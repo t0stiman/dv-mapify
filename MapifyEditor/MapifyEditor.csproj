@@ -21,6 +21,10 @@
     </ItemGroup>
 
     <ItemGroup>
+      <PackageReference Include="OsmSharp" Version="6.2.0" />
+    </ItemGroup>
+
+    <ItemGroup>
         <Reference Include="BezierCurves" />
         <Reference Include="UnityEngine" />
         <Reference Include="UnityEngine.AssetBundleModule" />
