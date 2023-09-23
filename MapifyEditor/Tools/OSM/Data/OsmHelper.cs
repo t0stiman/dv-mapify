@@ -3,7 +3,7 @@ using OsmSharp;
 using System;
 using UnityEngine;
 
-namespace Mapify.Editor.Tools.Osm
+namespace Mapify.Editor.Tools.OSM.Data
 {
     public static class OsmHelper
     {

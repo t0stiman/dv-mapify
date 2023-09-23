@@ -1,7 +1,7 @@
 using OsmSharp.Complete;
 using System;
 
-namespace Mapify.Editor.Tools.Osm
+namespace Mapify.Editor.Tools.OSM.Data
 {
     [Serializable]
     public class Relation : GeoBase

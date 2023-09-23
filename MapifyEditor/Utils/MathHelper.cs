@@ -16,10 +16,24 @@ namespace Mapify.Editor.Utils
         /// <summary>The plane <c>Y=0</c>.</summary>
         public static Plane YPlane => _yPlane;
 
-        /// <summary>Clamps a float to the range [-180, 180].</summary>
+        /// <summary>Clamps a <see cref="float"/> to the range [-180, 180].</summary>
         public static float ClampAngle(float value)
         {
             return Mathf.Clamp(value, -180.0f, 180.0f);
+        }
+
+        /// <summary>Clamps a <see cref="double"/> to a range.</summary>
+        public static double ClampD(double value, double min, double max)
+        {
+            if (value < min)
+            {
+                value = min;
+            }
+            if (value > max)
+            {
+                value = max;
+            }
+            return value;
         }
 
         /// <summary>Then handle length for a cubic bézier curve that approximates an arc.</summary>

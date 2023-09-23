@@ -10,7 +10,7 @@ using UnityEditor;
 using UnityEngine;
 
 #if UNITY_EDITOR
-namespace Mapify.Editor.Tools.Osm
+namespace Mapify.Editor.Tools.OSM.Data
 {
     public class DataExtractorWindow : EditorWindow, ISerializationCallbackReceiver
     {
@@ -79,28 +79,23 @@ namespace Mapify.Editor.Tools.Osm
         private void OnGUI()
         {
             EditorGUI.indentLevel++;
+            EditorGUILayout.Space();
 
             OsmFile = EditorGUILayout.TextField(
                 new GUIContent("OSM File", "The location of the file with OSM data"),
                 OsmFile);
-            Latitude = EditorGUILayout.DoubleField(
+            Latitude = MathHelper.ClampD(EditorGUILayout.DoubleField(
                 new GUIContent("Latitude", "Latitude at the centre"),
-                Latitude);
-            Longitude = EditorGUILayout.DoubleField(
+                Latitude), -90, 90);
+            Longitude = MathHelper.ClampD(EditorGUILayout.DoubleField(
                 new GUIContent("Longitude", "Longitude at the centre"),
-                Longitude);
+                Longitude), -180, 180);
+            OriginOffset = EditorGUILayout.Vector3Field(
+                new GUIContent("Origin offset", "Offsets all points from the origin when extracting"),
+                OriginOffset);
 
             EditorGUILayout.Space();
 
-            FilterNodesNotInWays = EditorGUILayout.Toggle(
-                new GUIContent("Filter nodes not in ways", "Removes nodes that are no part of any Way"),
-                FilterNodesNotInWays);
-            DrawEveryNode = EditorGUILayout.Toggle(
-                new GUIContent("Draw every node", "Draws all nodes of a way (instead of just the start and end)"),
-                DrawEveryNode);
-            ColouringMode = (ColourMode)EditorGUILayout.EnumPopup(
-                new GUIContent("Colouring mode"),
-                ColouringMode);
             CurrentFilter = (Filter)EditorGUILayout.EnumPopup(
                 new GUIContent("Current filter"),
                 CurrentFilter);
@@ -108,19 +103,56 @@ namespace Mapify.Editor.Tools.Osm
             //    new GUIContent("Custom filter"),
             //    CustomFilter,
             //    typeof(Func<OsmGeo, bool>));
+            FilterNodesNotInWays = EditorGUILayout.Toggle(
+                new GUIContent("Filter nodes not in ways", "Removes nodes that are no part of any Way"),
+                FilterNodesNotInWays);
+
+            EditorGUILayout.Space();
+
+            if (HasData)
+            {
+                EditorGUILayout.HelpBox("Data exists!", MessageType.Info);
+            }
+            else
+            {
+                EditorGUILayout.HelpBox("No data!", MessageType.Warning);
+            }
 
             EditorGUILayout.Space();
 
             EditorHelper.BeginHorizontalCentre();
             GUI.backgroundColor = HasData ? EditorHelper.Warning : EditorHelper.Accept;
-
             if (GUILayout.Button(new GUIContent("Generate data"), GUILayout.MaxWidth(EditorGUIUtility.labelWidth)))
             {
                 GenerateData();
             }
+            EditorHelper.EndHorizontalCentre();
+
+            EditorHelper.BeginHorizontalCentre();
+            GUI.enabled = HasData;
+            GUI.backgroundColor = EditorHelper.Cancel;
+            if (GUILayout.Button(new GUIContent("Clear Data"), GUILayout.MaxWidth(EditorGUIUtility.labelWidth)))
+            {
+                ClearData();
+            }
+            EditorHelper.EndHorizontalCentre();
 
             GUI.backgroundColor = Color.white;
-            EditorHelper.EndHorizontalCentre();
+
+            EditorGUILayout.Space();
+
+            // Check for changes in this block only, as this is the part related to drawing.
+            EditorGUI.BeginChangeCheck();
+            DrawEveryNode = EditorGUILayout.Toggle(
+                new GUIContent("Draw every node", "Draws all nodes of a way (instead of just the start and end)"),
+                DrawEveryNode);
+            ColouringMode = (ColourMode)EditorGUILayout.EnumPopup(
+                new GUIContent("Colouring mode"),
+                ColouringMode);
+            if (EditorGUI.EndChangeCheck())
+            {
+                SceneView.RepaintAll();
+            }
 
             EditorGUI.indentLevel--;
         }
@@ -165,20 +197,20 @@ namespace Mapify.Editor.Tools.Osm
 
                 Handles.DrawPolyLine(NodesToPositions(way.Nodes));
 
-                //for (int i = 1; i < way.Nodes.Length; i++)
-                //{
-                //    prev = here;
-                //    here = NodeData[way.Nodes[i]];
-                //    // Line connecting the points.
-                //    Handles.DrawLine(prev.Position, here.Position);
-                //    //DrawSpecificGizmo(here);
+                for (int i = 1; i < way.Nodes.Length; i++)
+                {
+                    prev = here;
+                    here = NodeData[way.Nodes[i]];
+                    // Line connecting the points.
+                    //Handles.DrawLine(prev.Position, here.Position);
+                    //DrawSpecificGizmo(here);
 
-                //    // Draw every single node in this case.
-                //    if (DrawEveryNode)
-                //    {
-                //        Handles.DrawWireDisc(here.Position, Vector3.up, 1.5f);
-                //    }
-                //}
+                    // Draw every single node in this case.
+                    if (DrawEveryNode)
+                    {
+                        Handles.DrawWireDisc(here.Position, Vector3.up, 0.02f * size);
+                    }
+                }
             }
 
             Handles.color = Color.white;
@@ -299,6 +331,7 @@ namespace Mapify.Editor.Tools.Osm
         {
             NodeData.Clear();
             WayData.Clear();
+            SceneView.RepaintAll();
         }
 
         // Unity can't serialise dictionaries, and getting the nodes from arrays that may have hundreds or thousands
@@ -332,19 +365,19 @@ namespace Mapify.Editor.Tools.Osm
         public static bool RailwayFilter(OsmGeo geo)
         {
             return geo.Type == OsmGeoType.Node ||
-                    (geo.Type == OsmGeoType.Way && geo.Tags != null && geo.Tags.ContainsKey("railway"));
+                    geo.Type == OsmGeoType.Way && geo.Tags != null && geo.Tags.ContainsKey("railway");
         }
 
         public static bool BuildingFilter(OsmGeo geo)
         {
             return geo.Type == OsmGeoType.Node ||
-                    (geo.Type == OsmGeoType.Way && geo.Tags != null && geo.Tags.ContainsKey("building"));
+                    geo.Type == OsmGeoType.Way && geo.Tags != null && geo.Tags.ContainsKey("building");
         }
 
         public static bool HighwayFilter(OsmGeo geo)
         {
             return geo.Type == OsmGeoType.Node ||
-                    (geo.Type == OsmGeoType.Way && geo.Tags != null && geo.Tags.ContainsKey("highway"));
+                    geo.Type == OsmGeoType.Way && geo.Tags != null && geo.Tags.ContainsKey("highway");
         }
 
         #endregion

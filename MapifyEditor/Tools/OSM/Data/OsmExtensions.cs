@@ -4,7 +4,7 @@ using OsmSharp.Tags;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Mapify.Editor.Tools.Osm
+namespace Mapify.Editor.Tools.OSM.Data
 {
     public static class OsmExtensions
     {

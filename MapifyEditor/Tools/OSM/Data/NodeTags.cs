@@ -1,7 +1,7 @@
 using OsmSharp.Tags;
 using System;
 
-namespace Mapify.Editor.Tools.Osm
+namespace Mapify.Editor.Tools.OSM.Data
 {
     [Serializable]
     public struct NodeTag
