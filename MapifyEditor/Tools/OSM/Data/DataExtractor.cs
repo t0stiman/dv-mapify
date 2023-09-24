@@ -138,6 +138,7 @@ namespace Mapify.Editor.Tools.OSM.Data
             EditorHelper.EndHorizontalCentre();
 
             GUI.backgroundColor = Color.white;
+            GUI.enabled = true;
 
             EditorGUILayout.Space();
 
@@ -184,8 +185,10 @@ namespace Mapify.Editor.Tools.OSM.Data
                         Handles.color = GetColour(way);
                         break;
                     case ColourMode.Random:
+                        Handles.color = Color.HSVToRGB(Math.Abs(way.GetHashCode()) / (float)int.MaxValue, 1, 1);
+                        //Handles.color = UnityEngine.Random.ColorHSV(0, 1, 1, 1, 1, 1);
+                        break;
                     default:
-                        Handles.color = UnityEngine.Random.ColorHSV(0, 1, 1, 1, 1, 1);
                         break;
                 }
 
