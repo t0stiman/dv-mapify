@@ -15,7 +15,7 @@ namespace Mapify.Editor.Tools.OSM
         [MenuItem("Mapify/Tools/OSM/Track Generator")]
         public static void ShowWindow()
         {
-            var window = GetWindow<TrackToolsWindow>();
+            var window = GetWindow<TrackGeneratorWindow>();
             window.Show();
             window.titleContent = new GUIContent("Track Generator");
         }
@@ -30,7 +30,7 @@ namespace Mapify.Editor.Tools.OSM
         public BufferStop BufferPrefab;
         public Switch LeftSwitch;
         public Switch RightSwitch;
-        public Turntable Turntable;
+        public Turntable TurntablePrefab;
 
         private bool _showPrefabs = false;
         // Ways created from extracted data.
@@ -44,14 +44,14 @@ namespace Mapify.Editor.Tools.OSM
 
         private void OnGUI()
         {
-            if (DataExtractor == null)
+            if (!DataExtractor)
             {
                 EditorGUILayout.HelpBox("Data Extractor cannot be null!", MessageType.Error);
             }
 
-            DataExtractor = (DataExtractor)EditorGUILayout.ObjectField(
+            DataExtractor = EditorHelper.ObjectField(
                 new GUIContent("Data extractor"),
-                DataExtractor, typeof(DataExtractor), true);
+                DataExtractor, true);
             TryUseTagData = EditorGUILayout.Toggle(
                 new GUIContent("Try to use tag data",
                 "If true, will try to get age, yards and/or station info from the data and assign it."),
@@ -66,64 +66,74 @@ namespace Mapify.Editor.Tools.OSM
             EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
 
             // Prefab foldout.
-            _showPrefabs = EditorGUILayout.Foldout(_showPrefabs, "Prefabs");
+            _showPrefabs = EditorGUILayout.BeginFoldoutHeaderGroup(_showPrefabs,
+                new GUIContent("Prefabs", "The prefabs to be used for track creation"),
+                null, PrefabFoldoutContextMenu);
 
             if (_showPrefabs)
             {
                 EditorGUI.indentLevel++;
-                EditorGUILayout.BeginVertical();
-                EditorGUILayout.PropertyField(_trackPrefab, new GUIContent("Track"));
-                EditorGUILayout.PropertyField(_bufferPrefab, new GUIContent("Buffer"));
-                EditorGUILayout.PropertyField(_leftSwitch, new GUIContent("Left switch"));
-                EditorGUILayout.PropertyField(_rightSwitch, new GUIContent("Right switch"));
-                EditorGUILayout.PropertyField(_turntable, new GUIContent("Turntable"));
-                EditorGUILayout.Space();
 
-                if (GUILayout.Button(new GUIContent("Try to get default Mapify assets",
-                    "This will not replace existing prefabs, set one to \"None\" to use the default prefab.")))
-                {
-                    _trackGenerator.TryGetDefaultAssets();
-                }
+                TrackPrefab = EditorHelper.ObjectField(
+                    new GUIContent("Track prefab"),
+                    TrackPrefab, true);
+                BufferPrefab = EditorHelper.ObjectField(
+                    new GUIContent("Buffer prefab"),
+                    BufferPrefab, true);
+                LeftSwitch = EditorHelper.ObjectField(
+                    new GUIContent("Left switch prefab"),
+                    LeftSwitch, true);
+                RightSwitch = EditorHelper.ObjectField(
+                    new GUIContent("Right switch prefab"),
+                    RightSwitch, true);
+                TurntablePrefab = EditorHelper.ObjectField(
+                    new GUIContent("Turntable prefab"),
+                    TurntablePrefab, true);
 
-                EditorGUILayout.EndVertical();
                 EditorGUI.indentLevel--;
+                EditorGUILayout.Space();
             }
 
-            EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+            EditorGUILayout.EndFoldoutHeaderGroup();
+
+            EditorHelper.Separator();
+
+            if (TestMode)
+            {
+                EditorGUILayout.HelpBox("Test mode enabled.", MessageType.Warning);
+            }
+
+            GUI.enabled = DataExtractor && DataExtractor.HasData;
 
             // If there's data, display a button to generate the tracks.
-            if (_trackGenerator.DataExtractor != null && _trackGenerator.DataExtractor.HasData)
+            if (GUILayout.Button(new GUIContent("Generate trackage",
+                DataExtractor ? (DataExtractor.HasData ? "Create tracks" : "Check extractor data") : "Data extractor is null")))
             {
-                if (_trackGenerator.TestMode)
-                {
-                    EditorGUILayout.HelpBox("Test mode enabled.", MessageType.Warning);
-                }
-                if (GUILayout.Button("Generate Trackage"))
-                {
-                    _trackGenerator.GenerateTrackage();
-                }
-            }
-            else
-            {
-                EditorGUILayout.HelpBox("Check the data extractor's data.", MessageType.Warning);
+                GenerateTrackage();
             }
 
             // If there's any children, display a button to clear them.
             // All children of the generator should've been generated by it, so it should be safe
             // to delete then.
-            if (_trackGenerator.transform.childCount > 0)
+            GUI.enabled = DataExtractor && DataExtractor.transform.childCount > 0;
+            if (GUILayout.Button("Clear existing tracks"))
             {
-                if (GUILayout.Button("Clear existing tracks"))
-                {
-                    _trackGenerator.ClearExistingTracks();
-                }
+                ClearExistingTracks();
             }
 
-            if (GUI.changed)
-            {
-                serializedObject.ApplyModifiedProperties();
-                EditorUtility.SetDirty(target);
-            }
+            GUI.enabled = true;
+        }
+
+        private void PrefabFoldoutContextMenu(Rect rect)
+        {
+            GenericMenu menu = new GenericMenu();
+            menu.AddItem(new GUIContent("Get default prefabs",
+                "Tries to get the default Mapify prefabs at their default location"),
+                false, TryGetDefaultAssets);
+            menu.AddItem(new GUIContent("Clear prefabs",
+                "Sets all prefabs to null"),
+                false, () => { TrackPrefab = null; BufferPrefab = null; LeftSwitch = null; RightSwitch = null; TurntablePrefab = null; });
+            menu.DropDown(rect);
         }
 
         [ContextMenu("Test Mode")]
@@ -134,7 +144,7 @@ namespace Mapify.Editor.Tools.OSM
 
         public void TryGetDefaultAssets()
         {
-            TrackToolsHelper.TryGetDefaultPrefabs(ref TrackPrefab, ref BufferPrefab, ref LeftSwitch, ref RightSwitch, ref Turntable);
+            TrackToolsHelper.TryGetDefaultPrefabs(ref TrackPrefab, ref BufferPrefab, ref LeftSwitch, ref RightSwitch, ref TurntablePrefab);
         }
 
         public void ClearExistingTracks()
