@@ -1,3 +1,4 @@
+using Mapify.Editor.Tools.OSM.Data;
 using System;
 using UnityEngine;
 
@@ -177,6 +178,48 @@ namespace Mapify.Editor.Utils
             }
 
             return results;
+        }
+        public static Vector3 Average(Vector3 a, Vector3 b)
+        {
+            return (a + b) * 0.5f;
+        }
+
+        public static Vector3 AverageDirection(Vector3 a, Vector3 b)
+        {
+            return Average(a.normalized, b.normalized).normalized;
+        }
+
+        // If the length is already known, avoid 2 Sqrt().
+        public static Vector3 AverageDirection(Vector3 a, Vector3 b, float aLength, float bLength)
+        {
+            return Average(a / aLength, b / bLength).normalized;
+        }
+
+        public static Vector3 GetBasicSmoothHandle(Vector3 prev, Vector3 here, Vector3 next)
+        {
+            Vector3 v1 = here - prev;
+            Vector3 v2 = next - here;
+
+            // Use the shortest of the 2 sides as the length, to prevent overshooting on the
+            // shorter side.
+            float l1 = v1.magnitude;
+            float l2 = v2.magnitude;
+            return AverageDirection(v1, v2, l1, l2) * Mathf.Min(l1, l2) * OneThird;
+        }
+
+        // Unlike the previous, which makes the handle the same size on both sides, this one
+        // resizes each side independently.
+        public static (TrackNodeHandle Next, TrackNodeHandle Prev) GetSizedSmoothHandles(Vector3 prev, Vector3 here, Vector3 next)
+        {
+            Vector3 v1 = here - prev;
+            Vector3 v2 = next - here;
+
+            float l1 = v1.magnitude;
+            float l2 = v2.magnitude;
+
+            Vector3 avg = Average(v1, v2).normalized;
+
+            return (new TrackNodeHandle(-avg, l1 * OneThird), new TrackNodeHandle(avg, l2 * OneThird));
         }
     }
 }

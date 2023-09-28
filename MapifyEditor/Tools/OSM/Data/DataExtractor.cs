@@ -12,16 +12,8 @@ using UnityEngine;
 #if UNITY_EDITOR
 namespace Mapify.Editor.Tools.OSM.Data
 {
-    public class DataExtractorWindow : EditorWindow, ISerializationCallbackReceiver
+    public class DataExtractor : MonoBehaviour, ISerializationCallbackReceiver
     {
-        [MenuItem("Mapify/Tools/OSM/Data Extractor")]
-        public static void ShowWindow()
-        {
-            var window = GetWindow<DataExtractorWindow>();
-            window.Show();
-            window.titleContent = new GUIContent("Data Extractor");
-        }
-
         public enum ColourMode
         {
             Random,
@@ -52,6 +44,8 @@ namespace Mapify.Editor.Tools.OSM.Data
         [SerializeField]
         public bool FilterNodesNotInWays = true;
         [SerializeField]
+        public bool AlwaysDraw = false;
+        [SerializeField]
         public bool DrawEveryNode = false;
         [SerializeField]
         public ColourMode ColouringMode = ColourMode.WayType;
@@ -74,103 +68,23 @@ namespace Mapify.Editor.Tools.OSM.Data
 
         private bool UseWayFilter => FilterNodesNotInWays && CurrentFilter != Filter.All;
 
-        #region GUI
-
-        private void OnGUI()
+        private void OnDrawGizmos()
         {
-            EditorGUI.indentLevel++;
-            EditorGUILayout.Space();
-
-            OsmFile = EditorGUILayout.TextField(
-                new GUIContent("OSM File", "The location of the file with OSM data"),
-                OsmFile);
-            Latitude = MathHelper.ClampD(EditorGUILayout.DoubleField(
-                new GUIContent("Latitude", "Latitude at the centre"),
-                Latitude), -90, 90);
-            Longitude = MathHelper.ClampD(EditorGUILayout.DoubleField(
-                new GUIContent("Longitude", "Longitude at the centre"),
-                Longitude), -180, 180);
-            OriginOffset = EditorGUILayout.Vector3Field(
-                new GUIContent("Origin offset", "Offsets all points from the origin when extracting"),
-                OriginOffset);
-
-            EditorGUILayout.Space();
-
-            CurrentFilter = (Filter)EditorGUILayout.EnumPopup(
-                new GUIContent("Current filter"),
-                CurrentFilter);
-            //CustomFilter = EditorGUILayout.ObjectField(
-            //    new GUIContent("Custom filter"),
-            //    CustomFilter,
-            //    typeof(Func<OsmGeo, bool>));
-            FilterNodesNotInWays = EditorGUILayout.Toggle(
-                new GUIContent("Filter nodes not in ways", "Removes nodes that are no part of any Way"),
-                FilterNodesNotInWays);
-
-            EditorGUILayout.Space();
-
-            if (HasData)
+            if (AlwaysDraw)
             {
-                EditorGUILayout.HelpBox("Data exists!", MessageType.Info);
+                Draw();
             }
-            else
-            {
-                EditorGUILayout.HelpBox("No data!", MessageType.Warning);
-            }
-
-            EditorGUILayout.Space();
-
-            EditorHelper.BeginHorizontalCentre();
-            GUI.backgroundColor = HasData ? EditorHelper.Warning : EditorHelper.Accept;
-            if (GUILayout.Button(new GUIContent("Generate data"), GUILayout.MaxWidth(EditorGUIUtility.labelWidth)))
-            {
-                GenerateData();
-            }
-            EditorHelper.EndHorizontalCentre();
-
-            EditorHelper.BeginHorizontalCentre();
-            GUI.enabled = HasData;
-            GUI.backgroundColor = EditorHelper.Cancel;
-            if (GUILayout.Button(new GUIContent("Clear Data"), GUILayout.MaxWidth(EditorGUIUtility.labelWidth)))
-            {
-                ClearData();
-            }
-            EditorHelper.EndHorizontalCentre();
-
-            GUI.backgroundColor = Color.white;
-            GUI.enabled = true;
-
-            EditorGUILayout.Space();
-
-            // Check for changes in this block only, as this is the part related to drawing.
-            EditorGUI.BeginChangeCheck();
-            DrawEveryNode = EditorGUILayout.Toggle(
-                new GUIContent("Draw every node", "Draws all nodes of a way (instead of just the start and end)"),
-                DrawEveryNode);
-            ColouringMode = (ColourMode)EditorGUILayout.EnumPopup(
-                new GUIContent("Colouring mode"),
-                ColouringMode);
-            if (EditorGUI.EndChangeCheck())
-            {
-                SceneView.RepaintAll();
-            }
-
-            EditorGUI.indentLevel--;
         }
 
-        #endregion
-
-        private void OnFocus()
+        private void OnDrawGizmosSelected()
         {
-            SceneView.duringSceneGui += Draw;
+            if (!AlwaysDraw)
+            {
+                Draw();
+            }
         }
 
-        private void OnLostFocus()
-        {
-            SceneView.duringSceneGui -= Draw;
-        }
-
-        private void Draw(SceneView scene)
+        private void Draw()
         {
             NodeVector3 here;
             NodeVector3 prev;
@@ -182,15 +96,17 @@ namespace Mapify.Editor.Tools.OSM.Data
                 switch (ColouringMode)
                 {
                     case ColourMode.WayType:
-                        Handles.color = GetColour(way);
+                        Gizmos.color = GetColour(way);
                         break;
                     case ColourMode.Random:
-                        Handles.color = Color.HSVToRGB(Math.Abs(way.GetHashCode()) / (float)int.MaxValue, 1, 1);
+                        Gizmos.color = Color.HSVToRGB(Math.Abs(way.GetHashCode()) / (float)int.MaxValue, 1, 1);
                         //Handles.color = UnityEngine.Random.ColorHSV(0, 1, 1, 1, 1, 1);
                         break;
                     default:
                         break;
                 }
+
+                Handles.color = Gizmos.color;
 
                 // Start and end of way.
                 Handles.DrawSolidDisc(NodeData[way.Nodes[0]].Position, Vector3.up, 0.04f * size);
@@ -198,15 +114,13 @@ namespace Mapify.Editor.Tools.OSM.Data
 
                 here = NodeData[way.Nodes[0]];
 
-                Handles.DrawPolyLine(NodesToPositions(way.Nodes));
-
                 for (int i = 1; i < way.Nodes.Length; i++)
                 {
                     prev = here;
                     here = NodeData[way.Nodes[i]];
                     // Line connecting the points.
-                    //Handles.DrawLine(prev.Position, here.Position);
-                    //DrawSpecificGizmo(here);
+                    Gizmos.DrawLine(prev.Position, here.Position);
+                    DrawSpecificGizmo(here);
 
                     // Draw every single node in this case.
                     if (DrawEveryNode)

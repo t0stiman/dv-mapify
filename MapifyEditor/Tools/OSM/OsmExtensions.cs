@@ -1,10 +1,11 @@
+using Mapify.Editor.Tools.OSM.Data;
 using OsmSharp;
 using OsmSharp.Complete;
 using OsmSharp.Tags;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Mapify.Editor.Tools.OSM.Data
+namespace Mapify.Editor.Tools.OSM
 {
     public static class OsmExtensions
     {
@@ -65,6 +66,11 @@ namespace Mapify.Editor.Tools.OSM.Data
             }
 
             return false;
+        }
+
+        public static TrackNode[] GetOrderedNodes(this Dictionary<long, TrackNode> nodes)
+        {
+            return nodes.Values.OrderByDescending(x => x.Connected.Count).ToArray();
         }
     }
 }
