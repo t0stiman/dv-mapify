@@ -53,7 +53,7 @@ namespace Mapify.Editor.Tools.OSM.Editor
                 new GUIContent("Origin offset", "Offsets all points from the origin when extracting"),
                 _centre.vector3Value);
 
-            EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
+            EditorHelper.Separator();
             
             // Filter selector
             _dataExtractor.CurrentFilter = (DataExtractor.Filter)EditorGUILayout.EnumPopup(
@@ -120,8 +120,6 @@ namespace Mapify.Editor.Tools.OSM.Editor
             _dataExtractor.ColouringMode = (DataExtractor.ColourMode)EditorGUILayout.EnumPopup(
                 new GUIContent("Draw mode", "Which way the nodes and ways will be coloured."),
                 _dataExtractor.ColouringMode);
-
-            EditorGUILayout.LabelField("", GUI.skin.horizontalSlider);
 
             if (GUI.changed)
             {

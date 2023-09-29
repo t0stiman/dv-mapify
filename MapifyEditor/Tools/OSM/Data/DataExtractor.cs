@@ -88,7 +88,8 @@ namespace Mapify.Editor.Tools.OSM.Data
         {
             NodeVector3 here;
             NodeVector3 prev;
-            float size = HandleUtility.GetHandleSize(Vector3.zero);
+            float size = HandleUtility.GetHandleSize(Vector3.zero) * 0.01f;
+            size = Mathf.Sqrt(size * size + 1.0f);
 
             foreach (var way in WayData.Values)
             {
@@ -109,8 +110,8 @@ namespace Mapify.Editor.Tools.OSM.Data
                 Handles.color = Gizmos.color;
 
                 // Start and end of way.
-                Handles.DrawSolidDisc(NodeData[way.Nodes[0]].Position, Vector3.up, 0.04f * size);
-                Handles.DrawWireDisc(NodeData[way.Nodes[way.Nodes.Length - 1]].Position, Vector3.up, 0.05f * size);
+                Handles.DrawSolidDisc(NodeData[way.Nodes[0]].Position, Vector3.up, 4f * size);
+                Handles.DrawWireDisc(NodeData[way.Nodes[way.Nodes.Length - 1]].Position, Vector3.up, 5f * size);
 
                 here = NodeData[way.Nodes[0]];
 
@@ -120,12 +121,12 @@ namespace Mapify.Editor.Tools.OSM.Data
                     here = NodeData[way.Nodes[i]];
                     // Line connecting the points.
                     Gizmos.DrawLine(prev.Position, here.Position);
-                    DrawSpecificGizmo(here);
+                    DrawSpecificGizmo(here, size);
 
                     // Draw every single node in this case.
                     if (DrawEveryNode)
                     {
-                        Handles.DrawWireDisc(here.Position, Vector3.up, 0.02f * size);
+                        Handles.DrawWireDisc(here.Position, Vector3.up, 2f * size);
                     }
                 }
             }
@@ -133,17 +134,17 @@ namespace Mapify.Editor.Tools.OSM.Data
             Handles.color = Color.white;
         }
 
-        private void DrawSpecificGizmo(NodeVector3 node)
+        private void DrawSpecificGizmo(NodeVector3 node, float size)
         {
             if (node.Tags != null && node.Tags.ContainsKey("railway", out int index))
             {
                 switch (node.Tags[index].Value)
                 {
                     case "buffer_stop":
-                        Gizmos.DrawCube(node.Position, Vector3.one * 4.0f);
+                        Gizmos.DrawCube(node.Position, Vector3.one * 4f * size);
                         break;
                     case "switch":
-                        Gizmos.DrawWireCube(node.Position, Vector3.one * 5.0f);
+                        Gizmos.DrawWireCube(node.Position, Vector3.one * 5f * size);
                         break;
                     case "turntable":
                         Gizmos.DrawSphere(node.Position, 4.0f);
