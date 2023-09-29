@@ -3,9 +3,11 @@ using OsmSharp;
 using OsmSharp.Complete;
 using OsmSharp.Streams;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
 
@@ -193,8 +195,21 @@ namespace Mapify.Editor.Tools.OSM.Data
                 var complete = source.Where(filter).ToComplete();
 
                 // Create nodes.
-                NodeData = complete.Where(x => x.Type == OsmGeoType.Node).Select(x => new NodeVector3((Node)x, Latitude, Longitude, OriginOffset))
-                    .ToDictionary(x => x.Id, x => x);
+                //object objLock = new object();
+                //ParallelOptions options = new ParallelOptions { MaxDegreeOfParallelism = 8 };
+                //Parallel.ForEach(complete, options, node =>
+                //{
+                //    if (node.Type == OsmGeoType.Node)
+                //    {
+                //        lock (objLock)
+                //        {
+                //            NodeData.Add(node.Id, new NodeVector3((Node)node, Latitude, Longitude, OriginOffset));
+                //        }
+                //    }
+                //});
+
+                NodeData = complete.Where(x => x.Type == OsmGeoType.Node).ToDictionary(
+                    x => x.Id, x => new NodeVector3((Node)x, Latitude, Longitude, OriginOffset));
 
                 // Create ways.
                 var ways = complete.Where(x => x.Type == OsmGeoType.Way).Select(x => (CompleteWay)x);

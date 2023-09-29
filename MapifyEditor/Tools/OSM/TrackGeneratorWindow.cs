@@ -283,7 +283,7 @@ namespace Mapify.Editor.Tools.OSM
                 wayRoot.transform.parent = DataExtractor.transform;
                 wayRoot.transform.position = DataExtractor.NodeData[way.Nodes[0]].Position;
                 wayRoot.Id = way.Id;
-                wayRoot.Tags = way.Tags.Select(x => (NodeTag)x).ToArray();
+                wayRoot.Tags = way.Tags.ToArray();
 
                 length = way.Nodes.Length;
                 nv = DataExtractor.NodeData[way.Nodes[0]];
@@ -496,20 +496,14 @@ namespace Mapify.Editor.Tools.OSM
             {
                 s = CreateOrGetSwitch(here);
                 int index = here.GetIndex(_nodes[nodeIds[1]]);
-                switch (index)
+
+                sp = index switch
                 {
-                    case 0:
-                        sp = s.GetJointPoint();
-                        break;
-                    case 1:
-                        sp = s.GetThroughPoint();
-                        break;
-                    case 2:
-                        sp = s.GetDivergingPoint();
-                        break;
-                    default:
-                        throw new Exception("This cannot happen.");
-                }
+                    0 => s.GetJointPoint(),
+                    1 => s.GetThroughPoint(),
+                    2 => s.GetDivergingPoint(),
+                    _ => throw new Exception("This cannot happen."),
+                };
 
                 curve[0].position = sp.position;
 
@@ -531,20 +525,14 @@ namespace Mapify.Editor.Tools.OSM
             {
                 s = CreateOrGetSwitch(here);
                 int index = here.GetIndex(_nodes[nodeIds[f - 1]]);
-                switch (index)
+
+                sp = index switch
                 {
-                    case 0:
-                        sp = s.GetJointPoint();
-                        break;
-                    case 1:
-                        sp = s.GetThroughPoint();
-                        break;
-                    case 2:
-                        sp = s.GetDivergingPoint();
-                        break;
-                    default:
-                        throw new Exception("This cannot happen.");
-                }
+                    0 => s.GetJointPoint(),
+                    1 => s.GetThroughPoint(),
+                    2 => s.GetDivergingPoint(),
+                    _ => throw new Exception("This cannot happen."),
+                };
 
                 curve[f].position = sp.position;
 
@@ -562,7 +550,7 @@ namespace Mapify.Editor.Tools.OSM
 
         private Switch CreateOrGetSwitch(TrackNode node)
         {
-            Switch s = null;
+            Switch s;
 
             // Get or create a new one switch instance.
             if (!_switchInstances.TryGetValue(node.Id, out s))
@@ -591,7 +579,7 @@ namespace Mapify.Editor.Tools.OSM
 
         private void AssignTrackProperties(TrackWay way, ref Track track)
         {
-            var current = way.Tags[0];
+            NodeTag current;
 
             for (int i = 0; i < way.Tags.Length; i++)
             {
