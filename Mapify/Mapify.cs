@@ -9,6 +9,7 @@ using Object = UnityEngine.Object;
 
 namespace Mapify
 {
+    [EnableReloading]
     public static class Mapify
     {
         private static UnityModManager.ModEntry ModEntry { get; set; }
