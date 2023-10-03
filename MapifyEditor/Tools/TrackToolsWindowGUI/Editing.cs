@@ -10,15 +10,21 @@ namespace Mapify.Editor.Tools
     {
         private bool _showEditing = false;
         private EditingMode _editingMode = EditingMode.Merge;
+        private int _editStartIndex = 0;
+        private int _editEndIndex = 1;
+        private float _editPercent = 0.5f;
 
         // Terrain match.
-        public float _maxDistance = 500.0f;
-        public float _reverseOffset = 5.0f;
+        private float _maxDistance = 500.0f;
+        private float _reverseOffset = 5.0f;
+
+        // InsertPoint
 
         // Editing mode.
         private readonly GUIContent[] _editingModeContents = {
             new GUIContent("Merge", "Merges multiple tracks into a one"),
-            new GUIContent("Terrain match", "Matches tracks to terrain and other objects")
+            new GUIContent("Terrain match", "Matches tracks to terrain and other objects"),
+            new GUIContent("Insert point", "Inserts a point between 2 others")
         };
 
         private void DrawEditingFoldout()
@@ -36,7 +42,7 @@ namespace Mapify.Editor.Tools
                 EditorGUI.indentLevel++;
 
                 GUI.backgroundColor *= 0.8f;
-                _editingMode = (EditingMode)GUILayout.SelectionGrid((int)_editingMode, _editingModeContents, 1, EditorStyles.miniButtonMid);
+                _editingMode = (EditingMode)GUILayout.SelectionGrid((int)_editingMode, _editingModeContents, 3, EditorStyles.miniButtonMid);
                 GUI.backgroundColor = Color.white;
                 EditorGUILayout.Space();
 
@@ -47,6 +53,9 @@ namespace Mapify.Editor.Tools
                         break;
                     case EditingMode.MatchTerrain:
                         DrawMatchTerrain();
+                        break;
+                    case EditingMode.InsertPoint:
+                        DrawInsertPoint();
                         break;
                     default:
                         EditorGUILayout.HelpBox("Coming soon!", MessageType.Info);
@@ -133,6 +142,46 @@ namespace Mapify.Editor.Tools
             GUILayout.EndHorizontal();
             GUI.backgroundColor = Color.white;
             GUI.enabled = true;
+        }
+
+        private void DrawInsertPoint()
+        {
+            if (!Require(CurrentTrack, "Selected track"))
+            {
+                return;
+            }
+
+            (_editStartIndex, _editEndIndex) = EditorHelper.MinMaxSliderInt(
+                new GUIContent("Split points", "The 2 points between which the insertion will happen"),
+                _editStartIndex, _editEndIndex, 0, CurrentTrack.Curve.pointCount - 1);
+
+            if (_editStartIndex >= _editEndIndex)
+            {
+                EditorGUILayout.HelpBox("The 2 points cannot be the same!", MessageType.Error);
+            }
+
+            _editPercent = EditorGUILayout.Slider(
+                new GUIContent("Point in curve"),
+                _editPercent, 0.0f, 1.0f);
+
+            _editStartIndex = Mathf.Min(_editStartIndex, CurrentTrack.Curve.pointCount - 2);
+
+            EditorGUILayout.Space();
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            GUI.backgroundColor = EditorHelper.Accept;
+
+            if (GUILayout.Button("Insert", GUILayout.MaxWidth(EditorGUIUtility.labelWidth)))
+            {
+                for (int i = _editEndIndex - 1; i >= _editStartIndex; i--)
+                {
+                    TrackToolsEditor.CreatePointBetween2(CurrentTrack, i, _editPercent);
+                }
+            }
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUI.backgroundColor = Color.white;
         }
 
         #endregion

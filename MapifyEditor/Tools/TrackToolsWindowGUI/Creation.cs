@@ -136,9 +136,9 @@ namespace Mapify.Editor.Tools
 
         private void DrawGlobalOptions()
         {
-            _currentParent = (Transform)EditorGUILayout.ObjectField(
+            _currentParent = EditorHelper.ObjectField(
                 new GUIContent("Track parent", "The parent transform for new tracks"),
-                _currentParent, typeof(Transform), true);
+                _currentParent, true);
             _trackAge = (TrackAge)EditorGUILayout.EnumPopup(
                 new GUIContent("Track age"),
                 _trackAge);
@@ -218,6 +218,11 @@ namespace Mapify.Editor.Tools
             if (_freeformTrackHelper != null && _freeformTrackHelper.UndoIndex.HasValue)
             {
                 Undo.CollapseUndoOperations(_freeformTrackHelper.UndoIndex.Value);
+            }
+
+            if (_freeformTrackHelper != null && _freeformTrackHelper.WorkingTrack)
+            {
+                Selection.activeGameObject = _freeformTrackHelper.WorkingTrack.gameObject;
             }
 
             _freeformTrackHelper = null;
