@@ -5,6 +5,7 @@
         <LangVersion>8.0</LangVersion>
         <RootNamespace>MapifyEditor</RootNamespace>
         <MSBuildWarningsAsMessages>CS0649</MSBuildWarningsAsMessages>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
         <OutDir>bin/$(Configuration)/Runtime</OutDir>
         <IsEditor>true</IsEditor>
         <PackageBuilderDir>../PackageBuilder/Assets/Mapify/Scripts/</PackageBuilderDir>
@@ -21,8 +22,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="OsmSharp" Version="6.2.0" />
+        <PackageReference Include="OsmSharp" Version="6.2.0" />
     </ItemGroup>
+
 
     <ItemGroup>
         <Reference Include="BezierCurves" />
@@ -46,7 +48,7 @@
         <Copy Condition="'$(IsEditor)' != 'true'" SourceFiles="$(TargetPath)" DestinationFolder="../build/runtime" />
 
         <!-- Copy to package build and test map -->
-        <Copy Condition="'$(IsEditor)' == 'true'" SourceFiles="$(TargetPath);$(OutDir)BezierCurves.dll" DestinationFolder="$(PackageBuilderDir);" />
+        <Copy Condition="'$(IsEditor)' == 'true'" SourceFiles="$(TargetPath);$(OutDir)BezierCurves.dll;$(OutDir)OsmSharp.dll;$(OutDir)protobuf-net.dll" DestinationFolder="$(PackageBuilderDir);" />
         <Copy Condition="'$(IsEditor)' == 'true' And Exists('$(TestMapDir)')" SourceFiles="$(TargetPath)" DestinationFolder="$(TestMapDir)" />
 
         <!-- Copy to game install folder -->
