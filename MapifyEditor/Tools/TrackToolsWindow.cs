@@ -411,11 +411,11 @@ namespace Mapify.Editor.Tools
                         return false;
                     }
 
-                    if (!CheckGrade(isBehind ? CurrentTrack.GetGradeAtStart() : CurrentTrack.GetGradeAtEnd()))
-                    {
-                        tooltip = "Grade too steep for creation";
-                        return false;
-                    }
+                    // if (!CheckGrade(isBehind ? CurrentTrack.GetGradeAtStart() : CurrentTrack.GetGradeAtEnd()))
+                    // {
+                    //     tooltip = "Grade too steep for creation";
+                    //     return false;
+                    // }
 
                     if (CurrentTrack.IsSwitch && (_currentPiece == TrackPiece.Switch || _currentPiece == TrackPiece.Yard))
                     {
@@ -438,11 +438,11 @@ namespace Mapify.Editor.Tools
                         return false;
                     }
 
-                    if (!CheckGrade(isBehind ? CurrentPoint.GetGradeBackwards() : CurrentPoint.GetGradeForwards()))
-                    {
-                        tooltip = "Grade too steep for creation";
-                        return false;
-                    }
+                    // if (!CheckGrade(isBehind ? CurrentPoint.GetGradeBackwards() : CurrentPoint.GetGradeForwards()))
+                    // {
+                    //     tooltip = "Grade too steep for creation";
+                    //     return false;
+                    // }
 
                     if (_currentPiece == TrackPiece.Special && _currentSpecial == SpecialTrackPiece.Connect2)
                     {
