@@ -424,6 +424,13 @@ namespace Mapify.Editor.Tools.OSM
             ClearExistingTracks();
             GenerateWaysAndNodes();
             InstantiateTracks();
+
+            Vector3 height = Vector3.up * TrackHeight;
+
+            foreach (Transform child in DataExtractor.transform)
+            {
+                child.position += height;
+            }
         }
 
         private void CreateTrack(Transform parent, long[] nodeIds, out Track track)
@@ -444,14 +451,12 @@ namespace Mapify.Editor.Tools.OSM
             int length = nodeIds.Length;
             int f = length - 1;
 
-            Vector3 height = Vector3.up * TrackHeight;
-
             if (SameLengthHandles)
             {
-                curve[0].position = prev.Position + height;
+                curve[0].position = prev.Position;
                 curve[0].handleStyle = BezierPoint.HandleStyle.Connected;
                 curve[0].globalHandle2 = prev.GetGlobalHandle(here);
-                curve[1].position = here.Position + height;
+                curve[1].position = here.Position;
                 curve[1].handleStyle = BezierPoint.HandleStyle.Connected;
                 curve[1].globalHandle1 = here.GetGlobalHandle(prev);
 
@@ -460,16 +465,16 @@ namespace Mapify.Editor.Tools.OSM
                     prev = here;
                     here = _nodes[nodeIds[i]];
 
-                    point = curve.AddPointAt(here.Position + height);
+                    point = curve.AddPointAt(here.Position);
                     point.globalHandle1 = here.GetGlobalHandle(prev);
                 }
             }
             else
             {
-                curve[0].position = prev.Position + height;
+                curve[0].position = prev.Position;
                 curve[0].handleStyle = BezierPoint.HandleStyle.Broken;
                 curve[0].globalHandle2 = prev.GetGlobalHandle(here);
-                curve[1].position = here.Position + height;
+                curve[1].position = here.Position;
                 curve[1].handleStyle = BezierPoint.HandleStyle.Broken;
                 curve[1].globalHandle1 = here.GetGlobalHandle(prev);
 
@@ -480,7 +485,7 @@ namespace Mapify.Editor.Tools.OSM
 
                     curve[i - 1].globalHandle2 = prev.GetGlobalHandle(here);
 
-                    point = curve.AddPointAt(here.Position + height);
+                    point = curve.AddPointAt(here.Position);
                     point.handleStyle = BezierPoint.HandleStyle.Broken;
                     point.globalHandle1 = here.GetGlobalHandle(prev);
                 }
