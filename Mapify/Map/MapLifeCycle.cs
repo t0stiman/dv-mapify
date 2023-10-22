@@ -142,12 +142,16 @@ namespace Mapify.Map
         {
             yield return LoadAssetBundle(Names.MAP_INFO_ASSET_BUNDLE, assetsDir, loadingInfo, loadingMapLogMsg);
 
-            mapInfo = requestedBundle.LoadAllAssets<MapInfo>()[0];
-            if (mapInfo is null)
+            if (requestedBundle is null)
             {
-                Debug.LogError("Failed to load mapinfo");
+                // Warning and not Error because this occurs if the map is built with an older version of Mapify, and then its not a problem
+                Debug.LogWarning("Failed to load the mapinfo bundle");
             }
-            Maps.RegisterLoadedMap(mapInfo);
+            else
+            {
+                mapInfo = requestedBundle.LoadAllAssets<MapInfo>()[0];
+                Maps.RegisterLoadedMap(mapInfo);
+            }
         }
 
         private static IEnumerator LoadMiscAssets(string assetsDir, DisplayLoadingInfo loadingInfo, string loadingMapLogMsg)
@@ -161,6 +165,13 @@ namespace Mapify.Map
                 if (bundleFileName.EndsWith(".manifest")) { continue; }
 
                 yield return LoadAssetBundle(bundleFileName, assetsDir, loadingInfo, loadingMapLogMsg);
+            }
+
+            // in maps exported with older versions of Mapify the mapInfo is in the MiscAssets assetbundle
+            if (mapInfo is null)
+            {
+                mapInfo = requestedBundle.LoadAllAssets<MapInfo>()[0];
+                Maps.RegisterLoadedMap(mapInfo);
             }
         }
 
