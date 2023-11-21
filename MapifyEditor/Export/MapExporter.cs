@@ -171,7 +171,6 @@ namespace Mapify.Editor
             string[] allAssetPaths = AssetDatabase.GetAllAssetPaths();
             List<string> miscAssetsPaths = new List<string>(allAssetPaths.Length - builds.Count);
             List<string> scenePaths = new List<string>();
-            List<string> customMapAssetsPaths = new List<string>();
 
             var mapInfoPath = AssetDatabase.GetAssetPath(EditorAssets.FindAsset<MapInfo>());
 
@@ -194,10 +193,6 @@ namespace Mapify.Editor
                 {
                     CreateMapInfoBuild(assetPath, ref builds);
                 }
-                else if (assetPath.StartsWith(Names.CUSTOM_MAP_ASSSETS_PATH))
-                {
-                    customMapAssetsPaths.Add(assetPath);
-                }
                 else
                 {
                     miscAssetsPaths.Add(assetPath);
@@ -209,19 +204,9 @@ namespace Mapify.Editor
             EditorUtility.ClearProgressBar();
 
             CreateSceneBuilds(scenePaths, ref builds);
-            CreateCustomMapAssetsBuilds(customMapAssetsPaths, ref builds);
             CreateMiscAssetsBuilds(miscAssetsPaths, ref builds);
 
             return builds.ToArray();
-        }
-
-        private static void CreateCustomMapAssetsBuilds(List<string> assetsPaths, ref List<AssetBundleBuild> builds)
-        {
-            builds.Add(new AssetBundleBuild
-            {
-                assetBundleName = Names.CUSTOM_MAP_ASSETS_ASSET_BUNDLE,
-                assetNames = assetsPaths.ToArray()
-            });
         }
 
         private static List<AssetBundleBuild> CreateTerrainBuilds()
@@ -296,7 +281,7 @@ namespace Mapify.Editor
                 if (assetBundleSize > 0 && assetBundleSize + fileSize > maxBundleSize)
                 {
                     builds.Add(new AssetBundleBuild {
-                        assetBundleName = Names.ASSETS_ASSET_BUNDLES_PREFIX+'_'+assetBundleNumber,
+                        assetBundleName = Names.MISC_ASSETS_ASSET_BUNDLES_PREFIX+'_'+assetBundleNumber,
                         assetNames = asssetBundleFiles.ToArray()
                     });
 
@@ -312,7 +297,7 @@ namespace Mapify.Editor
                 if(assetBundleSize > 0 && i >= assetPaths.Count-1)
                 {
                     builds.Add(new AssetBundleBuild {
-                        assetBundleName = Names.ASSETS_ASSET_BUNDLES_PREFIX+'_'+assetBundleNumber,
+                        assetBundleName = Names.MISC_ASSETS_ASSET_BUNDLES_PREFIX+'_'+assetBundleNumber,
                         assetNames = asssetBundleFiles.ToArray()
                     });
                 }

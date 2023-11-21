@@ -9,7 +9,7 @@ namespace Mapify.Editor.Tools
 {
     public partial class TrackToolsWindow : EditorWindow
     {
-        [MenuItem("Mapify/Tools/Track")]
+        [MenuItem("Mapify/Track Tools")]
         public static void ShowWindow()
         {
             var window = GetWindow<TrackToolsWindow>();
@@ -437,11 +437,12 @@ namespace Mapify.Editor.Tools
                         return false;
                     }
 
-                    // if (!CheckGrade(isBehind ? CurrentTrack.GetGradeAtStart() : CurrentTrack.GetGradeAtEnd()))
-                    // {
-                    //     tooltip = "Grade too steep for creation";
-                    //     return false;
-                    // }
+                    //todo comment this?
+                    if (!CheckGrade(isBehind ? CurrentTrack.GetGradeAtStart() : CurrentTrack.GetGradeAtEnd()))
+                    {
+                        tooltip = "Grade too steep for creation";
+                        return false;
+                    }
 
                     if (CurrentTrack.IsSwitch && (_currentPiece == TrackPiece.Switch || _currentPiece == TrackPiece.Yard))
                     {
@@ -464,11 +465,12 @@ namespace Mapify.Editor.Tools
                         return false;
                     }
 
-                    // if (!CheckGrade(isBehind ? CurrentPoint.GetGradeBackwards() : CurrentPoint.GetGradeForwards()))
-                    // {
-                    //     tooltip = "Grade too steep for creation";
-                    //     return false;
-                    // }
+                    //todo comment this?
+                    if (!CheckGrade(isBehind ? CurrentPoint.GetGradeBackwards() : CurrentPoint.GetGradeForwards()))
+                    {
+                        tooltip = "Grade too steep for creation";
+                        return false;
+                    }
 
                     if (_currentPiece == TrackPiece.Special && _currentSpecial == SpecialTrackPiece.Connect2)
                     {

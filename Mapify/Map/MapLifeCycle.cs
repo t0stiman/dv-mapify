@@ -33,9 +33,6 @@ namespace Mapify.Map
         private static string originalRailwayScenePath;
         private static string originalGameContentScenePath;
         private static int scenesToLoad;
-        //todo how do i make requestedBundle an argument to LoadAssetBundle? "Iterators cannot have 'out' parameters"
-        private static AssetBundle requestedBundle;
-        private static MapInfo mapInfo;
 
         public static IEnumerator LoadMap(BasicMapInfo basicMapInfo)
         {
@@ -53,13 +50,57 @@ namespace Mapify.Map
             yield return null;
 
             // Load asset bundles
-            string assetsDir = Maps.GetDirectory(basicMapInfo);
-            loadedAssetBundles = new List<AssetBundle>();
+            string mapDir = Maps.GetDirectory(basicMapInfo);
+            string[] assets_assetBundlePaths = Maps.GetMapAssets(Names.MISC_ASSETS_ASSET_BUNDLES_PREFIX+"*", mapDir);
+            loadedAssetBundles = new List<AssetBundle>(assets_assetBundlePaths.Length);
 
-            yield return LoadCustomMapAssets(assetsDir, loadingInfo, loadingMapLogMsg);
-            yield return LoadAssetBundle(Names.SCENES_ASSET_BUNDLE, assetsDir, loadingInfo, loadingMapLogMsg);
-            yield return LoadMapInfo(assetsDir, loadingInfo, loadingMapLogMsg);
-            yield return LoadMiscAssets(assetsDir, loadingInfo, loadingMapLogMsg);
+            foreach (var ass in assets_assetBundlePaths)
+            {
+                var assetFileName = Path.GetFileName(ass);
+
+                if (assetFileName.EndsWith(".manifest")) { continue; }
+
+                Mapify.LogDebug(() => $"Loading AssetBundle '{assetFileName}'");
+                AssetBundleCreateRequest assetsReq = AssetBundle.LoadFromFileAsync(Maps.GetMapAsset(assetFileName, mapDir));
+                DisplayLoadingInfo_OnLoadingStatusChanged_Patch.what = assetFileName;
+                do
+                {
+                    loadingInfo.UpdateLoadingStatus(loadingMapLogMsg, Mathf.RoundToInt(assetsReq.progress * 100));
+                    yield return null;
+                } while (!assetsReq.isDone);
+
+                loadedAssetBundles.Add(assetsReq.assetBundle);
+            }
+
+            Mapify.LogDebug(() => $"Loading AssetBundle '{Names.SCENES_ASSET_BUNDLE}'");
+            AssetBundleCreateRequest scenesReq = AssetBundle.LoadFromFileAsync(Maps.GetMapAsset(Names.SCENES_ASSET_BUNDLE, mapDir));
+            DisplayLoadingInfo_OnLoadingStatusChanged_Patch.what = Names.SCENES_ASSET_BUNDLE;
+            do
+            {
+                loadingInfo.UpdateLoadingStatus(loadingMapLogMsg, Mathf.RoundToInt(scenesReq.progress * 100));
+                yield return null;
+            } while (!scenesReq.isDone);
+
+            scenes = scenesReq.assetBundle;
+
+            // Register mapinfo
+            Mapify.LogDebug(() => $"Loading AssetBundle '{Names.MAP_INFO_ASSET_BUNDLE}'");
+            AssetBundleCreateRequest mapInfoRequest = AssetBundle.LoadFromFileAsync(Maps.GetMapAsset(Names.MAP_INFO_ASSET_BUNDLE, mapDir));
+            do
+            {
+                loadingInfo.UpdateLoadingStatus(loadingMapLogMsg, Mathf.RoundToInt(mapInfoRequest.progress * 100));
+                yield return null;
+            } while (!mapInfoRequest.isDone);
+
+            var mapInfo = mapInfoRequest.assetBundle.LoadAllAssets<MapInfo>()[0];
+            if (mapInfo is null)
+            {
+                Debug.LogError($"Failed to find {nameof(MapInfo)}!");
+                SceneSwitcher.SwitchToScene(DVScenes.MainMenu);
+                yield break;
+            }
+
+            Maps.RegisterLoadedMap(mapInfo);
 
             // Load scenes for us to steal assets from
             MonoBehaviourDisablerPatch.DisableAll();
@@ -98,7 +139,7 @@ namespace Mapify.Map
             Mapify.Log("Vanilla scenes unloaded");
             MonoBehaviourDisablerPatch.EnableAll();
 
-            SetLevelInfo();
+            SetLevelInfo(mapInfo);
             SetupStreamer(wsi.gameObject, mapInfo);
 
             InitializeLists();
@@ -108,7 +149,7 @@ namespace Mapify.Map
                 Mapify.LogError($"VanillaAsset {nonInstantiatableAsset} wasn't set in the AssetCopier! You MUST fix this!");
         }
 
-        private static void SetLevelInfo()
+        private static void SetLevelInfo(MapInfo mapInfo)
         {
             LevelInfo levelInfo = SingletonBehaviour<LevelInfo>.Instance;
             levelInfo.terrainSize = mapInfo.terrainSize;
@@ -121,71 +162,6 @@ namespace Mapify.Map
             levelInfo.newCareerSpawnRotation = mapInfo.defaultSpawnRotation;
             levelInfo.enforceBoundary = true;
             levelInfo.worldBoundaryMargin = mapInfo.worldBoundaryMargin;
-        }
-
-        private static IEnumerator LoadAssetBundle(string bundlePath, string assetsDir, DisplayLoadingInfo loadingInfo, string loadingMapLogMsg)
-        {
-            Mapify.LogDebug(() => $"Loading AssetBundle '{bundlePath}'");
-            var bundleRequest = AssetBundle.LoadFromFileAsync(Maps.GetMapAsset(bundlePath, assetsDir));
-            DisplayLoadingInfo_OnLoadingStatusChanged_Patch.what = bundlePath;
-            do
-            {
-                loadingInfo.UpdateLoadingStatus(loadingMapLogMsg, Mathf.RoundToInt(bundleRequest.progress * 100));
-                yield return null;
-            } while (!bundleRequest.isDone);
-
-            loadedAssetBundles.Add(bundleRequest.assetBundle);
-            requestedBundle = bundleRequest.assetBundle;
-        }
-
-        private static IEnumerator LoadMapInfo(string assetsDir, DisplayLoadingInfo loadingInfo, string loadingMapLogMsg)
-        {
-            yield return LoadAssetBundle(Names.MAP_INFO_ASSET_BUNDLE, assetsDir, loadingInfo, loadingMapLogMsg);
-
-            if (requestedBundle is null)
-            {
-                // Warning and not Error because this occurs if the map is built with an older version of Mapify, and then its not a problem
-                Debug.LogWarning("Failed to load the mapinfo bundle");
-            }
-            else
-            {
-                mapInfo = requestedBundle.LoadAllAssets<MapInfo>()[0];
-                Maps.RegisterLoadedMap(mapInfo);
-            }
-        }
-
-        private static IEnumerator LoadMiscAssets(string assetsDir, DisplayLoadingInfo loadingInfo, string loadingMapLogMsg)
-        {
-            string[] bundlePaths = Maps.GetMapAssets(Names.ASSETS_ASSET_BUNDLES_PREFIX+"*", assetsDir);
-
-            foreach (var aPath in bundlePaths)
-            {
-                var bundleFileName = Path.GetFileName(aPath);
-                // .manifest files are not asset bundles
-                if (bundleFileName.EndsWith(".manifest")) { continue; }
-
-                yield return LoadAssetBundle(bundleFileName, assetsDir, loadingInfo, loadingMapLogMsg);
-            }
-
-            // in maps exported with older versions of Mapify the mapInfo is in the MiscAssets assetbundle
-            if (mapInfo is null)
-            {
-                mapInfo = requestedBundle.LoadAllAssets<MapInfo>()[0];
-                Maps.RegisterLoadedMap(mapInfo);
-            }
-        }
-
-        private static IEnumerator LoadCustomMapAssets(string assetsDir, DisplayLoadingInfo loadingInfo, string loadingMapLogMsg)
-        {
-            var bundlePath = Names.CUSTOM_MAP_ASSETS_ASSET_BUNDLE;
-            var customStuffBundlePath = Path.Combine(assetsDir, bundlePath);
-            if (File.Exists(customStuffBundlePath))
-            {
-                yield return LoadAssetBundle(bundlePath, assetsDir, loadingInfo, loadingMapLogMsg);
-                StartLoadingScreenMusic(requestedBundle);
-                yield return null;
-                ShowLoadingScreenImage(requestedBundle);
-            }
         }
 
         private static void ShowLoadingScreenImage(AssetBundle bundle)
@@ -339,21 +315,23 @@ namespace Mapify.Map
             originalGameContentScenePath = null;
             scenesToLoad = 0;
 
-            UnloadAndUnset(ref loadedAssetBundles);
-
-            isMapLoaded = false;
-        }
-
-        private static void UnloadAndUnset(ref List<AssetBundle> bundles)
-        {
-            for (var i = 0; i < bundles.Count; i++)
+            foreach (AssetBundle bundle in assets_assetBundles)
             {
-                if (bundles[i] is null) continue;
-
-                bundles[i].Unload(true);
+                if (bundle != null)
+                {
+                    bundle.Unload(true);
+                }
             }
 
-            bundles = new List<AssetBundle>();
+            assets_assetBundles = null;
+
+            if (scenes != null)
+            {
+                scenes.Unload(true);
+                scenes = null;
+            }
+
+            isMapLoaded = false;
         }
     }
 }
