@@ -51,12 +51,12 @@ namespace Mapify.Map
 
             // Load asset bundles
             string mapDir = Maps.GetDirectory(basicMapInfo);
-            string[] assets_assetBundlePaths = Maps.GetMapAssets(Names.MISC_ASSETS_ASSET_BUNDLES_PREFIX+"*", mapDir);
-            loadedAssetBundles = new List<AssetBundle>(assets_assetBundlePaths.Length);
+            string[] miscAssets_bundlePaths = Maps.GetMapAssets(Names.MISC_ASSETS_ASSET_BUNDLES_PREFIX+"*", mapDir);
+            loadedAssetBundles = new List<AssetBundle>(miscAssets_bundlePaths.Length);
 
-            foreach (var ass in assets_assetBundlePaths)
+            foreach (var bundlePath in miscAssets_bundlePaths)
             {
-                var assetFileName = Path.GetFileName(ass);
+                var assetFileName = Path.GetFileName(bundlePath);
 
                 if (assetFileName.EndsWith(".manifest")) { continue; }
 
@@ -81,7 +81,7 @@ namespace Mapify.Map
                 yield return null;
             } while (!scenesReq.isDone);
 
-            scenes = scenesReq.assetBundle;
+            loadedAssetBundles.Add(scenesReq.assetBundle);
 
             // Register mapinfo
             Mapify.LogDebug(() => $"Loading AssetBundle '{Names.MAP_INFO_ASSET_BUNDLE}'");
@@ -209,7 +209,7 @@ namespace Mapify.Map
             canvasGameObject.GetComponent<CanvasRenderer>().SetTexture(customImage);
         }
 
-        private static void StartLoadingScreenMusic(AssetBundle bundle)
+        /*private static void StartLoadingScreenMusic(AssetBundle bundle)
         {
             Mapify.Log("Checking for custom loading screen music");
 
@@ -225,7 +225,7 @@ namespace Mapify.Map
             mainMenuMusicSource.Pause();
             mainMenuMusicSource.clip = customMusic;
             mainMenuMusicSource.Play();
-        }
+        }*/
 
         private static void SetupStreamer(GameObject parent, MapInfo mapInfo)
         {
@@ -315,7 +315,7 @@ namespace Mapify.Map
             originalGameContentScenePath = null;
             scenesToLoad = 0;
 
-            foreach (AssetBundle bundle in assets_assetBundles)
+            foreach (AssetBundle bundle in loadedAssetBundles)
             {
                 if (bundle != null)
                 {
@@ -323,14 +323,7 @@ namespace Mapify.Map
                 }
             }
 
-            assets_assetBundles = null;
-
-            if (scenes != null)
-            {
-                scenes.Unload(true);
-                scenes = null;
-            }
-
+            loadedAssetBundles = null;
             isMapLoaded = false;
         }
     }
