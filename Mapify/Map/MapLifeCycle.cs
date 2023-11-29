@@ -49,8 +49,35 @@ namespace Mapify.Map
             loadingInfo.UpdateLoadingStatus(loadingMapLogMsg, 0);
             yield return null;
 
-            // Load asset bundles
             string mapDir = Maps.GetDirectory(basicMapInfo);
+
+            // Register mapinfo
+            Mapify.LogDebug(() => $"Loading AssetBundle '{Names.MAP_INFO_ASSET_BUNDLE}'");
+            AssetBundleCreateRequest mapInfoRequest = AssetBundle.LoadFromFileAsync(Maps.GetMapAsset(Names.MAP_INFO_ASSET_BUNDLE, mapDir));
+            do
+            {
+                loadingInfo.UpdateLoadingStatus(loadingMapLogMsg, Mathf.RoundToInt(mapInfoRequest.progress * 100));
+                yield return null;
+            } while (!mapInfoRequest.isDone);
+
+            MapInfo mapInfo = null;
+            if (mapInfoRequest.assetBundle is null)
+            {
+                // Warning and not Error because this occurs if the map is built with an older version of Mapify, and then its not a problem
+                Debug.LogWarning("Failed to load the mapinfo bundle");
+            }
+            else
+            {
+                mapInfo = mapInfoRequest.assetBundle.LoadAllAssets<MapInfo>()[0];
+                if (mapInfo is null)
+                {
+                    Debug.LogError($"Failed to find {nameof(MapInfo)}!");
+                    SceneSwitcher.SwitchToScene(DVScenes.MainMenu);
+                    yield break;
+                }
+            }
+
+            // Load asset bundles
             string[] miscAssets_bundlePaths = Maps.GetMapAssets(Names.MISC_ASSETS_ASSET_BUNDLES_PREFIX+"*", mapDir);
             loadedAssetBundles = new List<AssetBundle>(miscAssets_bundlePaths.Length);
 
@@ -70,6 +97,13 @@ namespace Mapify.Map
                 } while (!assetsReq.isDone);
 
                 loadedAssetBundles.Add(assetsReq.assetBundle);
+
+                // in maps exported with older versions of Mapify the mapInfo is in the misc assets assetbundle
+                if (mapInfo is null)
+                {
+                    mapInfo = assetsReq.assetBundle.LoadAllAssets<MapInfo>()[0];
+                    Maps.RegisterLoadedMap(mapInfo);
+                }
             }
 
             Mapify.LogDebug(() => $"Loading AssetBundle '{Names.SCENES_ASSET_BUNDLE}'");
@@ -83,22 +117,7 @@ namespace Mapify.Map
 
             loadedAssetBundles.Add(scenesReq.assetBundle);
 
-            // Register mapinfo
-            Mapify.LogDebug(() => $"Loading AssetBundle '{Names.MAP_INFO_ASSET_BUNDLE}'");
-            AssetBundleCreateRequest mapInfoRequest = AssetBundle.LoadFromFileAsync(Maps.GetMapAsset(Names.MAP_INFO_ASSET_BUNDLE, mapDir));
-            do
-            {
-                loadingInfo.UpdateLoadingStatus(loadingMapLogMsg, Mathf.RoundToInt(mapInfoRequest.progress * 100));
-                yield return null;
-            } while (!mapInfoRequest.isDone);
 
-            var mapInfo = mapInfoRequest.assetBundle.LoadAllAssets<MapInfo>()[0];
-            if (mapInfo is null)
-            {
-                Debug.LogError($"Failed to find {nameof(MapInfo)}!");
-                SceneSwitcher.SwitchToScene(DVScenes.MainMenu);
-                yield break;
-            }
 
             Maps.RegisterLoadedMap(mapInfo);
 
