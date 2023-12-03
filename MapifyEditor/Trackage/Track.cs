@@ -57,7 +57,10 @@ namespace Mapify.Editor
         public BezierCurve Curve {
             get {
                 if (_curve != null) return _curve;
-                return _curve = GetComponent<BezierCurve>();
+
+                _curve = GetComponent<BezierCurve>();
+                _curve.resolution = 0.5f;
+                return _curve;
             }
         }
 

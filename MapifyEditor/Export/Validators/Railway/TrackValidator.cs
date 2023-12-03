@@ -41,6 +41,13 @@ namespace MapifyEditor.Export.Validators
                         yield return Result.Error("Track ID must be between 1 and 99 (inclusive)", track);
                 }
 
+                if (track.Curve.resolution < 0.45 || track.Curve.resolution > 0.55)
+                {
+                    var oldValue = track.Curve.resolution;
+                    track.Curve.resolution = 0.5f;
+                    yield return Result.Warning($"BezierCurve resolution should be 0.45 - 0.55, was {oldValue}. Changing it to {track.Curve.resolution}", track.Curve);
+                }
+
                 if (track.Curve.pointCount < 2)
                     yield return Result.Error("BezierCurve must have at least two points!", track.Curve);
 
