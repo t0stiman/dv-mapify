@@ -192,10 +192,23 @@ namespace Mapify.Utils
         public static IEnumerable<Vector2> GetCurvePositions(this RailTrack track, float resolution)
         {
             EquiPointSet pointSet = track.GetPointSet();
-            EquiPointSet simplified = EquiPointSet.ResampleEquidistant(pointSet, Mathf.Min(resolution, (float)pointSet.span / 3));
+            var simplified = new EquiPointSet();
+            try
+            {
+                simplified = EquiPointSet.ResampleEquidistant(pointSet, Mathf.Min(resolution, (float)pointSet.span / 3));
+            }
+            catch (ArgumentException)
+            {
+                Mapify.LogError($"Got {nameof(ArgumentException)} on RailTrack '{track.name}'");
+            }
 
-            foreach (EquiPointSet.Point point in simplified.points)
-                yield return new Vector2((float)point.position.x, (float)point.position.z);
+            if (simplified.points != null)
+            {
+                foreach (EquiPointSet.Point point in simplified.points)
+                {
+                    yield return new Vector2((float)point.position.x, (float)point.position.z);
+                }
+            }
         }
 
         public static BasicMapInfo GetBasicMapInfo(this SaveGameManager saveGameManager)

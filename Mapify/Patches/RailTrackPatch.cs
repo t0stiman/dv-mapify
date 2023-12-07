@@ -1,11 +1,35 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Reflection.Emit;
 using HarmonyLib;
 using Mapify.Editor;
 
 namespace Mapify.Patches
 {
+
+    [HarmonyPatch]
+    public static class RailTrack_yes
+    {
+        static IEnumerable<MethodBase> TargetMethods()
+        {
+            return AccessTools.GetTypesFromAssembly(Assembly.GetAssembly(typeof(RailTrack)))
+                .SelectMany(type => type.GetMethods())
+                .Where(method =>
+                    method.Name == nameof(RailTrack.GetPointWithinRangeWithYOffset) ||
+                    method.Name == "RailTrack.KinkPointSet")
+                .Cast<MethodBase>();
+        }
+
+        private static Exception Finalizer(RailTrack __instance, Exception __exception)
+        {
+            Mapify.Log($"Error on Railtrack '{__instance.name}': {__exception.Message}");
+            return null;
+        }
+    }
+
+
     [HarmonyPatch(typeof(RailTrack), "ConnectToClosestBranch")]
     public static class RailTrack_ConnectToClosestBranch_Patch
     {
