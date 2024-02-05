@@ -317,7 +317,8 @@ namespace Mapify.Editor
                 DisplayName = mapInfo.name,
                 ManagerVersion = "0.27.3",
                 Requirements = new[] { "Mapify" },
-                HomePage = mapInfo.homePage
+                HomePage = mapInfo.homePage,
+                Repository = mapInfo.repository
             };
             File.WriteAllText(filePath, JsonUtility.ToJson(modInfo));
         }
