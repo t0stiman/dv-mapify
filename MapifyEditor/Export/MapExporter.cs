@@ -107,7 +107,7 @@ namespace Mapify.Editor
         private static bool Export(string rootExportDir, bool uncompressed)
         {
             MapInfo mapInfo = EditorAssets.FindAsset<MapInfo>();
-            mapInfo.mapifyVersion = File.ReadLines("Assets/Mapify/version.txt").First().Trim();
+            mapInfo.mapifyVersion = File.ReadLines(Names.MAPIFY_VERSION_FILE).First().Trim();
 
             string mapExportDir = Path.Combine(rootExportDir, mapInfo.name);
 
@@ -303,8 +303,6 @@ namespace Mapify.Editor
                 }
             }
         }
-
-
 
         private static void CreateMapInfo(string filePath, MapInfo mapInfo)
         {

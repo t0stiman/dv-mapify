@@ -206,12 +206,12 @@ namespace Mapify.Editor.Tools
                     SelectTrack(t);
                     Undo.RegisterCreatedObjectUndo(t.gameObject, "Created Curve");
                     break;
-                case TrackPiece.Switch:
-                    go = TrackToolsCreator.CreateSwitch(LeftSwitch, RightSwitch, _currentParent, position, handle,
-                        _orientation, _connectingPoint).gameObject;
-                    SelectGameObject(go);
-                    Undo.RegisterCreatedObjectUndo(go, "Created Switch");
-                    break;
+                // case TrackPiece.Switch:
+                //     go = TrackToolsCreator.CreateSwitch(LeftSwitch, RightSwitch, _currentParent, position, handle,
+                //         _orientation, _connectingPoint).gameObject;
+                //     SelectGameObject(go);
+                //     Undo.RegisterCreatedObjectUndo(go, "Created Switch");
+                //     break;
                 case TrackPiece.Yard:
                     go = TrackToolsCreator.CreateYard(LeftSwitch, RightSwitch, _currentParent, position, handle,
                         _orientation, _trackDistance, _yardOptions, out _)[0].gameObject;
@@ -230,9 +230,9 @@ namespace Mapify.Editor.Tools
                     }
                     Undo.CollapseUndoOperations(group);
                     break;
-                case TrackPiece.Special:
-                    CreateSpecial(position, handle);
-                    break;
+                // case TrackPiece.Special:
+                //     CreateSpecial(position, handle);
+                //     break;
                 default:
                     throw new System.Exception("Invalid mode!");
             }
@@ -437,12 +437,12 @@ namespace Mapify.Editor.Tools
                         return false;
                     }
 
-                    //todo comment this?
-                    if (!CheckGrade(isBehind ? CurrentTrack.GetGradeAtStart() : CurrentTrack.GetGradeAtEnd()))
-                    {
-                        tooltip = "Grade too steep for creation";
-                        return false;
-                    }
+                    //BUG this is broken
+                    // if (!CheckGrade(isBehind ? CurrentTrack.GetGradeAtStart() : CurrentTrack.GetGradeAtEnd()))
+                    // {
+                    //     tooltip = "Grade too steep for creation";
+                    //     return false;
+                    // }
 
                     if (CurrentTrack.IsSwitch && (_currentPiece == TrackPiece.Switch || _currentPiece == TrackPiece.Yard))
                     {
@@ -465,12 +465,12 @@ namespace Mapify.Editor.Tools
                         return false;
                     }
 
-                    //todo comment this?
-                    if (!CheckGrade(isBehind ? CurrentPoint.GetGradeBackwards() : CurrentPoint.GetGradeForwards()))
-                    {
-                        tooltip = "Grade too steep for creation";
-                        return false;
-                    }
+                    //BUG this is broken
+                    // if (!CheckGrade(isBehind ? CurrentPoint.GetGradeBackwards() : CurrentPoint.GetGradeForwards()))
+                    // {
+                    //     tooltip = "Grade too steep for creation";
+                    //     return false;
+                    // }
 
                     if (_currentPiece == TrackPiece.Special && _currentSpecial == SpecialTrackPiece.Connect2)
                     {

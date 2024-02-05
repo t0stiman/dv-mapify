@@ -12,6 +12,7 @@ namespace Mapify.Map
 {
     public static class Maps
     {
+        //the base DV map
         public static readonly BasicMapInfo DEFAULT_MAP_INFO = new BasicMapInfo(Names.DEFAULT_MAP_NAME, $"{BuildInfo.BUILD_VERSION_MAJOR}", null);
 
         public static Action OnMapsUpdated;
