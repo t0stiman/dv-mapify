@@ -1,6 +1,6 @@
 {
   "Id": "Mapify",
-  "Version": "2024.02.05",
+  "Version": "2024.02.12",
   "DisplayName": "Mapify",
   "Author": "Insprill",
   "EntryMethod": "Mapify.Mapify.Load",
