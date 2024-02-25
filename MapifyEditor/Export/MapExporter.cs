@@ -79,6 +79,13 @@ namespace Mapify.Editor
                 }
 
                 ZipFile.CreateFromDirectory(mapExportFolder, exportFilePath, CompressionLevel.Fastest, true);
+
+                if (File.Exists(exportFilePath))
+                {
+                    EditorFileUtil.MoveToTrash(exportFilePath);
+                }
+
+                ZipFile.CreateFromDirectory(mapExportFolder, exportFilePath, CompressionLevel.Fastest, true);
                 EditorUtility.ClearProgressBar();
                 if (EditorUtility.DisplayDialog("Mapify", "Export complete!", "Open Folder", "Ok"))
                     EditorUtility.RevealInFinder(exportFilePath);
