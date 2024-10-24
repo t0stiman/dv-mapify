@@ -48,6 +48,8 @@ namespace Mapify.Editor
         [Header("Editor Visualization")]
         [SerializeField]
         private bool showLoadingGauge;
+        [SerializeField]
+        private bool showTrackOutline = true;
 #endif
 
         public bool isInSnapped { get; private set; }
@@ -116,13 +118,27 @@ namespace Mapify.Editor
         private void OnDrawGizmos()
         {
             if (showLoadingGauge)
+            {
                 DrawLoadingGauge();
+            }
+            if (showTrackOutline)
+            {
+                DrawTrackOutline();
+            }
+
             if (Curve[0].transform.DistToSceneCamera() >= SNAP_UPDATE_RANGE_SQR && Curve.Last().transform.DistToSceneCamera() >= SNAP_UPDATE_RANGE_SQR)
+            {
                 return;
+            }
             if (!isInSnapped)
+            {
                 DrawDisconnectedIcon(Curve[0].position);
+            }
             if (!isOutSnapped)
+            {
                 DrawDisconnectedIcon(Curve.Last().position);
+            }
+
             Snap();
         }
 
@@ -168,6 +184,31 @@ namespace Mapify.Editor
                     Quaternion rotation = Quaternion.LookRotation(direction.normalized, Vector3.up);
                     Gizmos.matrix = Matrix4x4.TRS(center, rotation, Vector3.one);
                     Gizmos.DrawWireCube(Vector3.zero, new Vector3(mapInfo.loadingGaugeWidth, mapInfo.loadingGaugeHeight, Mathf.Abs(direction.magnitude)));
+                    from = to;
+                }
+            }
+        }
+
+        private void DrawTrackOutline()
+        {
+            Gizmos.color = Color.magenta;
+
+            for (var i = 0; i < Curve.pointCount - 1; ++i)
+            {
+                var startPoint = Curve[i];
+                var endPoint = Curve[i + 1];
+
+                // Gizmos.DrawLine(startPoint.position, endPoint.position);
+
+
+                // var resolution = BezierCurve.GetNumPoints(startPoint, endPoint, Curve.resolution);
+                var vector3Array = BezierCurve.Interpolate(startPoint.position, startPoint.globalHandle2, endPoint.position, endPoint.globalHandle1, 5);
+                var from = vector3Array[0];
+
+                for (var index = 1; index < vector3Array.Length; ++index)
+                {
+                    var to = vector3Array[index];
+                    Gizmos.DrawLine(from + Vector3.up*2, to+ Vector3.up*2);
                     from = to;
                 }
             }
