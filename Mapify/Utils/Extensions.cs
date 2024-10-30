@@ -6,6 +6,7 @@ using CommandTerminal;
 using DV.JObjectExtstensions;
 using DV.PointSet;
 using DV.ThingTypes;
+using DV.UI.Inventory;
 using HarmonyLib;
 using Mapify.Editor;
 using Mapify.Editor.Utils;
@@ -216,6 +217,12 @@ namespace Mapify.Utils
                 saveGameData.RemoveData(SAVE_KEY_NAME);
             else
                 saveGameData.SetJObject(SAVE_KEY_NAME, JObject.FromObject(basicMapInfo));
+        }
+
+        public static void Reset(this InventorySectionController deez)
+        {
+            deez.inventoryModel.Clear();
+            GameObject.DestroyImmediate(deez.observer);
         }
 
         #endregion

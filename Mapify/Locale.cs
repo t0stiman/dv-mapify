@@ -11,8 +11,11 @@ namespace Mapify
     {
         private const string DEFAULT_LANGUAGE = "English";
         private const string MISSING_TRANSLATION = "[ MISSING TRANSLATION ]";
+
         public const string PREFIX = "mapify/";
         public const string STATION_PREFIX = PREFIX + "station/";
+        public const string DV_ASSET_PREFIX = PREFIX + "dv_asset/";
+
         public const string SESSION__MAP_SELECTOR = PREFIX + "session/map_selector";
         public const string LAUNCHER__SESSION_MAP = PREFIX + "launcher/session_map";
         public const string LAUNCHER__SESSION_MAP_NOT_INSTALLED = PREFIX + "launcher/session_map_not_installed";
@@ -36,6 +39,12 @@ namespace Mapify
         {
             if (!initializeAttempted)
                 throw new InvalidOperationException("Not initialized");
+
+            //Don't translate DV assets
+            if (key.StartsWith(DV_ASSET_PREFIX))
+            {
+                return key.Replace(DV_ASSET_PREFIX, "");
+            }
 
             string locale = LocalizationManager.CurrentLanguage;
 
