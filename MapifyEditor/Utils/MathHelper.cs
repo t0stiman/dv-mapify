@@ -1,3 +1,4 @@
+using Mapify.Editor.Tools.OSM.Data;
 using System;
 using UnityEngine;
 
@@ -16,10 +17,24 @@ namespace Mapify.Editor.Utils
         /// <summary>The plane <c>Y=0</c>.</summary>
         public static Plane YPlane => _yPlane;
 
-        /// <summary>Clamps a float to the range [-180, 180].</summary>
+        /// <summary>Clamps a <see cref="float"/> to the range [-180, 180].</summary>
         public static float ClampAngle(float value)
         {
             return Mathf.Clamp(value, -180.0f, 180.0f);
+        }
+
+        /// <summary>Clamps a <see cref="double"/> to a range.</summary>
+        public static double ClampD(double value, double min, double max)
+        {
+            if (value < min)
+            {
+                value = min;
+            }
+            if (value > max)
+            {
+                value = max;
+            }
+            return value;
         }
 
         /// <summary>Then handle length for a cubic bézier curve that approximates an arc.</summary>
@@ -207,6 +222,48 @@ namespace Mapify.Editor.Utils
             results[1][0] = results[0][3];
 
             return results;
+        }
+        public static Vector3 Average(Vector3 a, Vector3 b)
+        {
+            return (a + b) * 0.5f;
+        }
+
+        public static Vector3 AverageDirection(Vector3 a, Vector3 b)
+        {
+            return Average(a.normalized, b.normalized).normalized;
+        }
+
+        // If the length is already known, avoid 2 Sqrt().
+        public static Vector3 AverageDirection(Vector3 a, Vector3 b, float aLength, float bLength)
+        {
+            return Average(a / aLength, b / bLength).normalized;
+        }
+
+        public static Vector3 GetBasicSmoothHandle(Vector3 prev, Vector3 here, Vector3 next)
+        {
+            Vector3 v1 = here - prev;
+            Vector3 v2 = next - here;
+
+            // Use the shortest of the 2 sides as the length, to prevent overshooting on the
+            // shorter side.
+            float l1 = v1.magnitude;
+            float l2 = v2.magnitude;
+            return AverageDirection(v1, v2, l1, l2) * Mathf.Min(l1, l2) * OneThird;
+        }
+
+        // Unlike the previous, which makes the handle the same size on both sides, this one
+        // resizes each side independently.
+        public static (TrackNodeHandle Next, TrackNodeHandle Prev) GetSizedSmoothHandles(Vector3 prev, Vector3 here, Vector3 next)
+        {
+            Vector3 v1 = here - prev;
+            Vector3 v2 = next - here;
+
+            float l1 = v1.magnitude;
+            float l2 = v2.magnitude;
+
+            Vector3 avg = Average(v1, v2).normalized;
+
+            return (new TrackNodeHandle(-avg, l1 * OneThird), new TrackNodeHandle(avg, l2 * OneThird));
         }
     }
 }
