@@ -14,7 +14,6 @@ namespace Mapify.Editor.Tools.OSM.Editor
         private SerializedProperty _file;
         private SerializedProperty _latitude;
         private SerializedProperty _longitude;
-        private SerializedProperty _centre;
         private SerializedProperty _filterNodes;
         private SerializedProperty _alwaysDraw;
         private SerializedProperty _drawAll;
@@ -28,7 +27,6 @@ namespace Mapify.Editor.Tools.OSM.Editor
             _file = serializedObject.FindProperty("OsmFile");
             _latitude = serializedObject.FindProperty("Latitude");
             _longitude = serializedObject.FindProperty("Longitude");
-            _centre = serializedObject.FindProperty("OriginOffset");
             _filterNodes = serializedObject.FindProperty("FilterNodesNotInWays");
             _alwaysDraw = serializedObject.FindProperty("AlwaysDraw");
             _drawAll = serializedObject.FindProperty("DrawEveryNode");
@@ -49,12 +47,9 @@ namespace Mapify.Editor.Tools.OSM.Editor
             _longitude.doubleValue = MathHelper.ClampD(EditorGUILayout.DoubleField(
                 new GUIContent("Longitude", "Longitude at the centre"),
                 _longitude.doubleValue), -180.0, 180.0);
-            _centre.vector3Value = EditorGUILayout.Vector3Field(
-                new GUIContent("Origin offset", "Offsets all points from the origin when extracting"),
-                _centre.vector3Value);
 
             EditorHelper.Separator();
-            
+
             // Filter selector
             _dataExtractor.CurrentFilter = (DataExtractor.Filter)EditorGUILayout.EnumPopup(
                 new GUIContent("Data filter",

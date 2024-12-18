@@ -39,8 +39,6 @@ namespace Mapify.Editor.Tools.OSM.Data
         public double Latitude = 51.115833;
         [SerializeField]
         public double Longitude = 6.218056;
-        [SerializeField]
-        public Vector3 OriginOffset = Vector3.zero;
 
         // Extra component workings.
         [SerializeField]
@@ -209,7 +207,7 @@ namespace Mapify.Editor.Tools.OSM.Data
                 //});
 
                 NodeData = complete.Where(x => x.Type == OsmGeoType.Node).ToDictionary(
-                    x => x.Id, x => new NodeVector3((Node)x, Latitude, Longitude, OriginOffset));
+                    x => x.Id, x => new NodeVector3((Node)x, Latitude, Longitude, transform.position));
 
                 // Create ways.
                 var ways = complete.Where(x => x.Type == OsmGeoType.Way).Select(x => (CompleteWay)x);
