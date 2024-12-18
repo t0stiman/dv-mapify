@@ -9,7 +9,7 @@ namespace Mapify.Editor.Tools
 {
     public partial class TrackToolsWindow : EditorWindow
     {
-        [MenuItem("Mapify/Tools/Track")]
+        [MenuItem("Mapify/Track Tools")]
         public static void ShowWindow()
         {
             var window = GetWindow<TrackToolsWindow>();

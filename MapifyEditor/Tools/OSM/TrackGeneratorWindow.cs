@@ -5,14 +5,13 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
 
 #if UNITY_EDITOR
 namespace Mapify.Editor.Tools.OSM
 {
     public class TrackGeneratorWindow : EditorWindow
     {
-        [MenuItem("Mapify/Tools/OSM/Track Generator")]
+        [MenuItem("Mapify/OSM Track Generator")]
         public static void ShowWindow()
         {
             var window = GetWindow<TrackGeneratorWindow>();
