@@ -10,6 +10,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 #if UNITY_EDITOR
 namespace Mapify.Editor.Tools.OSM.Data
@@ -45,6 +46,8 @@ namespace Mapify.Editor.Tools.OSM.Data
         public bool FilterNodesNotInWays = true;
         [SerializeField]
         public bool AlwaysDraw = false;
+        [SerializeField]
+        public bool DrawTrackStartAndEnd = true;
         [SerializeField]
         public bool DrawEveryNode = false;
         [SerializeField]
@@ -110,8 +113,11 @@ namespace Mapify.Editor.Tools.OSM.Data
                 Handles.color = Gizmos.color;
 
                 // Start and end of way.
-                Handles.DrawSolidDisc(NodeData[way.Nodes[0]].Position, Vector3.up, 4f * size);
-                Handles.DrawWireDisc(NodeData[way.Nodes[way.Nodes.Length - 1]].Position, Vector3.up, 5f * size);
+                if (DrawTrackStartAndEnd)
+                {
+                    Handles.DrawSolidDisc(NodeData[way.Nodes[0]].Position, Vector3.up, 4f * size);
+                    Handles.DrawWireDisc(NodeData[way.Nodes[way.Nodes.Length - 1]].Position, Vector3.up, 5f * size);
+                }
 
                 here = NodeData[way.Nodes[0]];
 
