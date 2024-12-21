@@ -27,10 +27,11 @@ namespace Mapify.Editor.BezierCurves
         {
             curve = (BezierCurve)target;
 
-            resolutionProp = serializedObject.FindProperty("resolution");
+            resolutionProp = serializedObject.FindProperty(nameof(BezierCurve.resolution));
+            // these two are private so we can't use nameof
             closeProp = serializedObject.FindProperty("_close");
             pointsProp = serializedObject.FindProperty("points");
-            colorProp = serializedObject.FindProperty("drawColor");
+            colorProp = serializedObject.FindProperty(nameof(BezierCurve.drawColor));
         }
 
         public override void OnInspectorGUI()

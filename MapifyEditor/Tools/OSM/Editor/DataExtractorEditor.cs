@@ -16,6 +16,7 @@ namespace Mapify.Editor.Tools.OSM.Editor
         private SerializedProperty _longitude;
         private SerializedProperty _filterNodes;
         private SerializedProperty _alwaysDraw;
+        private SerializedProperty _drawTrackStartAndEnd;
         private SerializedProperty _drawAll;
 
         private bool _filterFoldout = false;
@@ -24,12 +25,13 @@ namespace Mapify.Editor.Tools.OSM.Editor
         {
             _dataExtractor = (DataExtractor)target;
 
-            _file = serializedObject.FindProperty("OsmFile");
-            _latitude = serializedObject.FindProperty("Latitude");
-            _longitude = serializedObject.FindProperty("Longitude");
-            _filterNodes = serializedObject.FindProperty("FilterNodesNotInWays");
-            _alwaysDraw = serializedObject.FindProperty("AlwaysDraw");
-            _drawAll = serializedObject.FindProperty("DrawEveryNode");
+            _file = serializedObject.FindProperty(nameof(DataExtractor.OsmFile));
+            _latitude = serializedObject.FindProperty(nameof(DataExtractor.Latitude));
+            _longitude = serializedObject.FindProperty(nameof(DataExtractor.Longitude));
+            _filterNodes = serializedObject.FindProperty(nameof(DataExtractor.FilterNodesNotInWays));
+            _alwaysDraw = serializedObject.FindProperty(nameof(DataExtractor.AlwaysDraw));
+            _drawTrackStartAndEnd = serializedObject.FindProperty(nameof(DataExtractor.DrawTrackStartAndEnd));
+            _drawAll = serializedObject.FindProperty(nameof(DataExtractor.DrawEveryNode));
         }
 
         public override void OnInspectorGUI()
@@ -109,6 +111,9 @@ namespace Mapify.Editor.Tools.OSM.Editor
             _alwaysDraw.boolValue = EditorGUILayout.Toggle(
                 new GUIContent("Always draw", "If false, will only draw when the GameObject is selected."),
                 _alwaysDraw.boolValue);
+            _drawTrackStartAndEnd.boolValue = EditorGUILayout.Toggle(
+                new GUIContent("Draw track start and end", "Draw a closed circle at the start of a track and an open one at the end."),
+                _drawTrackStartAndEnd.boolValue);
             _drawAll.boolValue = EditorGUILayout.Toggle(
                 new GUIContent("Draw every node", "If true, will draw every node, if false only the ends and special features."),
                 _drawAll.boolValue);
