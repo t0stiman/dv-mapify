@@ -13,7 +13,7 @@ namespace Mapify.Editor
             return gameObject.GetComponentsInChildren<Track>();
         }
 
-        // TODO why is this unused
+        // TODO make snapping work?
 //         protected void Snap()
 //         {
 // #if UNITY_EDITOR
