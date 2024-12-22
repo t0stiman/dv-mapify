@@ -21,20 +21,11 @@ namespace Mapify.Editor.Tools.OSM.Data
             Over4       = 5
         }
 
-        // For switch nodes, whether to use the left or right switch prefabs.
-        public enum SwitchOrientation
-        {
-            Undefined,
-            Left,
-            Right
-        }
-
         public long Id;
         public string Name;
         public Vector3 Position;
         public NodeTag[] Tags;
         public List<TrackNode> Connected;
-        public SwitchOrientation Orientation;
 
         private List<TrackNodeHandle> _handles;
 
@@ -45,7 +36,6 @@ namespace Mapify.Editor.Tools.OSM.Data
             Position = position;
             Tags = tags;
             Connected = new List<TrackNode>();
-            Orientation = SwitchOrientation.Undefined;
 
             _handles = new List<TrackNodeHandle>();
         }
@@ -147,12 +137,15 @@ namespace Mapify.Editor.Tools.OSM.Data
                     _handles.Add(new TrackNodeHandle((target - Position).normalized, dif.magnitude * MathHelper.OneThird));
                     break;
                 case NodeType.Connected:
+                {
                     // Smooth.
                     var handles = MathHelper.GetSizedSmoothHandles(Connected[0].Position, Position, Connected[1].Position);
                     _handles.Add(handles.Next);
                     _handles.Add(handles.Prev);
                     break;
+                }
                 case NodeType.Switch:
+                {
                     // These handles are a special case, as such they are just the directions to the
                     // connected points instead of proper handles. The actual handles are calculated
                     // using these and the switch instance's positions.
@@ -179,9 +172,9 @@ namespace Mapify.Editor.Tools.OSM.Data
 
                     // If the diverging exit is closer to the join point instead of the through exit,
                     // swap them around.
-                    // Good: 2 1  1 2   Bad:  1  1  
-                    //        \|  |/          |  |  
-                    //         |  |          /|  |\ 
+                    // Good: 2 1  1 2   Bad:  1  1
+                    //        \|  |/          |  |
+                    //         |  |          /|  |\
                     //         0  0         2 0  0 2
                     if (Vector3.Dot(_handles[2].Direction, _handles[0].Direction) > 0)
                     {
@@ -190,13 +183,20 @@ namespace Mapify.Editor.Tools.OSM.Data
 
                     // Cross through direction with the exit direction to see if it's to the left or right.
                     Vector3 direction = MathHelper.AverageDirection(-_handles[0].Direction, _handles[1].Direction);
-                    Vector3 cross = Vector3.Cross(direction, _handles[2].Direction);
-                    Orientation = cross.y < 0 ? SwitchOrientation.Left : SwitchOrientation.Right;
 
                     // Set the first handle to match the switch's final orientation, and use it when instancing.
-                    // Switches need to be flat so also do that.
-                    _handles[0].Direction = FlattenNoResize(direction).normalized;
+                    // _handles[0].Direction = direction.normalized;
+
+                    // Smooth
+                    var handles01 = MathHelper.GetSizedSmoothHandles(Connected[0].Position, Position, Connected[1].Position);
+                    _handles[0] = handles01.Next; //TODO reversed?
+                    _handles[1] = handles01.Prev;
+
+                    var handles02 = MathHelper.GetSizedSmoothHandles(Connected[0].Position, Position, Connected[2].Position);
+                    _handles[2] = handles02.Prev; //TODO reversed?
+
                     break;
+                }
                 case NodeType.Cross:
                     Debug.LogWarning($"Node {Id}:{Position} is a cross, not implemented yet.");
                     _handles.Add(new TrackNodeHandle((Connected[0].Position - Position).normalized, 1));
@@ -207,9 +207,9 @@ namespace Mapify.Editor.Tools.OSM.Data
                 case NodeType.Over4:
                     Debug.LogWarning($"Node {Id}:{Position} has more than 4 connections.");
 
-                    for (int i = 0; i < Connected.Count; i++)
+                    foreach (var trackNode in Connected)
                     {
-                        _handles.Add(new TrackNodeHandle((Connected[i].Position - Position).normalized, 1));
+                        _handles.Add(new TrackNodeHandle((trackNode.Position - Position).normalized, 1));
                     }
                     break;
                 default:
@@ -229,12 +229,6 @@ namespace Mapify.Editor.Tools.OSM.Data
             _handles.Add(new TrackNodeHandle((Connected[0].Position - Position).normalized, 1));
             _handles.Add(new TrackNodeHandle((Connected[1].Position - Position).normalized, 1));
             _handles.Add(new TrackNodeHandle((Connected[2].Position - Position).normalized, 1));
-        }
-
-        public static Vector3 FlattenNoResize(Vector3 handle)
-        {
-            handle.y = 0;
-            return handle;
         }
 
         public static Vector3 Flatten(Vector3 handle)

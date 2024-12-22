@@ -438,14 +438,12 @@ namespace Mapify.Editor.Tools
         /// </summary>
         /// <param name="track"></param>
         /// <param name="buffer"></param>
-        /// <param name="switchLeft"></param>
-        /// <param name="switchRight"></param>
         /// <param name="turntable"></param>
         /// <remarks>
         /// This will only look in the default directory (Mapify folder in the Assets root).
         /// If a parameter is not null, it will not be replaced.
         /// </remarks>
-        public static void TryGetDefaultPrefabs(ref Track track, ref BufferStop buffer, ref Switch switchLeft, ref Switch switchRight, ref Turntable turntable)
+        public static void TryGetDefaultPrefabs(ref Track track, ref BufferStop buffer, ref Turntable turntable)
         {
             string[] guids;
 
@@ -466,26 +464,6 @@ namespace Mapify.Editor.Tools
                 if (guids.Length > 0)
                 {
                     buffer = AssetDatabase.LoadAssetAtPath<BufferStop>(AssetDatabase.GUIDToAssetPath(guids[0]));
-                }
-            }
-
-            if (switchLeft == null)
-            {
-                guids = AssetDatabase.FindAssets("Switch Left", new[] { "Assets/Mapify/Prefabs/Trackage" });
-
-                if (guids.Length > 0)
-                {
-                    switchLeft = AssetDatabase.LoadAssetAtPath<Switch>(AssetDatabase.GUIDToAssetPath(guids[0]));
-                }
-            }
-
-            if (switchRight == null)
-            {
-                guids = AssetDatabase.FindAssets("Switch Right", new[] { "Assets/Mapify/Prefabs/Trackage" });
-
-                if (guids.Length > 0)
-                {
-                    switchRight = AssetDatabase.LoadAssetAtPath<Switch>(AssetDatabase.GUIDToAssetPath(guids[0]));
                 }
             }
 

@@ -370,7 +370,7 @@ namespace Mapify.Editor.Tools
         public void TryGetDefaultAssets()
         {
             Track t = null;
-            TrackToolsHelper.TryGetDefaultPrefabs(ref t, ref BufferPrefab, ref LeftSwitch, ref RightSwitch, ref TurntablePrefab);
+            TrackToolsHelper.TryGetDefaultPrefabs(ref t, ref BufferPrefab, ref TurntablePrefab);
         }
 
         public void ResetCreationSettings(bool all)

@@ -27,8 +27,6 @@ namespace Mapify.Editor.Tools.OSM
         // Mapify prefabs
         public Track TrackPrefab;
         public BufferStop BufferPrefab;
-        public Switch LeftSwitch;
-        public Switch RightSwitch;
         public Turntable TurntablePrefab;
 
         private bool _showPrefabs = false;
@@ -37,11 +35,12 @@ namespace Mapify.Editor.Tools.OSM
         // Nodes created from the extracted data.
         private Dictionary<long, TrackNode> _nodes = new Dictionary<long, TrackNode>();
         // Switches instantiated by the script.
-        private Dictionary<long, Switch> _switchInstances = new Dictionary<long, Switch>();
+        // private Dictionary<long, Switch> _switchInstances = new Dictionary<long, Switch>();
+        //TODO do we need this?
 
         public bool TestMode = false;
 
-        private void Awake()
+        private void OnEnable()
         {
             TryGetDefaultAssets();
         }
@@ -143,12 +142,6 @@ namespace Mapify.Editor.Tools.OSM
                 BufferPrefab = EditorHelper.ObjectField(
                     new GUIContent("Buffer prefab"),
                     BufferPrefab, true);
-                LeftSwitch = EditorHelper.ObjectField(
-                    new GUIContent("Left switch prefab"),
-                    LeftSwitch, true);
-                RightSwitch = EditorHelper.ObjectField(
-                    new GUIContent("Right switch prefab"),
-                    RightSwitch, true);
                 TurntablePrefab = EditorHelper.ObjectField(
                     new GUIContent("Turntable prefab"),
                     TurntablePrefab, true);
@@ -168,7 +161,7 @@ namespace Mapify.Editor.Tools.OSM
                 false, TryGetDefaultAssets);
             menu.AddItem(new GUIContent("Clear prefabs",
                 "Sets all prefabs to null"),
-                false, () => { TrackPrefab = null; BufferPrefab = null; LeftSwitch = null; RightSwitch = null; TurntablePrefab = null; });
+                false, () => { TrackPrefab = null; BufferPrefab = null; TurntablePrefab = null; });
             menu.DropDown(rect);
         }
 
@@ -180,14 +173,14 @@ namespace Mapify.Editor.Tools.OSM
 
         public void TryGetDefaultAssets()
         {
-            TrackToolsHelper.TryGetDefaultPrefabs(ref TrackPrefab, ref BufferPrefab, ref LeftSwitch, ref RightSwitch, ref TurntablePrefab);
+            TrackToolsHelper.TryGetDefaultPrefabs(ref TrackPrefab, ref BufferPrefab, ref TurntablePrefab);
         }
 
         public void ClearExistingTracks()
         {
             // References to gameobjects, clear before children are deleted.
             _ways.Clear();
-            _switchInstances.Clear();
+            // _switchInstances.Clear();
 
             // Clear children.
             var children = new List<GameObject>();
@@ -335,7 +328,7 @@ namespace Mapify.Editor.Tools.OSM
             {
                 id = way.Nodes[0];
                 length = way.Nodes.Length;
-                segment = new List<long>() { id };
+                segment = new List<long> { id };
                 segments = new List<long[]>();
 
                 for (int i = 1; i < length; i++)
@@ -346,10 +339,7 @@ namespace Mapify.Editor.Tools.OSM
                     switch (_nodes[id].GetNodeType())
                     {
                         // Break the segment.
-                        // Currently don't break at crosses.
                         case TrackNode.NodeType.Switch:
-                        //case TrackNode.NodeType.Cross:
-                        case TrackNode.NodeType.Over4:
                             segments.Add(segment.ToArray());
                             segment = new List<long>() { id };
                             continue;
@@ -438,10 +428,10 @@ namespace Mapify.Editor.Tools.OSM
             TrackNode here = _nodes[nodeIds[1]];
             BezierPoint point;
 
-            track = Instantiate(TrackPrefab);
+            //TODO use track tools instead of prefab?
+            track = Instantiate(TrackPrefab, parent);
 
             // Place the track segment in the correct spot.
-            track.transform.parent = parent;
             track.name = $"[{here.Name}] TO [{_nodes[nodeIds.Last()].Name}]";
             track.transform.position = here.Position;
 
@@ -490,6 +480,7 @@ namespace Mapify.Editor.Tools.OSM
                 }
             }
 
+            /*
             Switch s;
             BezierPoint sp;
 
@@ -550,36 +541,37 @@ namespace Mapify.Editor.Tools.OSM
                     curve[f].globalHandle1 = sp.globalHandle2;
                 }
             }
+            //*/
         }
-
-        private Switch CreateOrGetSwitch(TrackNode node)
-        {
-            Switch s;
-
-            // Get or create a new one switch instance.
-            if (!_switchInstances.TryGetValue(node.Id, out s))
-            {
-                // Use the correct one...
-                if (node.Orientation == TrackNode.SwitchOrientation.Left)
-                {
-                    s = Instantiate(LeftSwitch);
-                }
-                else
-                {
-                    s = Instantiate(RightSwitch);
-                }
-
-                _switchInstances.Add(node.Id, s);
-            }
-
-            // To position a switch, it needs to be rotated.
-            s.transform.parent = DataExtractor.transform;
-            s.transform.position = node.Position + Vector3.up * TrackHeight;
-            s.transform.rotation = Quaternion.LookRotation(node.GetHandle(0));
-            s.gameObject.name = $"SWITCH [{node.Name}]";
-
-            return s;
-        }
+        
+        // private Switch CreateOrGetSwitch(TrackNode node)
+        // {
+        //     Switch s;
+        //
+        //     // Get or create a new one switch instance.
+        //     if (!_switchInstances.TryGetValue(node.Id, out s))
+        //     {
+        //         // Use the correct one...
+        //         if (node.Orientation == TrackNode.SwitchOrientation.Left)
+        //         {
+        //             s = Instantiate(LeftSwitch);
+        //         }
+        //         else
+        //         {
+        //             s = Instantiate(RightSwitch);
+        //         }
+        //
+        //         _switchInstances.Add(node.Id, s);
+        //     }
+        //
+        //     // To position a switch, it needs to be rotated.
+        //     s.transform.parent = DataExtractor.transform;
+        //     s.transform.position = node.Position + Vector3.up * TrackHeight;
+        //     s.transform.rotation = Quaternion.LookRotation(node.GetHandle(0));
+        //     s.gameObject.name = $"SWITCH [{node.Name}]";
+        //
+        //     return s;
+        // }
 
         private void AssignTrackProperties(TrackWay way, ref Track track)
         {
