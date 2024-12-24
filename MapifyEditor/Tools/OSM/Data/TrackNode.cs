@@ -62,6 +62,11 @@ namespace Mapify.Editor.Tools.OSM.Data
             }
         }
 
+        public bool IsSwitch()
+        {
+            return GetNodeType() == NodeType.Switch;
+        }
+
         public Vector3 GetHandle(int index)
         {
             if (index < 0)
@@ -98,7 +103,12 @@ namespace Mapify.Editor.Tools.OSM.Data
         /// </summary>
         public bool IsBeforeTrackNode(TrackNode node)
         {
-            return GetIndex(node) == 0;
+            var index = GetIndex(node);
+            if (index == -1)
+            {
+                throw new ArgumentException($"Node {node.Id} is not connected to this node {Id} at all!");
+            }
+            return index == 0;
         }
 
         /// <summary>

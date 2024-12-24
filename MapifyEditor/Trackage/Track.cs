@@ -171,9 +171,9 @@ namespace Mapify.Editor
         {
             BezierPoint[] points = FindObjectsOfType<BezierCurve>().SelectMany(curve => new[] { curve[0], curve.Last() }).ToArray();
             GameObject[] selectedObjects = Selection.gameObjects;
-            bool isSelected = !IsSwitch && !IsTurntable && (selectedObjects.Contains(gameObject) || selectedObjects.Contains(Curve[0].gameObject) || selectedObjects.Contains(Curve.Last().gameObject));
-            TrySnap(points, isSelected, true);
-            TrySnap(points, isSelected, false);
+            bool shouldMove = !IsSwitch && !IsTurntable && !(selectedObjects.Contains(gameObject) || selectedObjects.Contains(Curve[0].gameObject) || selectedObjects.Contains(Curve.Last().gameObject));
+            TrySnap(points, shouldMove, true);
+            TrySnap(points, shouldMove, false);
         }
 
         private static void DrawDisconnectedIcon(Vector3 position)
@@ -214,9 +214,9 @@ namespace Mapify.Editor
             }
         }
 
-        private void TrySnap(IEnumerable<BezierPoint> snapPoints, bool move, bool first)
+        private void TrySnap(IEnumerable<BezierPoint> snapPoints, bool move, bool firstPoint)
         {
-            var mySnapPoint = first ? Curve[0] : Curve.Last();
+            var mySnapPoint = firstPoint ? Curve[0] : Curve.Last();
             var pos = mySnapPoint.transform.position;
             var closestPosition = Vector3.zero;
             var closestDistance = float.MaxValue;
@@ -235,7 +235,7 @@ namespace Mapify.Editor
                     closestDistance = Vector3.Distance(pos, closestPosition);
 
                     // no need to remember snapped turntables because they don't have the "Disconnected" indicator
-                    if (first)
+                    if (firstPoint)
                     {
                         snappedTrackBefore = null;
                     }
@@ -270,7 +270,7 @@ namespace Mapify.Editor
                     otherTrack.Snapped(otherSnapPoint);
 
                     //remember what track we snapped to
-                    if (first)
+                    if (firstPoint)
                     {
                         snappedTrackBefore = new SnappedTrack(otherTrack, otherSnapPoint);
                     }
@@ -284,7 +284,7 @@ namespace Mapify.Editor
             // No snap target found
             if (closestDistance >= float.MaxValue)
             {
-                if (first)
+                if (firstPoint)
                 {
                     snappedTrackBefore?.UnSnapped();
                     snappedTrackBefore = null;
@@ -301,10 +301,52 @@ namespace Mapify.Editor
                 return;
             }
 
-            if (first) isInSnapped = true;
+            if (firstPoint) isInSnapped = true;
             else isOutSnapped = true;
             if (move) mySnapPoint.transform.position = closestPosition;
         }
+
+        /// <summary>
+        /// Returns true if this track can only snap to a switch.
+        /// </summary>
+        public bool CanOnlySnapToSwitch(bool firstPoint)
+        {
+            var snapPoints = FindObjectsOfType<BezierCurve>().SelectMany(curve => new[] { curve[0], curve.Last() }).ToArray();
+
+            var mySnapPoint = firstPoint ? Curve[0] : Curve.Last();
+            var pos = mySnapPoint.transform.position;
+            var closestDistance = float.MaxValue;
+
+            var switchInRange = false;
+
+            foreach (BezierPoint otherSnapPoint in snapPoints)
+            {
+                //don't snap to itself
+                if (otherSnapPoint.Curve() == mySnapPoint.Curve()) continue;
+
+                var distance = Mathf.Abs(Vector3.Distance(otherSnapPoint.transform.position, pos));
+
+                // too far away
+                if (distance > SNAP_RANGE || distance >= closestDistance) continue;
+
+                var otherTrack = otherSnapPoint.GetComponentInParent<Track>();
+
+                if (otherTrack.IsSwitch)
+                {
+                    switchInRange = true;
+                }
+                else
+                {
+                    //found a snappable point that isn't a switch
+                    return false;
+                }
+
+                closestDistance = distance;
+            }
+
+            return switchInRange;
+        }
+
 
 #endif
         internal void Snapped(BezierPoint point)
