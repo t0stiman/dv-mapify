@@ -22,9 +22,10 @@ namespace Mapify.Editor.Tools
 
         // Editing mode.
         private readonly GUIContent[] _editingModeContents = {
-            new GUIContent("Merge", "Merges multiple tracks into a one"),
-            new GUIContent("Terrain match", "Matches tracks to terrain and other objects"),
-            new GUIContent("Insert point", "Inserts a point between 2 others")
+            new("Merge", "Merges multiple tracks into a one"),
+            new("Terrain match", "Matches tracks to terrain and other objects"),
+            new("Insert point", "Inserts a point between 2 others"),
+            new("Split track", "Splits a track into 2 tracks")
         };
 
         private void DrawEditingFoldout()
@@ -56,6 +57,9 @@ namespace Mapify.Editor.Tools
                         break;
                     case EditingMode.InsertPoint:
                         DrawInsertPoint();
+                        break;
+                    case EditingMode.SplitTrack:
+                        DrawSplitTrack();
                         break;
                     default:
                         EditorGUILayout.HelpBox("Coming soon!", MessageType.Info);
@@ -177,6 +181,28 @@ namespace Mapify.Editor.Tools
                 {
                     TrackToolsEditor.CreatePointBetween2(CurrentTrack, i, _editPercent);
                 }
+            }
+
+            GUILayout.FlexibleSpace();
+            GUILayout.EndHorizontal();
+            GUI.backgroundColor = Color.white;
+        }
+
+        private void DrawSplitTrack()
+        {
+            if (!Require(CurrentTrack, "Selected track"))
+            {
+                return;
+            }
+
+            EditorGUILayout.Space();
+            GUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            GUI.backgroundColor = EditorHelper.Accept;
+
+            if (GUILayout.Button("Split", GUILayout.MaxWidth(EditorGUIUtility.labelWidth)))
+            {
+                TrackToolsEditor.Split(CurrentTrack);
             }
 
             GUILayout.FlexibleSpace();

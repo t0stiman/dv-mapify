@@ -1,8 +1,10 @@
+using System;
 using Mapify.Editor.Utils;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEditor;
 using UnityEngine;
+using Object = UnityEngine.Object;
 
 namespace Mapify.Editor.Tools
 {
@@ -225,6 +227,68 @@ namespace Mapify.Editor.Tools
             bp1.globalHandle1 = curves[0][2];
             bp1.globalHandle2 = curves[1][1];
             bp2.globalHandle1 = curves[1][2];
+        }
+
+        /// <summary>
+        /// Split a track into 2 tracks
+        /// </summary>
+        /// <param name="track0">the original track</param>
+        public static void Split(Track track0)
+        {
+            var track1 = CopyTrack(track0);
+            var pointsCount = track0.Curve.points.Length;
+
+            if (pointsCount % 2 == 0)
+            {
+                int half = pointsCount / 2;
+                var track0Take = half + 1;
+                var track1skip = half - 1;
+
+                track1.Curve.points = track1.Curve.points.Skip(track1skip).Take(pointsCount - track1skip).ToArray();
+                track0.Curve.points = track0.Curve.points.Take(track0Take).ToArray();
+            }
+            else
+            {
+                float half = pointsCount / 2.0f;
+                var track0Take = (int)Math.Ceiling(half);
+                var track1skip = (int)Math.Floor(half);
+
+                track1.Curve.points = track1.Curve.points.Skip(track1skip).Take(pointsCount - track1skip).ToArray();
+                track0.Curve.points = track0.Curve.points.Take(track0Take).ToArray();
+            }
+
+            //mark the last point as unconnected
+            track0.Curve.Last().handleStyle = BezierPoint.HandleStyle.Broken;
+            track0.Curve.Last().globalHandle2 = track0.Curve.Last().localPosition;
+
+            //mark the first point as unconnected
+            track1.Curve[0].handleStyle = BezierPoint.HandleStyle.Broken;
+            track1.Curve[0].globalHandle1 = track1.Curve[0].localPosition;
+
+            track0.DestroyUnusedPoints();
+            track1.DestroyUnusedPoints();
+
+            track1.Curve.RenamePoints();
+        }
+
+        /// <summary>
+        /// Copy a track and return the copy.
+        /// </summary>
+        public static Track CopyTrack(Track originalTrack)
+        {
+            var copyObject = Object.Instantiate(originalTrack.gameObject, originalTrack.transform.parent);
+            copyObject.name = originalTrack.gameObject.name + " (1)";
+            originalTrack.gameObject.name += " (0)";
+
+            return copyObject.GetComponent<Track>();
+        }
+
+        public static void DestroyUnusedPoints(this Track track)
+        {
+            foreach (var unusedPoint in track.GetComponentsInChildren<BezierPoint>().Where(bp => !track.Curve.points.Contains(bp)))
+            {
+                Object.DestroyImmediate(unusedPoint.gameObject);
+            }
         }
     }
 }

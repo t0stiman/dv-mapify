@@ -129,7 +129,7 @@ namespace Mapify.Editor.Tools
 
             if (GUILayout.Button(new GUIContent("Frame whole piece", "Moves the scene view camera to show the whole piece")))
             {
-                SceneView.lastActiveSceneView.Frame(GeometryUtility.CalculateBounds(CurrentTrack.Curve.GetAllPoints(), Matrix4x4.identity), false);
+                SceneView.lastActiveSceneView.Frame(GeometryUtility.CalculateBounds(CurrentTrack.Curve.GetAllPointsAsVector3(), Matrix4x4.identity), false);
             }
         }
 

@@ -328,7 +328,7 @@ namespace Mapify.Editor.Utils
             return true;
         }
 
-        public static Vector3[] GetAllPoints(this BezierCurve curve)
+        public static Vector3[] GetAllPointsAsVector3(this BezierCurve curve)
         {
             Vector3[] points = new Vector3[curve.pointCount * 3];
 
@@ -340,6 +340,18 @@ namespace Mapify.Editor.Utils
             }
 
             return points;
+        }
+
+        /// <summary>
+        /// Rename the gameobjects of the points so they're named "Point X" where X is the index of the point in
+        /// BezierCurve.points
+        /// </summary>
+        public static void RenamePoints(this BezierCurve curve)
+        {
+            for (int pointIndex = 0; pointIndex < curve.points.Length; pointIndex++)
+            {
+                curve.points[pointIndex].gameObject.name = $"Point {pointIndex}";
+            }
         }
 
         // BezierPoint.

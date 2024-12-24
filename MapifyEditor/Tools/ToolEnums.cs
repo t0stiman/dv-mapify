@@ -64,7 +64,8 @@ namespace Mapify.Editor.Tools
         {
             Merge,
             MatchTerrain,
-            InsertPoint
+            InsertPoint,
+            SplitTrack
         }
 
         public static TrackOrientation FlipOrientation(TrackOrientation orientation)
