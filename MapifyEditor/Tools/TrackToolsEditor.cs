@@ -230,23 +230,29 @@ namespace Mapify.Editor.Tools
         }
 
         /// <summary>
-        /// Split a track into 2 tracks
+        /// Split a track into multiple tracks
         /// </summary>
         /// <param name="track0">the original track</param>
         /// <returns>The original and the new track in 1 array</returns>
         public static Track[] Split(Track track0)
         {
-            if (track0.Curve.points.Length <= 3)
+            var pointsCount = track0.Curve.points.Length;
+
+            switch (pointsCount)
             {
-                //TODO create an extra point instead
-                Debug.LogError("pointsCount <= 3");
-                return new[] { track0 };
+                case < 2:
+                    Debug.LogError($"Track {track0.transform.GetPath()} has {pointsCount} points");
+                    return new[] { track0 };
+                case 2:
+                    // we need to have at least 3 points
+                    CreatePointBetween2(track0, 0, 0.5f);
+                    pointsCount = track0.Curve.points.Length;
+                    break;
             }
 
-            var pointsCount = track0.Curve.points.Length;
             var track1 = track0.Copy();
 
-            if (pointsCount % 2 == 0)
+            if (pointsCount % 2 == 0) //even
             {
                 int half = pointsCount / 2;
                 var track0Take = half;
@@ -255,7 +261,7 @@ namespace Mapify.Editor.Tools
                 track0.Curve.points = track0.Curve.points.Take(track0Take).ToArray();
                 track1.Curve.points = track1.Curve.points.Skip(track1skip).Take(pointsCount - track1skip).ToArray();
             }
-            else
+            else //uneven
             {
                 float half = pointsCount / 2.0f;
                 var track0Take = (int)Math.Ceiling(half);

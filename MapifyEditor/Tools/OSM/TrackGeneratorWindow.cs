@@ -391,37 +391,44 @@ namespace Mapify.Editor.Tools.OSM
                         AssignTrackProperties(way, ref track);
                     }
 
-                    // In DV, a switch cannot be attached directly to another switch. We can avoid this by splitting the track in 2 if the start and end node of the segment are both a switch.
-                    Track[] oneOrTwoTracks;
-
+                    // In DV, a track can only belong to 1 switch. We will ensure this by splitting the track in 2 if the start and end node of the segment are both a switch.
+                    Track[] oneOrMultipleTracks;
                     if (_nodes[segment.First].GetNodeType() == TrackNode.NodeType.Switch &&
                         _nodes[segment.Last].GetNodeType() == TrackNode.NodeType.Switch)
                     {
-                        oneOrTwoTracks = TrackToolsEditor.Split(track);
+                        oneOrMultipleTracks = TrackToolsEditor.Split(track);
+
+                        // An out branch of a switch cannot be attached directly to the out branch of another switch
+                        if (!_nodes[segment.First].IsBeforeTrackNode(_nodes[segment.Last]) &&
+                            !_nodes[segment.Last].IsBeforeTrackNode(_nodes[segment.First]))
+                        {
+                            var splitAgain = TrackToolsEditor.Split(oneOrMultipleTracks[1]);
+                            oneOrMultipleTracks = new []{ oneOrMultipleTracks[0], splitAgain[0], splitAgain[1] };
+                        }
                     }
                     else
                     {
-                        oneOrTwoTracks = new []{track};
+                        oneOrMultipleTracks = new []{track};
                     }
 
                     // Check if it starts on a switch.
                     var startNode = _nodes[segment.First];
                     if (startNode.GetNodeType() == TrackNode.NodeType.Switch
                         //ignore the track before the switch:
-                        && startNode.GetIndex(_nodes[segment[1]]) != 0
+                        && !startNode.IsBeforeTrackNode(_nodes[segment[1]])
                        )
                     {
-                        CreateOrAddToSwitch(startNode, oneOrTwoTracks[0]);
+                        CreateOrAddToSwitch(startNode, oneOrMultipleTracks[0]);
                     }
 
                     // Check if it ends on a switch.
                     var endNode = _nodes[segment.Last];
                     if (endNode.GetNodeType() == TrackNode.NodeType.Switch
                         //ignore the track before the switch:
-                        && endNode.GetIndex(_nodes[segment[segment.Count - 2]]) != 0
+                        && !endNode.IsBeforeTrackNode(_nodes[segment[segment.Count - 2]])
                        )
                     {
-                        CreateOrAddToSwitch(endNode, oneOrTwoTracks.Last());
+                        CreateOrAddToSwitch(endNode, oneOrMultipleTracks.Last());
                     }
                 }
             }

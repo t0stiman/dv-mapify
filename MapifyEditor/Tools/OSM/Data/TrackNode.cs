@@ -94,6 +94,14 @@ namespace Mapify.Editor.Tools.OSM.Data
         }
 
         /// <summary>
+        /// Returns true if @node is the node that connects to this node on the track before the junction.
+        /// </summary>
+        public bool IsBeforeTrackNode(TrackNode node)
+        {
+            return GetIndex(node) == 0;
+        }
+
+        /// <summary>
         /// Get the index of a connected node to this node. Returns -1 if @node is not connected to this node.
         /// </summary>
         public int GetIndex(TrackNode node)

@@ -223,6 +223,7 @@ namespace Mapify.Editor.Utils
 
             return results;
         }
+
         public static Vector3 Average(Vector3 a, Vector3 b)
         {
             return (a + b) * 0.5f;
