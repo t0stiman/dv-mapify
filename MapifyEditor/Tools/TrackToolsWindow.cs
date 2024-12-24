@@ -603,6 +603,18 @@ namespace Mapify.Editor.Tools
             return false;
         }
 
+        // Check if an object is not null, draw an error box if it is.
+        private static bool Require2(Object obj, string errorMessage)
+        {
+            if (obj)
+            {
+                return true;
+            }
+
+            EditorGUILayout.HelpBox(errorMessage, MessageType.Error);
+            return false;
+        }
+
         private void NotImplementedGUI()
         {
             EditorGUILayout.HelpBox("Not implemented yet!", MessageType.Warning);

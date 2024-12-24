@@ -150,7 +150,7 @@ namespace Mapify.Editor.Tools
 
         private void DrawInsertPoint()
         {
-            if (!Require(CurrentTrack, "Selected track"))
+            if (!Require2(CurrentTrack, "Please select a track first."))
             {
                 return;
             }
@@ -190,7 +190,7 @@ namespace Mapify.Editor.Tools
 
         private void DrawSplitTrack()
         {
-            if (!Require(CurrentTrack, "Selected track"))
+            if (!Require2(CurrentTrack, "Please select a track first."))
             {
                 return;
             }

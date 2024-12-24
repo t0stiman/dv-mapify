@@ -13,6 +13,8 @@ namespace Mapify.Editor
             return gameObject.GetComponentsInChildren<Track>();
         }
 
+        public abstract BezierPoint GetJointPoint();
+
         // TODO make snapping work?
 //         protected void Snap()
 //         {

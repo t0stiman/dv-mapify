@@ -31,12 +31,11 @@ namespace Mapify.Editor.Tools.OSM
 
         private bool _showPrefabs = false;
         // Ways created from extracted data.
-        private Dictionary<long, TrackWay> _ways = new Dictionary<long, TrackWay>();
+        private Dictionary<long, TrackWay> _ways = new();
         // Nodes created from the extracted data.
-        private Dictionary<long, TrackNode> _nodes = new Dictionary<long, TrackNode>();
+        private Dictionary<long, TrackNode> _nodes = new();
         // Switches instantiated by the script.
-        // private Dictionary<long, Switch> _switchInstances = new Dictionary<long, Switch>();
-        //TODO do we need this?
+        private Dictionary<long, CustomSwitch> _switchInstances = new();
 
         public bool TestMode = false;
 
@@ -180,7 +179,7 @@ namespace Mapify.Editor.Tools.OSM
         {
             // References to gameobjects, clear before children are deleted.
             _ways.Clear();
-            // _switchInstances.Clear();
+            _switchInstances.Clear();
 
             // Clear children.
             var children = new List<GameObject>();
@@ -253,7 +252,7 @@ namespace Mapify.Editor.Tools.OSM
             foreach (var way in DataExtractor.WayData.Values)
             {
                 // Skip any way that doesn't link at least 2 nodes, ways with no tags, and non railway ways.
-                if (way.Nodes.Count() < 2 || way.Tags == null || !way.Tags.ContainsKey("railway"))
+                if (way.Nodes.Length < 2 || way.Tags == null || !way.Tags.ContainsKey("railway"))
                 {
                     continue;
                 }
@@ -308,40 +307,49 @@ namespace Mapify.Editor.Tools.OSM
                     here.TryConnect(prev);
                 }
 
-                wayRoot.Nodes = nodeIds.ToArray();
+                wayRoot.NodeIDs = nodeIds.ToArray();
                 _ways.Add(way.Id, wayRoot);
             }
 
             CreateSegments();
 
             Debug.Log($"Ways: {_ways.Count} || Nodes: {_nodes.Count}");
+
+            //log how many nodes of each type we have generated
+            string s = "";
+            foreach (TrackNode.NodeType nodeType in Enum.GetValues(typeof(TrackNode.NodeType)))
+            {
+                var nodeTypeCount = _nodes.Values.Count(node => node.GetNodeType() == nodeType);
+                s += $"{Enum.GetName(typeof(TrackNode.NodeType), nodeType)}: {nodeTypeCount} || ";
+            }
+            Debug.Log(s);
         }
 
         private void CreateSegments()
         {
             int length;
             long id;
-            List<long> segment;
-            List<long[]> segments;
+            TrackWaySegment segment;
+            List<TrackWaySegment> segments;
 
             foreach (var way in _ways.Values)
             {
-                id = way.Nodes[0];
-                length = way.Nodes.Length;
-                segment = new List<long> { id };
-                segments = new List<long[]>();
+                id = way.NodeIDs[0];
+                length = way.NodeIDs.Length;
+                segment = new TrackWaySegment(id);
+                segments = new();
 
                 for (int i = 1; i < length; i++)
                 {
-                    id = way.Nodes[i];
+                    id = way.NodeIDs[i];
                     segment.Add(id);
 
                     switch (_nodes[id].GetNodeType())
                     {
                         // Break the segment.
                         case TrackNode.NodeType.Switch:
-                            segments.Add(segment.ToArray());
-                            segment = new List<long>() { id };
+                            segments.Add(segment);
+                            segment = new TrackWaySegment(id);
                             continue;
                         default:
                             continue;
@@ -350,7 +358,7 @@ namespace Mapify.Editor.Tools.OSM
 
                 if (segment.Count > 1)
                 {
-                    segments.Add(segment.ToArray());
+                    segments.Add(segment);
                 }
 
                 way.Segments = segments.ToArray();
@@ -381,6 +389,39 @@ namespace Mapify.Editor.Tools.OSM
                     if (TryUseTagData)
                     {
                         AssignTrackProperties(way, ref track);
+                    }
+
+                    // In DV, a switch cannot be attached directly to another switch. We can avoid this by splitting the track in 2 if the start and end node of the segment are both a switch.
+                    Track[] oneOrTwoTracks;
+
+                    if (_nodes[segment.First].GetNodeType() == TrackNode.NodeType.Switch &&
+                        _nodes[segment.Last].GetNodeType() == TrackNode.NodeType.Switch)
+                    {
+                        oneOrTwoTracks = TrackToolsEditor.Split(track);
+                    }
+                    else
+                    {
+                        oneOrTwoTracks = new []{track};
+                    }
+
+                    // Check if it starts on a switch.
+                    var startNode = _nodes[segment.First];
+                    if (startNode.GetNodeType() == TrackNode.NodeType.Switch
+                        //ignore the track before the switch:
+                        && startNode.GetIndex(_nodes[segment[1]]) != 0
+                       )
+                    {
+                        CreateOrAddToSwitch(startNode, oneOrTwoTracks[0]);
+                    }
+
+                    // Check if it ends on a switch.
+                    var endNode = _nodes[segment.Last];
+                    if (endNode.GetNodeType() == TrackNode.NodeType.Switch
+                        //ignore the track before the switch:
+                        && endNode.GetIndex(_nodes[segment[segment.Count - 2]]) != 0
+                       )
+                    {
+                        CreateOrAddToSwitch(endNode, oneOrTwoTracks.Last());
                     }
                 }
             }
@@ -422,156 +463,105 @@ namespace Mapify.Editor.Tools.OSM
             }
         }
 
-        private void CreateTrack(Transform parent, long[] nodeIds, out Track track)
+        private void CreateTrack(Transform parent, TrackWaySegment segment, out Track track)
         {
-            TrackNode prev = _nodes[nodeIds[0]];
-            TrackNode here = _nodes[nodeIds[1]];
-            BezierPoint point;
-
-            //TODO use track tools instead of prefab?
             track = Instantiate(TrackPrefab, parent);
 
             // Place the track segment in the correct spot.
-            track.name = $"[{here.Name}] TO [{_nodes[nodeIds.Last()].Name}]";
-            track.transform.position = here.Position;
+            track.name = $"[{_nodes[segment.First].Name}] TO [{_nodes[segment.Last].Name}]";
+            track.transform.position = _nodes[segment.First].Position;
 
             BezierCurve curve = track.Curve;
 
-            int length = nodeIds.Length;
-            int f = length - 1;
+            TrackNode previousNode = _nodes[segment[0]];
+            TrackNode hereNode = _nodes[segment[1]];
+            BezierPoint point;
 
             if (SameLengthHandles)
             {
-                curve[0].position = prev.Position;
+                curve[0].position = previousNode.Position;
                 curve[0].handleStyle = BezierPoint.HandleStyle.Connected;
-                curve[0].globalHandle2 = prev.GetGlobalHandle(here);
-                curve[1].position = here.Position;
+                curve[0].globalHandle2 = previousNode.GetGlobalHandle(hereNode);
+                curve[1].position = hereNode.Position;
                 curve[1].handleStyle = BezierPoint.HandleStyle.Connected;
-                curve[1].globalHandle1 = here.GetGlobalHandle(prev);
+                curve[1].globalHandle1 = hereNode.GetGlobalHandle(previousNode);
 
-                for (int i = 2; i < length; i++)
+                for (int i = 2; i < segment.Count; i++)
                 {
-                    prev = here;
-                    here = _nodes[nodeIds[i]];
+                    previousNode = hereNode;
+                    hereNode = _nodes[segment[i]];
 
-                    point = curve.AddPointAt(here.Position);
-                    point.globalHandle1 = here.GetGlobalHandle(prev);
+                    point = curve.AddPointAt(hereNode.Position);
+                    point.globalHandle1 = hereNode.GetGlobalHandle(previousNode);
                 }
             }
             else
             {
-                curve[0].position = prev.Position;
+                curve[0].position = previousNode.Position;
                 curve[0].handleStyle = BezierPoint.HandleStyle.Broken;
-                curve[0].globalHandle2 = prev.GetGlobalHandle(here);
-                curve[1].position = here.Position;
+                curve[0].globalHandle2 = previousNode.GetGlobalHandle(hereNode);
+                curve[1].position = hereNode.Position;
                 curve[1].handleStyle = BezierPoint.HandleStyle.Broken;
-                curve[1].globalHandle1 = here.GetGlobalHandle(prev);
+                curve[1].globalHandle1 = hereNode.GetGlobalHandle(previousNode);
 
-                for (int i = 2; i < length; i++)
+                for (int i = 2; i < segment.Count; i++)
                 {
-                    prev = here;
-                    here = _nodes[nodeIds[i]];
+                    previousNode = hereNode;
+                    hereNode = _nodes[segment[i]];
 
-                    curve[i - 1].globalHandle2 = prev.GetGlobalHandle(here);
+                    curve[i - 1].globalHandle2 = previousNode.GetGlobalHandle(hereNode);
 
-                    point = curve.AddPointAt(here.Position);
+                    point = curve.AddPointAt(hereNode.Position);
                     point.handleStyle = BezierPoint.HandleStyle.Broken;
-                    point.globalHandle1 = here.GetGlobalHandle(prev);
+                    point.globalHandle1 = hereNode.GetGlobalHandle(previousNode);
                 }
             }
-
-            /*
-            Switch s;
-            BezierPoint sp;
-
-            // Check if it starts on a switch.
-            here = _nodes[nodeIds[0]];
-
-            if (here.GetNodeType() == TrackNode.NodeType.Switch)
-            {
-                s = CreateOrGetSwitch(here);
-                int index = here.GetIndex(_nodes[nodeIds[1]]);
-
-                sp = index switch
-                {
-                    0 => s.GetJointPoint(),
-                    1 => s.GetThroughPoint(),
-                    2 => s.GetDivergingPoint(),
-                    _ => throw new Exception("This cannot happen."),
-                };
-
-                curve[0].position = sp.position;
-
-                // No idea why this needs to be done.
-                if (index != 0 && here.Orientation == TrackNode.SwitchOrientation.Right)
-                {
-                    curve[0].globalHandle2 = sp.globalHandle2;
-                }
-                else
-                {
-                    curve[0].globalHandle2 = sp.globalHandle1;
-                }
-            }
-
-            // Check if it ends on a switch.
-            here = _nodes[nodeIds[f]];
-
-            if (here.GetNodeType() == TrackNode.NodeType.Switch)
-            {
-                s = CreateOrGetSwitch(here);
-                int index = here.GetIndex(_nodes[nodeIds[f - 1]]);
-
-                sp = index switch
-                {
-                    0 => s.GetJointPoint(),
-                    1 => s.GetThroughPoint(),
-                    2 => s.GetDivergingPoint(),
-                    _ => throw new Exception("This cannot happen."),
-                };
-
-                curve[f].position = sp.position;
-
-                // Ditto.
-                if (index != 0 && here.Orientation == TrackNode.SwitchOrientation.Right)
-                {
-                    curve[f].globalHandle1 = sp.globalHandle1;
-                }
-                else
-                {
-                    curve[f].globalHandle1 = sp.globalHandle2;
-                }
-            }
-            //*/
         }
-        
-        // private Switch CreateOrGetSwitch(TrackNode node)
-        // {
-        //     Switch s;
-        //
-        //     // Get or create a new one switch instance.
-        //     if (!_switchInstances.TryGetValue(node.Id, out s))
-        //     {
-        //         // Use the correct one...
-        //         if (node.Orientation == TrackNode.SwitchOrientation.Left)
-        //         {
-        //             s = Instantiate(LeftSwitch);
-        //         }
-        //         else
-        //         {
-        //             s = Instantiate(RightSwitch);
-        //         }
-        //
-        //         _switchInstances.Add(node.Id, s);
-        //     }
-        //
-        //     // To position a switch, it needs to be rotated.
-        //     s.transform.parent = DataExtractor.transform;
-        //     s.transform.position = node.Position + Vector3.up * TrackHeight;
-        //     s.transform.rotation = Quaternion.LookRotation(node.GetHandle(0));
-        //     s.gameObject.name = $"SWITCH [{node.Name}]";
-        //
-        //     return s;
-        // }
+
+        private CustomSwitch CreateOrAddToSwitch(TrackNode node, Track track)
+        {
+            // Get or create a new switch instance.
+            if (_switchInstances.TryGetValue(node.Id, out CustomSwitch switch_))
+            {
+                // Add track to switch
+                switch_.AddTrack(track);
+
+                var branchCount = switch_.GetTracks().Length;
+                if (branchCount > 2)
+                {
+                    Debug.LogError($"{nameof(CreateOrAddToSwitch)}: Something went wrong, {switch_.gameObject.name} has {branchCount} tracks");
+                }
+            }
+            else
+            {
+                // Create new switch
+                var attachPoint = node.Position + Vector3.up * TrackHeight;
+                var rotation = Quaternion.LookRotation(node.GetHandle(0));
+                switch_ = CreateSwitch(track.transform.parent, attachPoint, rotation, $"SWITCH [{node.Name}]", track);
+
+                _switchInstances.Add(node.Id, switch_);
+            }
+
+            track.transform.parent = switch_.transform;
+            return switch_;
+        }
+
+        private static CustomSwitch CreateSwitch(Transform parent, Vector3 attachPoint, Quaternion rotation, string switchName, Track firstTrack)
+        {
+            var switchObject = new GameObject(switchName)
+            {
+                transform =
+                {
+                    parent = parent,
+                    position = attachPoint,
+                    rotation = rotation
+                }
+            };
+
+            var switchComponent = switchObject.AddComponent<CustomSwitch>();
+            switchComponent.SetTracks(new []{firstTrack});
+            return switchComponent;
+        }
 
         private void AssignTrackProperties(TrackWay way, ref Track track)
         {

@@ -2,7 +2,6 @@ using Mapify.Editor.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
 using UnityEngine;
 
 namespace Mapify.Editor.Tools.OSM.Data
@@ -76,7 +75,6 @@ namespace Mapify.Editor.Tools.OSM.Data
         public Vector3 GetHandle(TrackNode node)
         {
             int index = GetIndex(node);
-
             return GetHandle(index);
         }
 
@@ -95,6 +93,9 @@ namespace Mapify.Editor.Tools.OSM.Data
             return GetGlobalHandle(GetIndex(node));
         }
 
+        /// <summary>
+        /// Get the index of a connected node to this node. Returns -1 if @node is not connected to this node.
+        /// </summary>
         public int GetIndex(TrackNode node)
         {
             for (int i = 0; i < _handles.Count; i++)
@@ -181,19 +182,13 @@ namespace Mapify.Editor.Tools.OSM.Data
                         SwitchSwap(Connected[1], Connected[0], Connected[2]);
                     }
 
-                    // Cross through direction with the exit direction to see if it's to the left or right.
-                    Vector3 direction = MathHelper.AverageDirection(-_handles[0].Direction, _handles[1].Direction);
-
-                    // Set the first handle to match the switch's final orientation, and use it when instancing.
-                    // _handles[0].Direction = direction.normalized;
-
                     // Smooth
                     var handles01 = MathHelper.GetSizedSmoothHandles(Connected[0].Position, Position, Connected[1].Position);
-                    _handles[0] = handles01.Next; //TODO reversed?
+                    _handles[0] = handles01.Next;
                     _handles[1] = handles01.Prev;
 
                     var handles02 = MathHelper.GetSizedSmoothHandles(Connected[0].Position, Position, Connected[2].Position);
-                    _handles[2] = handles02.Prev; //TODO reversed?
+                    _handles[2] = handles02.Prev;
 
                     break;
                 }

@@ -1,9 +1,11 @@
+using System;
 using Mapify.Editor.Tools.OptionData;
 using Mapify.Editor.Utils;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using static Mapify.Editor.Tools.ToolEnums;
+using Object = UnityEngine.Object;
 
 namespace Mapify.Editor.Tools
 {
@@ -305,11 +307,9 @@ namespace Mapify.Editor.Tools
 
             var switchObject = new GameObject($"[Switch w/ {switchBranchesCount} branches]");
             switchObject.transform.position = attachPoint;
+            switchObject.transform.parent = parent;
 
             var switchComponent = switchObject.AddComponent<CustomSwitch>();
-            //TODO
-            switchComponent.defaultBranch = 0;
-            switchComponent.standSide = CustomSwitch.StandSide.LEFT;
 
             var tracks = new Track[switchBranchesCount];
             var length = radius * arc * Mathf.Deg2Rad;
@@ -343,6 +343,8 @@ namespace Mapify.Editor.Tools
                 tracks[branchIndex] = CreateArcCurve(switchObject.transform, attachPoint, handlePosition, trackOrientation, thisRadius, thisArc, 360, endGrade);
             }
 
+            //middle track with uneven amount of branches, track left of middle with even amount of branches
+            switchComponent.defaultBranch = (byte)(Math.Round(switchBranchesCount/2.0-1));
             switchComponent.SetTracks(tracks);
             return switchComponent;
         }

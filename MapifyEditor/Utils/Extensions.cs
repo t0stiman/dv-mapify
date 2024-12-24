@@ -15,6 +15,17 @@ namespace Mapify.Editor.Utils
     {
         #region GameObjects & Components
 
+        public static string GetPath(this Transform transform)
+        {
+            var path = "/" + transform.name;
+            while (transform.parent != null)
+            {
+                transform = transform.parent;
+                path = "/" + transform.name + path;
+            }
+            return path;
+        }
+
         public static float DistToSceneCamera(this Transform t)
         {
 #if UNITY_EDITOR
@@ -304,6 +315,37 @@ namespace Mapify.Editor.Utils
         public static float GetAverageGrade(this Track track, float resolution = 0.5f)
         {
             return track.GetHeightChange() / track.GetHorizontalLength(resolution);
+        }
+
+        /// <summary>
+        /// Copy a track and return the copy.
+        /// </summary>
+        public static Track Copy(this Track originalTrack)
+        {
+            var copyObject = Object.Instantiate(originalTrack.gameObject, originalTrack.transform.parent);
+            copyObject.name = originalTrack.gameObject.name + " (1)";
+            originalTrack.gameObject.name += " (0)";
+
+            return copyObject.GetComponent<Track>();
+        }
+
+        public static void Recenter(this Track track)
+        {
+            //Temporarily detach
+            var children = track.transform.GetChildren();
+            foreach (var child in children)
+            {
+                child.parent = track.transform.parent;
+            }
+
+            var offset = track.Curve[0].position - track.transform.position;
+            track.transform.position += offset;
+
+            //Re-attach
+            foreach (var child in children)
+            {
+                child.parent = track.transform;
+            }
         }
 
         // BezierCurve
