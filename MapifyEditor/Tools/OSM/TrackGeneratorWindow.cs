@@ -423,7 +423,7 @@ namespace Mapify.Editor.Tools.OSM
             {
                 var switch_ = CreateOrAddToSwitch(startNode, oneOrMultipleTracks[0]);
 
-                // An branch of a switch cannot be attached directly to the branch of another switch
+                // A branch of a switch cannot be attached directly to the branch of another switch
                 if (oneOrMultipleTracks[0].CanOnlySnapToSwitch(false))
                 {
                     var split = TrackToolsEditor.Split(oneOrMultipleTracks[0]);
@@ -442,11 +442,11 @@ namespace Mapify.Editor.Tools.OSM
                 var switch_ = CreateOrAddToSwitch(endNode, oneOrMultipleTracks.Last());
 
                 // An branch of a switch cannot be attached directly to the branch of another switch
-                if (oneOrMultipleTracks.Last().CanOnlySnapToSwitch(true))
+                if (oneOrMultipleTracks.Last().CanOnlySnapToSwitch(false))
                 {
                     var split = TrackToolsEditor.Split(oneOrMultipleTracks.Last());
                     //get it out of the switch
-                    split[0].transform.parent = switch_.transform.parent;
+                    split[1].transform.parent = switch_.transform.parent;
                 }
             }
         }
@@ -545,9 +545,18 @@ namespace Mapify.Editor.Tools.OSM
         private CustomSwitch CreateOrAddToSwitch(TrackNode node, Track track)
         {
             // Get or create a new switch instance.
-            if (_switchInstances.TryGetValue(node.Id, out CustomSwitch switch_))
+            if (_switchInstances.TryGetValue(node.Id, out var switch_))
             {
                 // Add track to switch
+
+                // Curve[0] needs to be at the join point
+                var jointPointPos = switch_.GetJointPoint().position;
+                if (Vector3.Distance(jointPointPos, track.Curve[0].position) >
+                    Vector3.Distance(jointPointPos, track.Curve.Last().position))
+                {
+                    track.Curve.ReversePoints();
+                }
+
                 switch_.AddTrack(track);
 
                 var branchCount = switch_.GetTracks().Length;
@@ -559,9 +568,17 @@ namespace Mapify.Editor.Tools.OSM
             else
             {
                 // Create new switch
-                var attachPoint = node.Position + Vector3.up * TrackHeight;
+                var switchPosition = node.Position + Vector3.up * TrackHeight;
+
+                // Curve[0] needs to be the join point
+                if (Vector3.Distance(switchPosition, track.Curve[0].position) >
+                    Vector3.Distance(switchPosition, track.Curve.Last().position))
+                {
+                    track.Curve.ReversePoints();
+                }
+
                 var rotation = Quaternion.LookRotation(node.GetHandle(0));
-                switch_ = CreateSwitch(track.transform.parent, attachPoint, rotation, $"SWITCH [{node.Name}]", track);
+                switch_ = CreateSwitch(track.transform.parent, switchPosition, rotation, $"SWITCH [{node.Name}]", track);
 
                 _switchInstances.Add(node.Id, switch_);
             }

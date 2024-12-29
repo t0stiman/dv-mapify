@@ -347,7 +347,6 @@ namespace Mapify.Editor
             return switchInRange;
         }
 
-
 #endif
         internal void Snapped(BezierPoint point)
         {

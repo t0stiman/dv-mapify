@@ -385,8 +385,7 @@ namespace Mapify.Editor.Utils
         }
 
         /// <summary>
-        /// Rename the gameobjects of the points so they're named "Point X" where X is the index of the point in
-        /// BezierCurve.points
+        /// Rename the gameobjects of the points so they're named "Point X" where X is the index of the point in BezierCurve.points
         /// </summary>
         public static void RenamePoints(this BezierCurve curve)
         {
@@ -396,6 +395,20 @@ namespace Mapify.Editor.Utils
             }
         }
 
+        /// <summary>
+        /// Reverse the order of the points in this curve
+        /// </summary>
+        public static void ReversePoints(this BezierCurve curve)
+        {
+            curve.points = curve.points.Reverse().ToArray();
+            foreach (var point in curve.points)
+            {
+                point.SwapHandles();
+            }
+
+            curve.RenamePoints();
+        }
+
         // BezierPoint.
         /// <summary>
         /// Returns the grade for the next handle.
@@ -403,6 +416,18 @@ namespace Mapify.Editor.Utils
         public static float GetGradeForwards(this BezierPoint bp)
         {
             return MathHelper.GetGrade(bp.position, bp.globalHandle2);
+        }
+
+        /// <summary>
+        /// swap handle 1 with handle 2
+        /// </summary>
+        public static void SwapHandles(this BezierPoint bp)
+        {
+            //make a copy
+            var one = new Vector3(bp.globalHandle1.x, bp.globalHandle1.y, bp.globalHandle1.z);
+
+            bp.globalHandle1 = bp.globalHandle2;
+            bp.globalHandle2 = one;
         }
 
         /// <summary>
