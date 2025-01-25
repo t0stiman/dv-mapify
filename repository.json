@@ -2,6 +2,11 @@
   "Releases": [
     {
       "Id": "Mapify",
+      "Version": "2025.01.25",
+      "DownloadUrl": "https://github.com/t0stiman/dv-mapify/releases/download/v2025.01.25/Mapify.zip"
+    },
+    {
+      "Id": "Mapify",
       "Version": "2024.12.07",
       "DownloadUrl": "https://github.com/t0stiman/dv-mapify/releases/download/v2024.12.07/Mapify.zip"
     },
