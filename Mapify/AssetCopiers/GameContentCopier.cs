@@ -93,14 +93,14 @@ namespace Mapify.SceneInitializers.Vanilla.GameContent
                 yield break;
             }
 
-            foreach (ScanItemCashRegisterModule module in shopsParent.GetComponentsInChildren<ScanItemCashRegisterModule>())
+            foreach (var module in shopsParent.GetComponentsInChildren<ScanItemCashRegisterModule>())
             {
                 string itemName = module.sellingItemSpec.name.Replace("_", "");
                 if (itemName.StartsWith("Key")) continue;
-                if (VanillaAsset.TryParse($"StoreItem{itemName}", true, out VanillaAsset asset))
+                if (Enum.TryParse($"StoreItem{itemName}", true, out VanillaAsset asset))
                     yield return (asset, module.gameObject);
-                else
-                    Mapify.LogError($"Failed to find {nameof(VanillaAsset)} for shop item {itemName}");
+                // else
+                //     Mapify.LogError($"Failed to find {nameof(VanillaAsset)} for shop item {itemName}");
             }
 
             GameObject shop = shopsParent.FindChildByName("[ItemShop] Harbor");
