@@ -75,13 +75,6 @@ namespace Mapify.Editor
 
                 if (File.Exists(exportFilePath))
                 {
-                    File.Delete(exportFilePath);
-                }
-
-                ZipFile.CreateFromDirectory(mapExportFolder, exportFilePath, CompressionLevel.Fastest, true);
-
-                if (File.Exists(exportFilePath))
-                {
                     EditorFileUtil.MoveToTrash(exportFilePath);
                 }
 
@@ -246,15 +239,15 @@ namespace Mapify.Editor
 
             for (int i = 0; i < sortedTerrain.Length; i++)
             {
-                string terrainName = AssetDatabase.GetAssetPath(sortedTerrain[i].terrainData);
+                string terrainPath = AssetDatabase.GetAssetPath(sortedTerrain[i].terrainData);
 
                 builds.Add(new AssetBundleBuild
                 {
                     assetBundleName = $"terraindata_{i}",
-                    assetNames = new[] { terrainName }
+                    assetNames = new[] { terrainPath }
                 });
 
-                EditorUtility.DisplayProgressBar(progressBarText, terrainName, i / (float)sortedTerrain.Length);
+                EditorUtility.DisplayProgressBar(progressBarText, terrainPath, i / (float)sortedTerrain.Length);
             }
 
             EditorUtility.ClearProgressBar();

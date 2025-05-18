@@ -212,18 +212,17 @@ namespace Mapify.Map
         {
             Mapify.Log("Showing custom loading screen image");
 
-            var randomInt = Random.Range(0, mapInfo.LoadingScreenImages.Length);
-            var customImage = mapInfo.LoadingScreenImages[randomInt];
+            var randomImageIndex = Random.Range(0, mapInfo.LoadingScreenImages.Length);
+            var customImage = mapInfo.LoadingScreenImages[randomImageIndex];
 
-            var canvasGameObject = Object.FindObjectsOfType<GameObject>().FirstOrDefault(gameObject => gameObject.name.Contains("LoadImage_Background_"));
-            if (canvasGameObject is null)
+            var randomScreenPicker = Object.FindObjectsOfType<RandomScreenPicker>().FirstOrDefault();
+            if (randomScreenPicker is null)
             {
-                Mapify.LogError("cant find canvasGameObject");
+                Mapify.LogError($"can't find {nameof(RandomScreenPicker)}");
                 return;
             }
 
-            // set the image
-            canvasGameObject.GetComponent<CanvasRenderer>().SetTexture(customImage);
+            randomScreenPicker.displayComponent.texture = customImage;
         }
 
         private static void ShowLoadingScreenLogo(Texture2D loadingScreenLogo)

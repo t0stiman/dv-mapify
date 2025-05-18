@@ -30,8 +30,7 @@ namespace MapifyEditor.Export.Validators.Project
                 yield return Result.Error($"Your map name cannot be {Names.DEFAULT_MAP_NAME}");
 
             //Loading Screen
-            //LoadingScreenImages will be null if the map was built with an older version of Mapify
-            if (mapInfo.LoadingScreenImages != null && mapInfo.LoadingScreenImages.Any(image => image == null))
+            if (mapInfo.LoadingScreenImages.Any(image => image == null))
             {
                 yield return Result.Error("Loading screen image is null", mapInfo);
             }
@@ -67,12 +66,14 @@ namespace MapifyEditor.Export.Validators.Project
             if (mapInfo.LoadingScreenLogo != null)
             {
                 var logo = mapInfo.LoadingScreenLogo;
-                const int optimalWidth = 1024;
-                const int optimalHeight = 575;
 
-                if (logo.width != optimalWidth || logo.height != optimalHeight)
+                const int width = 16;
+                const int height = 9;
+                const float optimalRatio = width/(float)height;
+
+                if (Mathf.Abs(logo.width/(float)logo.height - optimalRatio) > 0.01)
                 {
-                    yield return Result.Warning($"MapInfo: '{nameof(MapInfo.LoadingScreenLogo)}' should be {optimalWidth}x{optimalHeight} to show up correctly", mapInfo);
+                    yield return Result.Warning($"MapInfo: '{nameof(MapInfo.LoadingScreenLogo)}' should have a {width}:{height} aspect ratio to show up correctly", mapInfo);
                 }
             }
         }
