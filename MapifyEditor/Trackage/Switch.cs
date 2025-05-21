@@ -9,6 +9,7 @@ using UnityEditor;
 
 namespace Mapify.Editor
 {
+    [ExecuteInEditMode] //this is necessary for snapping to work
     [RequireComponent(typeof(VanillaObject))]
     public class Switch : SwitchBase
     {
