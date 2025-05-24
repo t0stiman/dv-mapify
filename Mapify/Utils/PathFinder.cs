@@ -45,7 +45,7 @@ namespace Mapify.Utils
             {
                 if (!cameFrom.ContainsKey(current))
                 {
-                    Mapify.LogError($"cameFrom does not contain current {current.logicTrack.ID.FullID}");
+                    Mapify.LogError($"cameFrom does not contain current {current.GetLogicTrack().ID.FullID}");
                     return null;
                 }
 
@@ -81,7 +81,7 @@ namespace Mapify.Utils
 
                 cameFrom.TryGetValue(current, out var prev);
 
-                var debug = $"ID: {current.logicTrack.ID.FullID} Prev: {prev?.logicTrack.ID.FullID}";
+                var debug = $"ID: {current.GetLogicTrack().ID.FullID} Prev: {prev?.GetLogicTrack().ID.FullID}";
 
                 var neighbors = new List<RailTrack>();
 
@@ -102,28 +102,29 @@ namespace Mapify.Utils
 
                 foreach (var neighbor in neighbors)
                 {
+                    var neighborLogicTrack = neighbor.GetLogicTrack();
+
                     //if we could go through junction directly (without reversing)
                     if (!current.CanGoToDirectly(prev, neighbor))
                     {
-                        Mapify.LogDebugExtreme($"{neighbor.logicTrack.ID.FullID} reverse needed");
+                        Mapify.LogDebugExtreme($"{neighborLogicTrack.ID.FullID} reverse needed");
                         continue;
                     }
 
                     // compute exact cost
-                    var newCost = costSoFar[current] + neighbor.logicTrack.length;
+                    var newCost = costSoFar[current] + neighborLogicTrack.length;
 
-// If there's no cost assigned to the neighbor yet, or if the new
-// cost is lower than the assigned one, add newCost for this neighbor
+                    // If there's no cost assigned to the neighbor yet, or if the new
+                    // cost is lower than the assigned one, add newCost for this neighbor
                     if (costSoFar.ContainsKey(neighbor) && !(newCost < costSoFar[neighbor])) continue;
 
                     // If we're replacing the previous cost, remove it
-                    if (costSoFar.ContainsKey(neighbor))
+                    if (costSoFar.Remove(neighbor))
                     {
-                        costSoFar.Remove(neighbor);
                         cameFrom.Remove(neighbor);
                     }
 
-                    Mapify.LogDebugExtreme($"neighbor {neighbor.logicTrack.ID.FullID} update {newCost}");
+                    Mapify.LogDebugExtreme($"neighbor {neighborLogicTrack.ID.FullID} update {newCost}");
 
                     costSoFar.Add(neighbor, newCost);
                     cameFrom.Add(neighbor, current);
