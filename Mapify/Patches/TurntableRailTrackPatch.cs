@@ -15,16 +15,18 @@ namespace Mapify.Patches
             var currentYrotation = __instance.currentYRotation;
             __instance.currentYRotation = __instance.targetYRotation;
 
-            var num = __instance.currentYRotation - currentYrotation;
-            if (Mathf.Abs(num) == 0.0)
+            var rotationDelta = __instance.currentYRotation - currentYrotation;
+            if (Mathf.Abs(rotationDelta) == 0.0)
             {
                 if (!forceConnectionRefresh)
                     return false;
+
+                __instance.UpdateTrackConnection();
             }
             else
             {
-                var turnTablePosition = __instance.transform.parent.position;
-                var rotationToApplyEulers = num * __instance.visuals.forward;
+                var turnTablePosition = __instance.transform.position;
+                var rotationToApplyEulers = rotationDelta * __instance.visuals.forward;
                 var rotationToApply = Quaternion.Euler(rotationToApplyEulers);
 
                 for (var index = 0; index < __instance.Track.curve.pointCount; ++index)
@@ -37,17 +39,13 @@ namespace Mapify.Patches
                         bezierPoint.handle2 = __instance.RotateAroundPoint(bezierPoint.handle2, Vector3.zero, rotationToApply);
                 }
 
-                __instance.Track.GetPointSet().RotateAroundPoint(new Vector3d(turnTablePosition - WorldMover.currentMove), rotationToApply);
+                __instance.Track.GetKinkedPointSet().RotateAroundPoint(new Vector3d(turnTablePosition - DV.OriginShift.OriginShift.currentMove), rotationToApply);
 
-                foreach (var onTrackBogey in __instance.Track.onTrackBogies)
-                {
-                    onTrackBogey.Car.ForceOptimizationState(false);
-                    onTrackBogey.RefreshBogiePoints();
-                }
-                __instance.visuals.Rotate(rotationToApplyEulers, Space.World);
+                __instance.Track.TrackPointsUpdated_Invoke();
+
+                __instance.visuals.RotateAround(__instance.visuals.parent.position, __instance.visuals.forward, rotationDelta);
+                __instance.UpdateTrackConnection();
             }
-
-            __instance.UpdateTrackConnection();
 
             return false;
         }

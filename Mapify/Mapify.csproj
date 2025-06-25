@@ -30,6 +30,7 @@
         <Reference Include="DV.Localization" />
         <Reference Include="DV.LayeredAudio" />
         <Reference Include="DV.MeshX" />
+        <Reference Include="DV.OriginShiftInfo" />
         <Reference Include="DV.PointSet" />
         <Reference Include="DV.SignPlacer" />
         <Reference Include="DV.TerrainSystem" />
