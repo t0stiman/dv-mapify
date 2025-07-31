@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Mapify.Editor
 {
-    [ExecuteInEditMode] //this is necessary for snapping to work
+    [ExecuteInEditMode] // this is necessary for snapping to work
     [RequireComponent(typeof(BezierCurve))]
     public class Track : MonoBehaviour
     {
@@ -61,9 +61,9 @@ namespace Mapify.Editor
         private Vector3 previousPositionFirstPoint;
         private Vector3 previousPositionLastPoint;
 
-        //the track connected to the first point in our curve
+        // the track connected to the first point in our curve
         private SnappedTrack snappedTrackBefore;
-        //the track connected to the last point in our curve
+        // the track connected to the last point in our curve
         private SnappedTrack snappedTrackAfter;
 #endif
 
@@ -151,7 +151,7 @@ namespace Mapify.Editor
             if (!isOutSnapped)
                 DrawDisconnectedIcon(Curve.Last().position);
 
-            //first or last point moved?
+            // first or last point moved?
             if (Curve[0].position != previousPositionFirstPoint ||
                 Curve.Last().position != previousPositionLastPoint)
             {
@@ -251,7 +251,7 @@ namespace Mapify.Editor
             {
                 foreach (BezierPoint otherSnapPoint in snapPoints)
                 {
-                    //don't snap to itself
+                    // don't snap to itself
                     if (otherSnapPoint.Curve() == mySnapPoint.Curve()) continue;
 
                     Vector3 otherPosition = otherSnapPoint.transform.position;
@@ -270,7 +270,7 @@ namespace Mapify.Editor
 
                     otherTrack.Snapped(otherSnapPoint);
 
-                    //remember what track we snapped to
+                    // remember what track we snapped to
                     if (first)
                     {
                         snappedTrackBefore = new SnappedTrack(otherTrack, otherSnapPoint);

@@ -64,7 +64,7 @@ namespace Mapify.Editor.Validators
                     var machine = station.warehouseMachines[i];
                     if (machine == null)
                     {
-                        //machine set to null / None would cause a NullReferenceException below
+                        // machine set to null / None would cause a NullReferenceException below
                         skipMachineChecks = true;
                         yield return Result.Error($"Station has warehouse machine set to None", station);
                     }

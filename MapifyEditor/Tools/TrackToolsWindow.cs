@@ -445,7 +445,7 @@ namespace Mapify.Editor.Tools
                         return false;
                     }
 
-                    //TODO bug: this check sometimes gives a false positive
+                    // TODO bug: this check sometimes gives a false positive
                     if (!CheckGrade(isBehind ? CurrentTrack.GetGradeAtStart() : CurrentTrack.GetGradeAtEnd()))
                     {
                         tooltip = "Grade too steep for creation";
@@ -687,14 +687,14 @@ namespace Mapify.Editor.Tools
                 {
                     Handles.DrawWireDisc(HandleUtility.WorldToGUIPoint(Attach.Position), Vector3.forward, 15.0f);
                     // TODO: use a disc instead of this so it is not selectable.
-                    //Handles.FreeRotateHandle(Quaternion.identity, Attach.Position,
+                    // Handles.FreeRotateHandle(Quaternion.identity, Attach.Position,
                     //        HandleUtility.GetHandleSize(Attach.Position) * 0.15f);
                 }
 
                 for (int i = 0; i < Points.Length; i++)
                 {
                     Handles.DrawWireDisc(HandleUtility.WorldToGUIPoint(Points[i]), Vector3.forward, 5.0f);
-                    //Handles.FreeRotateHandle(Quaternion.identity, Points[i],
+                    // Handles.FreeRotateHandle(Quaternion.identity, Points[i],
                     //    HandleUtility.GetHandleSize(Points[i]) * 0.05f);
                 }
             }

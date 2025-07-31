@@ -87,7 +87,7 @@ namespace Mapify.Map
                     yield break;
                 }
 
-                //LoadingScreenImages will be null if the map was built with an older version of Mapify
+                // LoadingScreenImages will be null if the map was built with an older version of Mapify
                 if (mapInfo.LoadingScreenImages != null && mapInfo.LoadingScreenImages.Length > 0)
                 {
                     ShowLoadingScreenImage(mapInfo);

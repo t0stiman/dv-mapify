@@ -360,7 +360,7 @@ namespace Mapify.Editor.Tools
             float length = EditorGUILayout.FloatField(new GUIContent("Approx. length",
                 "Approximated total length of the curve"),
                 _radius * _arc * Mathf.Deg2Rad);
-            //length of zero makes no sense and will cause exceptions
+            // length of zero makes no sense and will cause exceptions
             if(length < 0.1f) length = 0.1f;
 
             bool changed = EditorGUI.EndChangeCheck();

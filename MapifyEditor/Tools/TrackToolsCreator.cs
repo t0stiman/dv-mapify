@@ -316,7 +316,7 @@ namespace Mapify.Editor.Tools
             {
                 if (switchBranchesCount % 2 == 1 && branchIndex == (switchBranchesCount-1) / 2)
                 {
-                    //middle track
+                    // middle track
                     tracks[branchIndex] = CreateStraight(switchObject.transform, attachPoint, handlePosition, length, endGrade);
                     continue;
                 }
@@ -326,13 +326,13 @@ namespace Mapify.Editor.Tools
 
                 if (branchIndex < switchBranchesCount / 2.0)
                 {
-                    //left of center
+                    // left of center
                     trackOrientation = TrackOrientation.Left;
                     thisRadius = (branchIndex + 1) * radius;
                 }
                 else
                 {
-                    //right of center
+                    // right of center
                     trackOrientation = TrackOrientation.Right;
                     thisRadius = (switchBranchesCount - branchIndex) * radius;
                 }

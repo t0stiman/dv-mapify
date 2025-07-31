@@ -29,14 +29,14 @@ namespace MapifyEditor.Export.Validators.Project
             if (mapInfo.name == Names.DEFAULT_MAP_NAME)
                 yield return Result.Error($"Your map name cannot be {Names.DEFAULT_MAP_NAME}");
 
-            //Loading Screen
+            // Loading Screen
             // mapInfo.LoadingScreenImages is null after upgrading from an older Mapify version that didn't support custom loading screens
             if (mapInfo.LoadingScreenImages != null && mapInfo.LoadingScreenImages.Any(image => image == null))
             {
                 yield return Result.Error("Loading screen image is null", mapInfo);
             }
 
-            //World
+            // World
             if (mapInfo.waterLevel < -1)
                 yield return Result.Error("Water level cannot be lower than -1", mapInfo);
 

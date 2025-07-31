@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace Mapify.Editor
 {
-    [ExecuteInEditMode] //this is necessary for snapping to work
+    [ExecuteInEditMode] // this is necessary for snapping to work
     public abstract class SwitchBase: MonoBehaviour
     {
         public virtual Track[] GetTracks()
@@ -107,7 +107,7 @@ namespace Mapify.Editor
 
             foreach (BezierPoint otherSnapPoint in points)
             {
-                //don't connect to itself
+                // don't connect to itself
                 if (otherSnapPoint.Curve().GetComponentInParent<Switch>() == this) continue;
 
                 Vector3 otherPosition = otherSnapPoint.transform.position;
@@ -126,7 +126,7 @@ namespace Mapify.Editor
 
                 otherTrack.Snapped(otherSnapPoint);
 
-                //remember what track we snapped to
+                // remember what track we snapped to
                 snappedTracks[snapPointIndex] = new SnappedTrack(otherTrack, otherSnapPoint);
             }
 

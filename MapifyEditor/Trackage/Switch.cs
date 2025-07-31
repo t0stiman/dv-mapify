@@ -6,7 +6,7 @@ namespace Mapify.Editor
     [RequireComponent(typeof(VanillaObject))]
     public class Switch : SwitchBase
     {
-        //must match DV.RailTrack.RailTrack.JUNCTION_DIVERGING_TRACK_NAME / JUNCTION_THROUGH_TRACK_NAME
+        // must match DV.RailTrack.RailTrack.JUNCTION_DIVERGING_TRACK_NAME / JUNCTION_THROUGH_TRACK_NAME
         public const string THROUGH_TRACK_NAME = "[track through]";
         public const string DIVERGING_TRACK_NAME = "[track diverging]";
 

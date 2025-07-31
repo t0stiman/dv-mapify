@@ -118,7 +118,7 @@ namespace Mapify.Editor
         SwitchSetter = 190,
         SwitchAlternating = 191,
 
-        //build 99.4
+        // build 99.4
         ItemContainerBriefcase = 192,
         ItemContainerFolder = 193,
         Nameplate = 194,
