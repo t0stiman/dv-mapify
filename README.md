@@ -49,7 +49,7 @@ Mapify is a Derail Valley mod that allows people to create and load custom maps.
 
 ## Documentation
 
-For information about creating maps and contributing to the project, check out the [docs](https://dv-mapify.rtfd.io/).
+For information about creating maps and contributing to the project, check out the [docs](https://t0stiman.github.io/dv-mapify/).
 
 
 
