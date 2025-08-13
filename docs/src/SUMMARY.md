@@ -5,6 +5,7 @@
 # User guide
 
 - [Using maps](./usage/index.md)
+- [Available maps](./usage/available-maps.md)
 
 # Development
 
