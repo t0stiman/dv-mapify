@@ -303,3 +303,6 @@ PackageBuilder/ProjectSettings/*
 
 # unitypackage
 *.unitypackage
+
+# docs generated files
+docs/book
