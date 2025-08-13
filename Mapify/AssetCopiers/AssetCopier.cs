@@ -22,9 +22,13 @@ namespace Mapify
 
             if(prefabs.TryGetValue(asset, out var prefab))
             {
-                var gameObject = GameObject.Instantiate(prefab, originShift ? WorldMover.OriginShiftParent : null);
-                gameObject.SetActive(active);
-                return gameObject;
+                var parent = originShift ? WorldMover.OriginShiftParent : null;
+                if (active)
+                {
+                    return GameObject.Instantiate(prefab, parent);
+                }
+
+                return UnityUtils.InstantiateDisabled(prefab, parent);
             }
 
             Mapify.LogError($"Failed to instantiate asset {asset}");
