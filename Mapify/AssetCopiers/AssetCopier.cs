@@ -19,9 +19,18 @@ namespace Mapify
         public static GameObject Instantiate(VanillaAsset asset, bool active = true, bool originShift = true)
         {
             Mapify.LogDebug(() => "Instantiating asset: " + asset);
-            var gameObject = GameObject.Instantiate(prefabs[asset], originShift ? WorldMover.OriginShiftParent : null);
-            gameObject.SetActive(active);
-            return gameObject;
+
+            if(prefabs.TryGetValue(asset, out var prefab))
+            {
+                var gameObject = GameObject.Instantiate(prefab, originShift ? WorldMover.OriginShiftParent : null);
+                gameObject.SetActive(active);
+                return gameObject;
+            }
+
+            Mapify.LogError($"Failed to instantiate asset {asset}");
+            var nothing = new GameObject();
+            nothing.SetActive(false);
+            return nothing;
         }
 
         public static void Cleanup()
