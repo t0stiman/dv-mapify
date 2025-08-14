@@ -66,6 +66,10 @@ namespace Mapify.Editor
         private SnappedTrack snappedTrackAfter;
 #endif
 
+        // The name the track had in the editor. This is useful for debugging since the name gets changed to LogicTrack at runtime.
+        [HideInInspector]
+        public string InEditorName;
+
         public BezierCurve Curve {
             get {
                 if (_curve != null) return _curve;
@@ -87,9 +91,7 @@ namespace Mapify.Editor
 
         public string LogicName =>
             trackType == TrackType.Road
-                ? !generateSigns
-                    ? $"[#] {name}"
-                    : name
+                ? $"{(generateSigns ? "" : "[#] ")}{name}"
                 : $"[Y]_[{stationId}]_[{yardId}-{trackId:D2}-{trackType.LetterId()}]";
 
 #if UNITY_EDITOR

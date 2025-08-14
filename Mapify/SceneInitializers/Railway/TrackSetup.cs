@@ -89,9 +89,11 @@ namespace Mapify.SceneInitializers.Railway
             foreach (Track track in tracks)
             {
                 track.gameObject.SetActive(false);
+                var railTrack = track.gameObject.AddComponent<RailTrack>();
                 if (!track.IsSwitch && !track.IsTurntable)
-                    track.name = track.LogicName;
-                RailTrack railTrack = track.gameObject.AddComponent<RailTrack>();
+                {
+                    railTrack.gameObject.name = track.LogicName;
+                }
                 railTrack.generateColliders = !track.IsTurntable;
                 railTrack.dontChange = false;
                 railTrack.age = (int)track.age;
