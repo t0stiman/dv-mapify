@@ -12,18 +12,18 @@ namespace Mapify.SceneInitializers.Railway
     {
         public override void Run()
         {
-            Track[] tracks = Object.FindObjectsOfType<Track>().Where(t => !t.IsSwitch).ToArray();
+            Track[] nonSwitchTracks = Object.FindObjectsOfType<Track>().Where(t => !t.IsSwitch).ToArray();
 
             Mapify.LogDebug(() => "Creating RailTracks");
-            CreateRailTracks(tracks);
+            CreateRailTracks(nonSwitchTracks);
 
             Mapify.LogDebug(() => "Creating Junctions");
             CreateJunctions();
 
-            tracks.SetActive(true);
+            nonSwitchTracks.SetActive(true);
 
             Mapify.LogDebug(() => "Connecting tracks");
-            ConnectTracks(tracks);
+            ConnectTracks(nonSwitchTracks);
 
             AlignAllTrackEnds();
             TestConnections();
@@ -95,6 +95,7 @@ namespace Mapify.SceneInitializers.Railway
                 railTrack.generateColliders = !track.IsTurntable;
                 railTrack.dontChange = false;
                 railTrack.age = (int)track.age;
+                railTrack.curve.resolution = RailTrack.DEFAULT_BEZIER_RESOLUTION;
                 railTrack.ApplyRailType();
             }
         }
