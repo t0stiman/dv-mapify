@@ -18,16 +18,19 @@ namespace Mapify
 
         public static GameObject Instantiate(VanillaAsset asset, bool active = true, bool originShift = true)
         {
-            Mapify.LogDebug(() => "Instantiating asset: " + asset);
+            Mapify.LogDebug($"Instantiating asset: {asset}");
 
             if(prefabs.TryGetValue(asset, out var prefab))
             {
                 var parent = originShift ? WorldMover.OriginShiftParent : null;
                 if (active)
                 {
-                    return GameObject.Instantiate(prefab, parent);
+                    var instantiated = GameObject.Instantiate(prefab, parent);
+                    instantiated.SetActive(true);
+                    return instantiated;
                 }
 
+                // instantiate disabled so Awake, Start etc. don't run
                 return UnityUtils.InstantiateDisabled(prefab, parent);
             }
 
