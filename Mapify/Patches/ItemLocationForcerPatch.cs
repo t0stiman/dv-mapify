@@ -19,9 +19,9 @@ namespace Mapify.Patches
             if(!__instance.itemGO.TryGetComponent<ShopScanner>(out var shopScanner)) return;
 
             Mapify.LogDebug($"Forcing scanner at '{shopScanner.gameObject.GetPath()}' active");
-            var forceActive = __instance.gameObject.GetOrAddComponent<ForceActive>();
-            forceActive.enabled = true;
-            forceActive.target = shopScanner.gameObject;
+            var reactivate = __instance.gameObject.GetOrAddComponent<Reactivate>();
+            reactivate.enabled = true;
+            reactivate.target = shopScanner.gameObject;
         }
     }
 
@@ -31,8 +31,8 @@ namespace Mapify.Patches
         private static void Postfix(ItemLocationForcer __instance)
         {
             if(__instance.itemGO == null || Maps.IsDefaultMap) return;
-            if(!__instance.itemGO.TryGetComponent<ForceActive>(out var forceActive)) return;
-            forceActive.enabled = false;
+            if(!__instance.itemGO.TryGetComponent<Reactivate>(out var reactivate)) return;
+            reactivate.enabled = false;
         }
     }
 

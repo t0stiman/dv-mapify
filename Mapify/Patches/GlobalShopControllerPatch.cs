@@ -5,8 +5,9 @@ using HarmonyLib;
 
 namespace Mapify.Patches
 {
+#if DEBUG
     [HarmonyPatch(typeof(GlobalShopController), nameof(GlobalShopController.InitializeShopData))]
-    public class GlobalShopControllerPatch
+    public class GlobalShopController_InitializeShopData_Patch
     {
         private static void Postfix(GlobalShopController __instance)
         {
@@ -54,4 +55,5 @@ namespace Mapify.Patches
             }
         }
     }
+#endif
 }
