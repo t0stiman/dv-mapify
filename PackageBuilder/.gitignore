@@ -1,4 +1,14 @@
-﻿# This .gitignore file should be placed at the root of your Unity project directory
+﻿# Mapify scripts
+Assets/Mapify/Scripts/*.dll
+
+# Project Settings
+ProjectSettings/*
+!ProjectSettings/ProjectSettings.asset
+!ProjectSettings/EditorSettings.asset
+!ProjectSettings/PackageManagerSettings.asset
+!ProjectSettings/ProjectVersion.txt
+
+# This .gitignore file should be placed at the root of your Unity project directory
 #
 # Get latest from https://github.com/github/gitignore/blob/main/Unity.gitignore
 #
