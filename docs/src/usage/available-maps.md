@@ -5,7 +5,7 @@ This is a list of map mods that are currently available to download.
 ## Test tracks
 
 [Tostiman's test map](https://www.nexusmods.com/derailvalley/mods/798)  
-[Wiz's Test Track](https://www.nexusmods.com/derailvalley/mods/801) (Needs to be updated)  
+[Wiz's Test Track](https://www.nexusmods.com/derailvalley/mods/801)  
 [Rolling material testing map](https://www.nexusmods.com/derailvalley/mods/832)
 
 ## Unavailable/broken maps 
