@@ -52,15 +52,15 @@ namespace Mapify
 
         #region Logging
 
+        public static void LogDebugExtreme(object msg)
+        {
+            LogDebugExtreme(() => msg);
+        }
+
         public static void LogDebugExtreme(Func<object> resolver)
         {
             if (Settings.ExtremelyVerboseLogging)
                 LogDebug(resolver);
-        }
-
-        public static void LogDebugExtreme(object msg)
-        {
-            LogDebugExtreme(() => msg);
         }
 
         public static void LogDebug(object msg)
