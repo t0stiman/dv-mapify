@@ -292,17 +292,5 @@ TestMap/
 # Decompiled project
 DerailValley/
 
-### Package Builder
-PackageBuilder/Assets/Mapify/Scripts/*.dll
-# Project Settings
-PackageBuilder/ProjectSettings/*
-!PackageBuilder/ProjectSettings/ProjectSettings.asset
-!PackageBuilder/ProjectSettings/EditorSettings.asset
-!PackageBuilder/ProjectSettings/PackageManagerSettings.asset
-!PackageBuilder/ProjectSettings/ProjectVersion.txt
-
-# unitypackage
-*.unitypackage
-
 # docs generated files
 docs/book
