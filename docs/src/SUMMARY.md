@@ -14,6 +14,7 @@
   - [Terrain](./creatingmaps/terrain.md)
   - [Decoration](./creatingmaps/decoration.md)
   - [Railway](./creatingmaps/railway.md)
+  - [Locomotive spawners](./creatingmaps/locomotive-spawners.md)
   - [Job Generation](./creatingmaps/jobs.md)
   - [Area Blockers](./creatingmaps/area-blockers.md)
   - [Service Stations](./creatingmaps/service-stations.md)
