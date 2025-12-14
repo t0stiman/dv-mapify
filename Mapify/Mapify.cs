@@ -12,7 +12,7 @@ namespace Mapify
     public static class Mapify
     {
         private static UnityModManager.ModEntry ModEntry { get; set; }
-        private static Settings Settings;
+        public static Settings Settings { get; private set; }
 
         internal static Harmony Harmony { get; private set; }
 
@@ -20,7 +20,7 @@ namespace Mapify
         {
             ModEntry = modEntry;
 
-            Settings = Settings.Load<Settings>(ModEntry);
+            Settings = UnityModManager.ModSettings.Load<Settings>(ModEntry);
             ModEntry.OnGUI = entry => Settings.Draw(entry);
             ModEntry.OnSaveGUI = entry => Settings.Save(entry);
 
