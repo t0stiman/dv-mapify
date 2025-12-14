@@ -9,7 +9,7 @@
 
 <!-- PROJECT LOGO -->
 <div align="center">
-  <h1>Mapify</h1>
+  <h1>Mapify Continued</h1>
   <p>
     A <a href="https://store.steampowered.com/app/588030">Derail Valley</a> mod for creating and loading custom maps
     <br />
