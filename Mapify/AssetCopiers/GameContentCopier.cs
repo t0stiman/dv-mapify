@@ -100,8 +100,8 @@ namespace Mapify.SceneInitializers.Vanilla.GameContent
                 if (itemName.StartsWith("Key")) continue;
                 if (Enum.TryParse($"StoreItem{itemName}", true, out VanillaAsset asset))
                     yield return (asset, module.gameObject);
-                else
-                    Mapify.LogError($"Failed to find {nameof(VanillaAsset)} for shop item {itemName}");
+                // else
+                //     Mapify.LogError($"Failed to find {nameof(VanillaAsset)} for shop item {itemName}");
             }
 
             var shop = shopsParent.GetComponentInChildren<Shop>(true);
@@ -114,8 +114,7 @@ namespace Mapify.SceneInitializers.Vanilla.GameContent
             foreach (var module in shop.GetComponentsInChildren<ScanItemCashRegisterModule>())
                 Object.Destroy(module.gameObject);
 
-            Object.Destroy(shop.transform.FindChildByName("Stopwatch"));
-            Object.Destroy(shop.transform.FindChildByName("PosterAnchor"));
+            Object.Destroy(shop.gameObject.FindChildByName("PosterAnchor"));
 
             yield return (VanillaAsset.StoreObject, shop.gameObject);
 

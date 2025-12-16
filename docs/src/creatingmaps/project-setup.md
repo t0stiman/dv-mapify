@@ -60,8 +60,8 @@ To toggle Gizmos, click the "Gizmos" button in the top right of the scene view.
 
 ## Importing The Creation Package
 
-To import the map creation package, [download the latest release from GitHub][github-releases].
-Then, back in Unity, go to `Assets > Import Package > Custom Package` and select the `.unitypacakge` file you downloaded.
+To import the map creation package, [download the .unitypackage file from the latest release from GitHub][github-releases].
+Then, back in Unity, go to `Assets > Import Package > Custom Package` and select the `.unitypackage` file you downloaded.
 When the import prompt comes up, import everything.
 
 
@@ -108,5 +108,5 @@ To view them, hover over the field momentarily, and it'll appear.
 
 [unity-hub]: https://unity.com/download
 [unity-download]: unityhub://2019.4.40f1/ffc62b691db5
-[github-releases]: https://github.com/Insprill/dv-mapify/releases
+[github-releases]: https://github.com/t0stiman/dv-mapify/releases
 [code-monkey]: https://www.youtube.com/@CodeMonkeyUnitys

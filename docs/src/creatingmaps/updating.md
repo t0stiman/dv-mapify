@@ -24,4 +24,4 @@ If you're upgrading through multiple versions, read the list bottom-up, starting
 - All service station resources must be reassigned.
 - Diesel service station resources are now required to be last in the list.
 
-[github-releases]: https://github.com/Insprill/dv-mapify/releases
+[github-releases]: https://github.com/t0stiman/dv-mapify/releases

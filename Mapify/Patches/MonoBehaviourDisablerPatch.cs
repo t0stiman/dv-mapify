@@ -25,7 +25,7 @@ namespace Mapify.Patches
             "OnDestroy"
         };
         private static readonly MethodInfo prefix = AccessTools.DeclaredMethod(typeof(MonoBehaviourDisablerPatch), nameof(Prefix));
-        private static readonly HarmonyMethod harmonyPrefix = new HarmonyMethod(prefix);
+        private static readonly HarmonyMethod harmonyPrefix = new(prefix);
 
         public static void DisableAll()
         {
@@ -53,7 +53,11 @@ namespace Mapify.Patches
                     }
                     catch (Exception e)
                     {
-                        Mapify.LogException($"Failed to patch {type.FullName}#{methodName}", e);
+                        Mapify.LogWarning($"[{nameof(MonoBehaviourDisablerPatch)}] Failed to patch {type.FullName}#{methodName}. Exception: \n{e.Message}");
+                        if (Mapify.Settings.VerboseLogging)
+                        {
+                            Mapify.LogException("", e);
+                        }
                     }
                 }
             }

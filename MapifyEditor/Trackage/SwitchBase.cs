@@ -9,6 +9,22 @@ namespace Mapify.Editor
     [ExecuteInEditMode] // this is necessary for snapping to work
     public abstract class SwitchBase: MonoBehaviour
     {
+// #if UNITY_EDITOR
+//         //TODO snap?
+//         private bool snapShouldUpdate = true;
+//
+//         private Vector3 previousPositionSwitchFirstPoint;
+//         private Vector3 previousPositionThroughTrackLastPoint;
+//         private Vector3 previousPositionDivergingTrackLastPoint;
+//
+//
+//         private SnappedTrack snappedTrackBeforeSwitch;
+//         //the track connected to the through track
+//         private SnappedTrack snappedTrackAfterThrough;
+//         //the track connected to the diverging track
+//         private SnappedTrack snappedTrackAfterDiverging;
+// #endif
+
         public virtual Track[] GetTracks()
         {
             var tracks = gameObject.GetComponentsInChildren<Track>();
