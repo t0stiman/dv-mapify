@@ -19,15 +19,15 @@ namespace Mapify.SceneInitializers.Railway
             var allTracks = Object.FindObjectsOfType<Track>();
             var nonSwitchTracks = allTracks.Where(t => !t.IsSwitch).ToArray();
 
-            Mapify.LogDebug(() => "Creating RailTracks");
+            Mapify.LogDebug("Creating RailTracks");
             CreateRailTracks(nonSwitchTracks, false);
 
-            Mapify.LogDebug(() => "Creating Junctions");
+            Mapify.LogDebug("Creating Junctions");
             CreateJunctions();
 
             nonSwitchTracks.SetActive(true);
 
-            Mapify.LogDebug(() => "Connecting tracks");
+            Mapify.LogDebug("Connecting tracks");
             ConnectTracks(allTracks);
 
             var allRailTracks = Object.FindObjectsOfType<RailTrack>();

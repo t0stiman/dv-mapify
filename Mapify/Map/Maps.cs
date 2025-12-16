@@ -47,7 +47,7 @@ namespace Mapify.Map
         {
             if (result)
             {
-                Mapify.LogDebug(() => $"New mod enabled ({modEntry.Info.DisplayName}), checking for maps...");
+                Mapify.LogDebug($"New mod enabled ({modEntry.Info.DisplayName}), checking for maps...");
                 FindMaps(modEntry);
                 return;
             }
@@ -93,7 +93,7 @@ namespace Mapify.Map
                     continue;
                 }
 
-                Mapify.LogDebug(() => $"Found map '{mapInfo.name}' from '{modEntry.Info.DisplayName}' in '{dir}'");
+                Mapify.LogDebug($"Found map '{mapInfo.name}' from '{modEntry.Info.DisplayName}' in '{dir}'");
                 availableMaps.Add(mapInfo.name, (mapInfo, modEntry, dir));
                 foundMap = true;
             }
