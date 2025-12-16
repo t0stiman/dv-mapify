@@ -9,22 +9,6 @@ namespace Mapify.Editor
     [ExecuteInEditMode] // this is necessary for snapping to work
     public abstract class SwitchBase: MonoBehaviour
     {
-// #if UNITY_EDITOR
-//         //TODO snap?
-//         private bool snapShouldUpdate = true;
-//
-//         private Vector3 previousPositionSwitchFirstPoint;
-//         private Vector3 previousPositionThroughTrackLastPoint;
-//         private Vector3 previousPositionDivergingTrackLastPoint;
-//
-//
-//         private SnappedTrack snappedTrackBeforeSwitch;
-//         //the track connected to the through track
-//         private SnappedTrack snappedTrackAfterThrough;
-//         //the track connected to the diverging track
-//         private SnappedTrack snappedTrackAfterDiverging;
-// #endif
-
         public virtual Track[] GetTracks()
         {
             var tracks = gameObject.GetComponentsInChildren<Track>();
@@ -40,22 +24,15 @@ namespace Mapify.Editor
 
         private Vector3[] previousPositionsPoints;
         private SnappedTrack[] snappedTracks;
-        private bool init = false;
 
         private void OnEnable()
         {
             snapShouldUpdate = true;
-
-            var pointsCount = GetTracks().Count()+1;
-            previousPositionsPoints = new Vector3[pointsCount];
-            snappedTracks = new SnappedTrack[pointsCount];
-            init = true;
         }
 
         private void OnDisable()
         {
             UnsnapConnectedTracks();
-            init = false;
         }
 
         private void OnDestroy()
@@ -65,7 +42,6 @@ namespace Mapify.Editor
 
         private void OnDrawGizmos()
         {
-            if(!init) return;
             if (transform.DistToSceneCamera() >= Track.SNAP_UPDATE_RANGE_SQR)
             {
                 return;
@@ -84,6 +60,13 @@ namespace Mapify.Editor
         {
             var positionPoints = GetPoints().Select(point => point.position).ToArray();
 
+            if (previousPositionsPoints is null || positionPoints.Length != previousPositionsPoints.Length)
+            {
+                snapShouldUpdate = true;
+                previousPositionsPoints = positionPoints;
+                return;
+            }
+
             for (int index = 0; index < positionPoints.Length; index++)
             {
                 if (positionPoints[index] == previousPositionsPoints[index]) continue;
@@ -95,6 +78,8 @@ namespace Mapify.Editor
 
         private void UnsnapConnectedTracks()
         {
+            if(snappedTracks is null) { return; }
+
             foreach (var snapped in snappedTracks)
             {
                 snapped?.UnSnapped();
@@ -120,6 +105,12 @@ namespace Mapify.Editor
             var position = reference.position;
             var closestPosition = Vector3.zero;
             var closestDistance = float.MaxValue;
+
+            var switchPointsCount = GetPoints().Count;
+            if (snappedTracks is null || snappedTracks.Length != switchPointsCount)
+            {
+                snappedTracks = new SnappedTrack[switchPointsCount];
+            }
 
             foreach (BezierPoint otherSnapPoint in points)
             {
