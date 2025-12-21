@@ -1753,9 +1753,7 @@ namespace Mapify.Editor.Tools
 
             // Create main track
             BezierPoint bp;
-            tracks[0] = GetEmptyTrack();
-            tracks[0].transform.parent = container.transform;
-            tracks[0].transform.position = p0;
+            tracks[0] = GetEmptyTrack("Track 0 (Main)", container.transform, p0);
 
             bp = tracks[0].Curve.AddPointAt(p0);
             bp.handleStyle = BezierPoint.HandleStyle.Broken;
@@ -1763,8 +1761,6 @@ namespace Mapify.Editor.Tools
             bp = tracks[0].Curve.AddPointAt(p3);
             bp.handleStyle = BezierPoint.HandleStyle.Broken;
             bp.globalHandle1 = p2;
-
-            tracks[0].gameObject.name = $"Track 0 (Main) {tracks[0].GetHorizontalLength():F3}m";
 
             int trackIndex = 1;
 
@@ -1774,9 +1770,8 @@ namespace Mapify.Editor.Tools
                 float offset = spacing * i;
                 SimpleBezier offsetBezier = OffsetBezier(mainBezier, offset, bothSides ? false : toLeft);
 
-                tracks[trackIndex] = GetEmptyTrack();
-                tracks[trackIndex].transform.parent = container.transform;
-                tracks[trackIndex].transform.position = offsetBezier.P0;
+                string trackName = $"Track {trackIndex} ({(bothSides ? "Right" : (toLeft ? "Left" : "Right"))} {i})";
+                tracks[trackIndex] = GetEmptyTrack(trackName, container.transform, offsetBezier.P0);
 
                 bp = tracks[trackIndex].Curve.AddPointAt(offsetBezier.P0);
                 bp.handleStyle = BezierPoint.HandleStyle.Broken;
@@ -1784,8 +1779,6 @@ namespace Mapify.Editor.Tools
                 bp = tracks[trackIndex].Curve.AddPointAt(offsetBezier.P3);
                 bp.handleStyle = BezierPoint.HandleStyle.Broken;
                 bp.globalHandle1 = offsetBezier.P2;
-
-                tracks[trackIndex].gameObject.name = $"Track {trackIndex} ({(bothSides ? "Right" : (toLeft ? "Left" : "Right"))} {i}) {tracks[trackIndex].GetHorizontalLength():F3}m";
 
                 trackIndex++;
             }
@@ -1798,9 +1791,8 @@ namespace Mapify.Editor.Tools
                     float offset = spacing * i;
                     SimpleBezier offsetBezier = OffsetBezier(mainBezier, offset, true);
 
-                    tracks[trackIndex] = GetEmptyTrack();
-                    tracks[trackIndex].transform.parent = container.transform;
-                    tracks[trackIndex].transform.position = offsetBezier.P0;
+                    string trackName = $"Track {trackIndex} (Left {i})";
+                    tracks[trackIndex] = GetEmptyTrack(trackName, container.transform, offsetBezier.P0);
 
                     bp = tracks[trackIndex].Curve.AddPointAt(offsetBezier.P0);
                     bp.handleStyle = BezierPoint.HandleStyle.Broken;
@@ -1809,7 +1801,6 @@ namespace Mapify.Editor.Tools
                     bp.handleStyle = BezierPoint.HandleStyle.Broken;
                     bp.globalHandle1 = offsetBezier.P2;
 
-                    tracks[trackIndex].gameObject.name = $"Track {trackIndex} (Left {i}) {tracks[trackIndex].GetHorizontalLength():F3}m";
 
                     trackIndex++;
                 }

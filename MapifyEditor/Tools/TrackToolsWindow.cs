@@ -645,7 +645,11 @@ namespace Mapify.Editor.Tools
 
         private void ApplySettingsToTrack(Track t)
         {
-            t.transform.parent = _currentParent;
+            // Only set parent if the track doesn't already have one (to preserve container hierarchy)
+            if (t.transform.parent == null)
+            {
+                t.transform.parent = _currentParent;
+            }
             t.age = _trackAge;
             t.generateSigns = _generateSigns;
             t.generateBallast = _generateBallast;
