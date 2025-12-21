@@ -167,6 +167,44 @@ namespace Mapify.Editor.Tools
                 _newCache[0].Lines = new Vector3[][] { MathHelper.SampleBezier(curve, _sampleCount) };
                 _newCache[0].DrawButton = false;
 
+                // If multi-track mode is enabled, preview parallel tracks
+                if (_multiTrackMode)
+                {
+                    SimpleBezier mainBezier = new SimpleBezier(curve[0], curve[1], curve[2], curve[3]);
+
+                    // Preview tracks on the right side (or only side if not both)
+                    for (int i = 1; i <= _parallelTrackCount; i++)
+                    {
+                        float offset = _parallelTrackSpacing * i;
+                        SimpleBezier offsetBezier = TrackToolsCreator.OffsetBezier(mainBezier, offset,
+                            _parallelBothSides ? false : (_parallelTrackSide == TrackOrientation.Left));
+
+                        Vector3[] parallelCurve = new Vector3[] { offsetBezier.P0, offsetBezier.P1, offsetBezier.P2, offsetBezier.P3 };
+                        AttachPoint parallelAp = new AttachPoint(offsetBezier.P0, offsetBezier.P1);
+
+                        _newCache.Add(new PreviewPointCache(parallelAp));
+                        _newCache[_newCache.Count - 1].Lines = new Vector3[][] { MathHelper.SampleBezier(parallelCurve, _sampleCount) };
+                        _newCache[_newCache.Count - 1].DrawButton = false;
+                    }
+
+                    // Preview tracks on the left side if both sides enabled
+                    if (_parallelBothSides)
+                    {
+                        for (int i = 1; i <= _parallelTrackCount; i++)
+                        {
+                            float offset = _parallelTrackSpacing * i;
+                            SimpleBezier offsetBezier = TrackToolsCreator.OffsetBezier(mainBezier, offset, true);
+
+                            Vector3[] parallelCurve = new Vector3[] { offsetBezier.P0, offsetBezier.P1, offsetBezier.P2, offsetBezier.P3 };
+                            AttachPoint parallelAp = new AttachPoint(offsetBezier.P0, offsetBezier.P1);
+
+                            _newCache.Add(new PreviewPointCache(parallelAp));
+                            _newCache[_newCache.Count - 1].Lines = new Vector3[][] { MathHelper.SampleBezier(parallelCurve, _sampleCount) };
+                            _newCache[_newCache.Count - 1].DrawButton = false;
+                        }
+                    }
+                }
+
                 // Handle at the next position.
                 _nextCache.Add(new PreviewPointCache(ap));
                 _nextCache[0].Lines = new Vector3[][] { new Vector3[] { curve[0], curve[1] } };
@@ -231,22 +269,113 @@ namespace Mapify.Editor.Tools
         // Create a track from the curve.
         private void StartNewTrack(Vector3[] curve)
         {
-            _freeformTrackHelper.WorkingTrack = TrackToolsCreator.CreateBezier(_currentParent,
-                curve[0], curve[1], curve[2], curve[3]);
+            if (_multiTrackMode)
+            {
+                _freeformTrackHelper.WorkingTracks = TrackToolsCreator.CreateBezierMulti(_currentParent,
+                    curve[0], curve[1], curve[2], curve[3],
+                    _parallelTrackCount, _parallelTrackSpacing,
+                    _parallelTrackSide == TrackOrientation.Left, _parallelBothSides);
 
-            _freeformTrackHelper.UndoIndex = Undo.GetCurrentGroup();
-            _freeformTrackHelper.WorkingTrack.name = "Freeform Track";
-            ApplySettingsToTrack(_freeformTrackHelper.WorkingTrack);
+                _freeformTrackHelper.UndoIndex = Undo.GetCurrentGroup();
+
+                // Apply settings to all tracks
+                foreach (Track track in _freeformTrackHelper.WorkingTracks)
+                {
+                    ApplySettingsToTrack(track);
+                }
+
+                // Set main track reference for compatibility
+                _freeformTrackHelper.WorkingTrack = _freeformTrackHelper.WorkingTracks[0];
+                _freeformTrackHelper.WorkingTrack.transform.parent.name = "Freeform Multi Track";
+            }
+            else
+            {
+                _freeformTrackHelper.WorkingTrack = TrackToolsCreator.CreateBezier(_currentParent,
+                    curve[0], curve[1], curve[2], curve[3]);
+
+                _freeformTrackHelper.UndoIndex = Undo.GetCurrentGroup();
+                _freeformTrackHelper.WorkingTrack.name = "Freeform Track";
+                ApplySettingsToTrack(_freeformTrackHelper.WorkingTrack);
+            }
         }
 
         private void ContinueTrack(Vector3[] curve)
         {
-            BezierCurve track = _freeformTrackHelper.WorkingTrack.Curve;
-            track.Last().handleStyle = BezierPoint.HandleStyle.Broken;
-            track.Last().globalHandle2 = curve[1];
-            track.AddPointAt(curve[3]);
-            track.Last().handleStyle = BezierPoint.HandleStyle.Broken;
-            track.Last().globalHandle1 = curve[2];
+            if (_multiTrackMode && _freeformTrackHelper.WorkingTracks != null)
+            {
+                // Continue all parallel tracks
+                // The main track (index 0) uses the curve as-is
+                // Parallel tracks need to be offset from their own last positions
+
+                for (int trackIndex = 0; trackIndex < _freeformTrackHelper.WorkingTracks.Length; trackIndex++)
+                {
+                    Track track = _freeformTrackHelper.WorkingTracks[trackIndex];
+                    BezierCurve bezierCurve = track.Curve;
+
+                    if (trackIndex == 0)
+                    {
+                        // Main track - use the curve as-is
+                        bezierCurve.Last().handleStyle = BezierPoint.HandleStyle.Broken;
+                        bezierCurve.Last().globalHandle2 = curve[1];
+                        bezierCurve.AddPointAt(curve[3]);
+                        bezierCurve.Last().handleStyle = BezierPoint.HandleStyle.Broken;
+                        bezierCurve.Last().globalHandle1 = curve[2];
+                    }
+                    else
+                    {
+                        // Calculate which side and offset amount
+                        bool isLeft;
+                        int sideIndex;
+
+                        if (_parallelBothSides)
+                        {
+                            // Right side tracks: 1 to _parallelTrackCount
+                            // Left side tracks: _parallelTrackCount+1 to _parallelTrackCount*2
+                            if (trackIndex <= _parallelTrackCount)
+                            {
+                                isLeft = false;
+                                sideIndex = trackIndex;
+                            }
+                            else
+                            {
+                                isLeft = true;
+                                sideIndex = trackIndex - _parallelTrackCount;
+                            }
+                        }
+                        else
+                        {
+                            isLeft = _parallelTrackSide == TrackOrientation.Left;
+                            sideIndex = trackIndex;
+                        }
+
+                        float offset = _parallelTrackSpacing * sideIndex;
+
+                        // Use the main track's NEW segment to calculate offset using the improved OffsetBezier method
+                        SimpleBezier mainSegment = new SimpleBezier(curve[0], curve[1], curve[2], curve[3]);
+                        SimpleBezier offsetSegment = TrackToolsCreator.OffsetBezier(mainSegment, offset, isLeft);
+
+                        // Use the calculated offset bezier for all points
+                        Vector3 offsetP1 = offsetSegment.P1;
+                        Vector3 offsetP2 = offsetSegment.P2;
+                        Vector3 offsetP3 = offsetSegment.P3;
+
+                        bezierCurve.Last().handleStyle = BezierPoint.HandleStyle.Broken;
+                        bezierCurve.Last().globalHandle2 = offsetP1;
+                        bezierCurve.AddPointAt(offsetP3);
+                        bezierCurve.Last().handleStyle = BezierPoint.HandleStyle.Broken;
+                        bezierCurve.Last().globalHandle1 = offsetP2;
+                    }
+                }
+            }
+            else
+            {
+                BezierCurve track = _freeformTrackHelper.WorkingTrack.Curve;
+                track.Last().handleStyle = BezierPoint.HandleStyle.Broken;
+                track.Last().globalHandle2 = curve[1];
+                track.AddPointAt(curve[3]);
+                track.Last().handleStyle = BezierPoint.HandleStyle.Broken;
+                track.Last().globalHandle1 = curve[2];
+            }
         }
     }
 }

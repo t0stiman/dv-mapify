@@ -193,18 +193,53 @@ namespace Mapify.Editor.Tools
             switch (_currentPiece)
             {
                 case TrackPiece.Straight:
-                    t = TrackToolsCreator.CreateStraight(_currentParent, position, handle,
-                        _length, _endGrade);
-                    ApplySettingsToTrack(t);
-                    SelectTrack(t);
-                    Undo.RegisterCreatedObjectUndo(t.gameObject, "Created Straight");
+                    if (_multiTrackMode)
+                    {
+                        Track[] tracks = TrackToolsCreator.CreateStraightMulti(_currentParent, position, handle,
+                            _length, _endGrade, _parallelTrackCount, _parallelTrackSpacing,
+                            _parallelTrackSide == TrackOrientation.Left, _parallelBothSides);
+
+                        foreach (Track track in tracks)
+                        {
+                            ApplySettingsToTrack(track);
+                        }
+
+                        SelectGameObject(tracks[0].transform.parent.gameObject);
+                        Undo.RegisterCreatedObjectUndo(tracks[0].transform.parent.gameObject, "Created Multi Straight");
+                    }
+                    else
+                    {
+                        t = TrackToolsCreator.CreateStraight(_currentParent, position, handle,
+                            _length, _endGrade);
+                        ApplySettingsToTrack(t);
+                        SelectTrack(t);
+                        Undo.RegisterCreatedObjectUndo(t.gameObject, "Created Straight");
+                    }
                     break;
                 case TrackPiece.Curve:
-                    t = TrackToolsCreator.CreateArcCurve(_currentParent, position, handle, _orientation,
-                        _radius, _arc, _maxArcPerPoint, _endGrade);
-                    ApplySettingsToTrack(t);
-                    SelectTrack(t);
-                    Undo.RegisterCreatedObjectUndo(t.gameObject, "Created Curve");
+                    if (_multiTrackMode)
+                    {
+                        Track[] tracks = TrackToolsCreator.CreateArcCurveMulti(_currentParent, position, handle,
+                            _orientation, _radius, _arc, _maxArcPerPoint, _endGrade,
+                            _parallelTrackCount, _parallelTrackSpacing,
+                            _parallelTrackSide == TrackOrientation.Left, _parallelBothSides);
+
+                        foreach (Track track in tracks)
+                        {
+                            ApplySettingsToTrack(track);
+                        }
+
+                        SelectGameObject(tracks[0].transform.parent.gameObject);
+                        Undo.RegisterCreatedObjectUndo(tracks[0].transform.parent.gameObject, "Created Multi Curve");
+                    }
+                    else
+                    {
+                        t = TrackToolsCreator.CreateArcCurve(_currentParent, position, handle, _orientation,
+                            _radius, _arc, _maxArcPerPoint, _endGrade);
+                        ApplySettingsToTrack(t);
+                        SelectTrack(t);
+                        Undo.RegisterCreatedObjectUndo(t.gameObject, "Created Curve");
+                    }
                     break;
                 case TrackPiece.Switch:
                     if (_switchType == SwitchType.Vanilla)
@@ -708,6 +743,7 @@ namespace Mapify.Editor.Tools
             public Vector3? Next;
             public Vector3? NextHandle;
             public Track WorkingTrack;
+            public Track[] WorkingTracks; // For multi-track mode
             public int? UndoIndex;
             public bool Locked;
 
@@ -723,6 +759,7 @@ namespace Mapify.Editor.Tools
                 Next = null;
                 NextHandle = null;
                 WorkingTrack = null;
+                WorkingTracks = null;
                 UndoIndex = null;
                 Locked = false;
             }
@@ -767,6 +804,11 @@ namespace Mapify.Editor.Tools
                 if (WorkingTrack)
                 {
                     return AttachPoint.FromBezierPoint(WorkingTrack.Curve.Last(), false);
+                }
+
+                if (WorkingTracks != null && WorkingTracks.Length > 0 && WorkingTracks[0])
+                {
+                    return AttachPoint.FromBezierPoint(WorkingTracks[0].Curve.Last(), false);
                 }
 
                 if (!Start.HasValue)
