@@ -189,7 +189,7 @@ namespace Mapify.Editor.Tools
 
                 _parallelTrackCount = EditorGUILayout.IntSlider(
                     new GUIContent("Track count", "Number of parallel tracks (excluding main track)"),
-                    _parallelTrackCount, 1, 6);
+                    _parallelTrackCount, 1, 19);
 
                 _parallelTrackSpacing = EditorGUILayout.FloatField(
                     new GUIContent("Track spacing", "Distance between parallel tracks in meters"),
