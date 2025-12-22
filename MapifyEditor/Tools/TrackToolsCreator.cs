@@ -1554,7 +1554,7 @@ namespace Mapify.Editor.Tools
         {
             GameObject crossObj = new GameObject($"[Crossover {orientation}]");
             crossObj.transform.parent = parent;
-            crossObj.transform.position = attachPoint;
+            // Don't set position - keep at parent's origin so child positions work correctly
 
             SwitchPoint sp;
 
@@ -1654,7 +1654,7 @@ namespace Mapify.Editor.Tools
             // Create the parent object.
             GameObject obj = new GameObject("[Double Slip]");
             obj.transform.parent = parent;
-            obj.transform.position = attachPoint;
+            // Don't set position - keep at parent's origin so child positions work correctly
 
             // Double slips use the switch radius for the curve.
             float radius = TrackToolsHelper.CalculateSwitchRadius(leftPrefab);
