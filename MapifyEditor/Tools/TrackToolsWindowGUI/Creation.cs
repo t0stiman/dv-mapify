@@ -46,9 +46,7 @@ namespace Mapify.Editor.Tools
         // Switches.
         private SwitchType _switchType = SwitchType.Vanilla;
         private int _switchBranchesCount = 2;
-        private SwitchPoint _connectingPointVanilla = SwitchPoint.Joint;
-        // 0 -> joint point, 1 - ∞ -> branch point
-        private int _connectingPointCustom = 0; //TODO implement connecting point
+        private SwitchPoint _connectingPoint = SwitchPoint.Joint;
 
         // Yards.
         private YardOptions _yardOptions = YardOptions.DefaultOptions;
@@ -362,7 +360,7 @@ namespace Mapify.Editor.Tools
             float length = EditorGUILayout.FloatField(new GUIContent("Approx. length",
                 "Approximated total length of the curve"),
                 _radius * _arc * Mathf.Deg2Rad);
-            //length of zero makes no sense and will cause exceptions
+            // length of zero makes no sense and will cause exceptions
             if(length < 0.1f) length = 0.1f;
 
             bool changed = EditorGUI.EndChangeCheck();
@@ -566,7 +564,7 @@ namespace Mapify.Editor.Tools
             DrawOrientationGUI("Choose which side the track diverges to");
             DrawVanillaSwitchPointGUI();
 
-            if (_connectingPointVanilla == SwitchPoint.Through)
+            if (_connectingPoint == SwitchPoint.Through)
             {
                 EditorGUILayout.HelpBox("The selected point has no connection with " +
                     "the track, you should select one of the others.", MessageType.Warning);

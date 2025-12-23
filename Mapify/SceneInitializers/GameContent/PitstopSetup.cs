@@ -26,7 +26,7 @@ namespace Mapify.SceneInitializers.GameContent
                 manualServiceIndicatorTransform.SetPositionAndRotation(msi.position, msi.rotation);
                 Object.Destroy(msi.gameObject);
 
-                //todo: customizable price-per-unit
+                // todo: customizable price-per-unit
                 List<LocoResourceModule> resourceModules = new List<LocoResourceModule>(serviceStation.resources.Length);
                 for (int i = 0; i < serviceStation.resources.Length; i++)
                 {

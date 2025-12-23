@@ -273,8 +273,8 @@ namespace Mapify.Editor
 
         private static void CreateMiscAssetsBuilds(List<string> assetPaths, ref List<AssetBundleBuild> builds)
         {
-            //put big assets in their own assetbundle to avoid the combined assetbundle getting too big.
-            //Unity cannot load assetbundles larger then 4GB.
+            // put big assets in their own assetbundle to avoid the combined assetbundle getting too big.
+            // Unity cannot load assetbundles larger then 4GB.
             long assetBundleSize = 0;
             long assetBundleNumber = 1;
             var asssetBundleFiles = new List<string>();
@@ -283,7 +283,7 @@ namespace Mapify.Editor
             {
                 string absolutePath = Path.GetFullPath(assetPaths[i]);
 
-                //skip directories
+                // skip directories
                 if ((File.GetAttributes(absolutePath) & FileAttributes.Directory) == FileAttributes.Directory)
                 {
                     continue;
@@ -292,7 +292,7 @@ namespace Mapify.Editor
                 long fileSize = new FileInfo(absolutePath).Length;
 
                 // if the asset would get too big, create a new assetbundle
-                const long maxBundleSize = 500 * 1000000; //500MB
+                const long maxBundleSize = 500 * 1000000; // 500MB
                 if (assetBundleSize > 0 && assetBundleSize + fileSize > maxBundleSize)
                 {
                     builds.Add(new AssetBundleBuild {
@@ -308,7 +308,7 @@ namespace Mapify.Editor
                 asssetBundleFiles.Add(assetPaths[i]);
                 assetBundleSize += fileSize;
 
-                //if this is the last asset, create a new assetbundle
+                // if this is the last asset, create a new assetbundle
                 if(assetBundleSize > 0 && i >= assetPaths.Count-1)
                 {
                     builds.Add(new AssetBundleBuild {

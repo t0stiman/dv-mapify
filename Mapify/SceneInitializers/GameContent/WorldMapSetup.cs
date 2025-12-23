@@ -33,7 +33,7 @@ namespace Mapify.SceneInitializers.GameContent
             modifiedMaterial = false;
             if (defaultTexture != null)
             {
-                //restore base map texture on exiting a custom map
+                // restore base map texture on exiting a custom map
                 mapMaterial.mainTexture = defaultTexture;
             }
         }

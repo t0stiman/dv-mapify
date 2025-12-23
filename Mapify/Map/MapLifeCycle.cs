@@ -35,7 +35,7 @@ namespace Mapify.Map
 
         public static IEnumerator LoadMap(BasicMapInfo basicMapInfo)
         {
-            Mapify.LogDebug(() => $"Loading map {basicMapInfo.name}");
+            Mapify.LogDebug($"Loading map {basicMapInfo.name}");
 
             if (isMapLoaded)
                 throw new InvalidOperationException("Map is already loaded");
@@ -57,7 +57,7 @@ namespace Mapify.Map
             loadedAssetBundles = new List<AssetBundle>();
 
             // Register mapinfo
-            Mapify.LogDebug(() => $"Loading AssetBundle '{Names.MAP_INFO_ASSET_BUNDLE}'");
+            Mapify.LogDebug($"Loading AssetBundle '{Names.MAP_INFO_ASSET_BUNDLE}'");
             AssetBundleCreateRequest mapInfoRequest = AssetBundle.LoadFromFileAsync(Maps.GetMapAsset(Names.MAP_INFO_ASSET_BUNDLE, mapDir));
             do
             {
@@ -91,7 +91,7 @@ namespace Mapify.Map
                     yield break;
                 }
 
-                //LoadingScreenImages will be null if the map was built with an older version of Mapify
+                // LoadingScreenImages will be null if the map was built with an older version of Mapify
                 if (mapInfo.LoadingScreenImages != null && mapInfo.LoadingScreenImages.Length > 0)
                 {
                     ShowLoadingScreenImage(mapInfo);
@@ -109,7 +109,7 @@ namespace Mapify.Map
 
                 if (assetFileName.EndsWith(".manifest")) { continue; }
 
-                Mapify.LogDebug(() => $"Loading AssetBundle '{assetFileName}'");
+                Mapify.LogDebug($"Loading AssetBundle '{assetFileName}'");
                 AssetBundleCreateRequest assetsReq = AssetBundle.LoadFromFileAsync(Maps.GetMapAsset(assetFileName, mapDir));
                 DisplayLoadingInfo_OnLoadingStatusChanged_Patch.what = assetFileName;
                 do
@@ -128,7 +128,7 @@ namespace Mapify.Map
                 }
             }
 
-            Mapify.LogDebug(() => $"Loading AssetBundle '{Names.SCENES_ASSET_BUNDLE}'");
+            Mapify.LogDebug($"Loading AssetBundle '{Names.SCENES_ASSET_BUNDLE}'");
             AssetBundleCreateRequest scenesReq = AssetBundle.LoadFromFileAsync(Maps.GetMapAsset(Names.SCENES_ASSET_BUNDLE, mapDir));
             DisplayLoadingInfo_OnLoadingStatusChanged_Patch.what = Names.SCENES_ASSET_BUNDLE;
             do
@@ -227,7 +227,7 @@ namespace Mapify.Map
         {
             if (loadingScreenLogo == null)
             {
-                Mapify.LogDebug(() => "Skipping loading screen logo, it is null");
+                Mapify.LogDebug("Skipping loading screen logo, it is null");
                 return;
             }
 

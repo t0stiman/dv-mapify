@@ -298,18 +298,14 @@ namespace Mapify.Editor.Tools
         /// <summary>
         /// Creates a switch without the limitations of the base game switches
         /// </summary>
-        public static CustomSwitch CreateCustomSwitch(Transform parent, Vector3 attachPoint, Vector3 handlePosition, int switchBranchesCount,
-            int connectingPoint, float radius, float arc, float endGrade)
+        public static CustomSwitch CreateCustomSwitch(Transform parent, Vector3 attachPoint, Vector3 handlePosition, int switchBranchesCount, float radius, float arc, float endGrade)
         {
-            //TODO implement connectingPoint
-
             var switchObject = new GameObject($"[Switch w/ {switchBranchesCount} branches]");
             switchObject.transform.position = attachPoint;
             switchObject.transform.parent = parent;
 
             var switchComponent = switchObject.AddComponent<CustomSwitch>();
 
-            //TODO maybe make this configurable? not important
             switchComponent.defaultBranch = 0;
             switchComponent.standSide = CustomSwitch.StandSide.LEFT;
 
@@ -320,7 +316,7 @@ namespace Mapify.Editor.Tools
             {
                 if (switchBranchesCount % 2 == 1 && branchIndex == (switchBranchesCount-1) / 2)
                 {
-                    //middle track
+                    // middle track
                     tracks[branchIndex] = CreateStraight(switchObject.transform, attachPoint, handlePosition, length, endGrade);
                     continue;
                 }
@@ -330,13 +326,13 @@ namespace Mapify.Editor.Tools
 
                 if (branchIndex < switchBranchesCount / 2.0)
                 {
-                    //left of center
+                    // left of center
                     trackOrientation = TrackOrientation.Left;
                     thisRadius = (branchIndex + 1) * radius;
                 }
                 else
                 {
-                    //right of center
+                    // right of center
                     trackOrientation = TrackOrientation.Right;
                     thisRadius = (switchBranchesCount - branchIndex) * radius;
                 }
