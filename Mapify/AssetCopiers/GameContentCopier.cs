@@ -100,8 +100,8 @@ namespace Mapify.SceneInitializers.Vanilla.GameContent
                 if (itemName.StartsWith("Key")) continue;
                 if (Enum.TryParse($"StoreItem{itemName}", true, out VanillaAsset asset))
                     yield return (asset, module.gameObject);
-                else
-                    Mapify.LogError($"Failed to find {nameof(VanillaAsset)} for shop item {itemName}");
+                // else
+                //     Mapify.LogError($"Failed to find {nameof(VanillaAsset)} for shop item {itemName}");
             }
 
             var shop = shopsParent.GetComponentInChildren<Shop>(true);

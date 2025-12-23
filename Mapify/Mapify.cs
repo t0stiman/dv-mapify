@@ -12,8 +12,7 @@ namespace Mapify
     public static class Mapify
     {
         private static UnityModManager.ModEntry ModEntry { get; set; }
-        private static Settings Settings;
-        private const string LOCALE_FILE = "locale.csv";
+        public static Settings Settings { get; private set; }
 
         internal static Harmony Harmony { get; private set; }
 
@@ -21,13 +20,16 @@ namespace Mapify
         {
             ModEntry = modEntry;
 
-            Settings = Settings.Load<Settings>(ModEntry);
+            Settings = UnityModManager.ModSettings.Load<Settings>(ModEntry);
             ModEntry.OnGUI = entry => Settings.Draw(entry);
             ModEntry.OnSaveGUI = entry => Settings.Save(entry);
 
             try
             {
-                LoadLocale();
+                if (!Locale.LoadCSV(ModEntry.Path))
+                {
+                    return false;
+                }
                 Maps.Init();
                 Patch();
             }
@@ -38,13 +40,6 @@ namespace Mapify
             }
 
             return true;
-        }
-
-        private static void LoadLocale()
-        {
-            string localePath = Path.Combine(ModEntry.Path, LOCALE_FILE);
-            if (!Locale.Load(localePath))
-                LogError($"Failed to find locale file at {localePath}! Please make sure it's there.");
         }
 
         private static void Patch()

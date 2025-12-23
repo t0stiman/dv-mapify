@@ -36,6 +36,7 @@ namespace Mapify.Patches
             streamer.AddSceneGO(__instance.sceneName, __instance.gameObject);
         }
 
+
         public static void ResetStreamers()
         {
             streamers = null;

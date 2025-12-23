@@ -277,6 +277,56 @@ namespace Mapify.Utils
                 saveGameData.SetJObject(SAVE_KEY_NAME, JObject.FromObject(basicMapInfo));
         }
 
+        public static RailTrack GetRailTrack(this RailTrackRegistry registry, string stationID, string yardID, byte trackNumber)
+        {
+            var query = $"[{stationID}]_[{yardID}-{trackNumber:D2}";
+
+            return registry.AllTracks.FirstOrDefault(track => track.name.Contains(query));
+        }
+
+        public static Junction.Branch FindClosestBranch(this Junction junction, Vector3 fromPoint, float maxRange = 5f)
+        {
+            var closestDistance = float.PositiveInfinity;
+
+            RailTrack track = null;
+            var first = false;
+
+            foreach (var foundTrack in Resources.FindObjectsOfTypeAll<RailTrack>())
+            {
+                // skip the tracks in the junction
+                if(junction.outBranches.Any(branch => branch.track == foundTrack)) continue;
+
+                if (!foundTrack.curve || foundTrack.curve.pointCount < 2) continue;
+
+                var firstPoint = foundTrack.curve[0];
+
+                var distanceToFirst = Vector3.SqrMagnitude(fromPoint - firstPoint.position);
+                if (distanceToFirst < maxRange * (double) maxRange && distanceToFirst < (double) closestDistance)
+                {
+                    closestDistance = distanceToFirst;
+                    track = foundTrack;
+                    first = true;
+                }
+
+                var lastPoint = foundTrack.curve.Last();
+                var distanceToLast = Vector3.SqrMagnitude(fromPoint - lastPoint.position);
+                if (distanceToLast < maxRange * (double) maxRange && distanceToLast < (double) closestDistance)
+                {
+                    closestDistance = distanceToLast;
+                    track = foundTrack;
+                    first = false;
+                }
+            }
+
+            if (track == null)
+            {
+                Mapify.LogError($"Failed to find closest branch for {junction.name}");
+                return null;
+            }
+
+            return new Junction.Branch(track, first);
+        }
+
         #endregion
 
         #region Mapify
@@ -289,6 +339,16 @@ namespace Mapify.Utils
         public static GameObject Replace(this VanillaObject vanillaObject, bool active = true, bool originShift = true, Type[] preserveTypes = null)
         {
             return vanillaObject.gameObject.Replace(AssetCopier.Instantiate(vanillaObject.asset, active, originShift), preserveTypes, vanillaObject.keepChildren, vanillaObject.rotationOffset);
+        }
+
+        public static string GetLocalizedStationName(this Station station)
+        {
+            if(Locale.TryGetMapSpecificTranslation(Locale.STATION_PREFIX+station.stationID, out var localizedName))
+            {
+                return localizedName;
+            }
+
+            return station.stationName;
         }
 
         #endregion
