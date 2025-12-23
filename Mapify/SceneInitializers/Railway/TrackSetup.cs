@@ -98,11 +98,15 @@ namespace Mapify.SceneInitializers.Railway
         {
             track.gameObject.SetActive(setActive);
             if (!track.IsSwitch && !track.IsTurntable)
+            {
                 track.name = track.LogicName;
+            }
+
             var railTrack = track.gameObject.AddComponent<RailTrack>();
             railTrack.generateColliders = !track.IsTurntable;
             railTrack.dontChange = false;
             railTrack.age = (int)track.age;
+            railTrack.curve.resolution = RailTrack.DEFAULT_BEZIER_RESOLUTION;
             railTrack.ApplyRailType();
 
             return railTrack;
