@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
+using Mapify.Editor.BezierCurves;
 using Mapify.Editor.Utils;
 using UnityEditor;
 using UnityEngine;
@@ -7,7 +8,7 @@ using UnityEngine;
 namespace Mapify.Editor
 {
     [ExecuteInEditMode] //this is necessary for snapping to work
-    [RequireComponent(typeof(BezierCurve))]
+    [RequireComponent(typeof(BezierCurve2))]
     public class Track : MonoBehaviour
     {
         public const float SNAP_RANGE = 1.0f;
@@ -54,7 +55,7 @@ namespace Mapify.Editor
 
         public bool isInSnapped { get; private set; }
         public bool isOutSnapped { get; private set; }
-        private BezierCurve _curve;
+        private BezierCurve2 _curve;
 
 #if UNITY_EDITOR
         private bool snapShouldUpdate = true;
@@ -70,7 +71,7 @@ namespace Mapify.Editor
         public BezierCurve Curve {
             get {
                 if (_curve != null) return _curve;
-                return _curve = GetComponent<BezierCurve>();
+                return _curve = GetComponent<BezierCurve2>();
             }
         }
 

@@ -9,12 +9,17 @@
         <IsEditor>true</IsEditor>
         <PackageBuilderDir>../PackageBuilder/Assets/Mapify/Scripts/</PackageBuilderDir>
         <TestMapDir>../TestMap/Assets/Mapify/Scripts</TestMapDir>
+        <PublicizerClearCacheOnClean>true</PublicizerClearCacheOnClean>
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(IsEditor)' == 'true'">
         <DefineConstants>$(DefineConstants);UNITY_EDITOR</DefineConstants>
         <OutDir>bin/$(Configuration)/Editor</OutDir>
     </PropertyGroup>
+
+    <ItemGroup>
+        <Publicize Include="BezierCurves" IncludeCompilerGeneratedMembers="false" />
+    </ItemGroup>
 
     <ItemGroup Condition="'$(IsEditor)' == 'true'">
         <Reference Include="UnityEditor" />
@@ -31,6 +36,10 @@
         <Reference Include="UnityEngine.JSONSerializeModule" />
         <Reference Include="UnityEngine.PhysicsModule" />
         <Reference Include="UnityEngine.TerrainModule" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Krafs.Publicizer" Version="2.2.1" />
     </ItemGroup>
 
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
