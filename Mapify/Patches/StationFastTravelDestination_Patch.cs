@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using DV.Teleporters;
 using HarmonyLib;
+using Mapify.Map;
 using UnityEngine;
 
 namespace Mapify.Patches;
@@ -13,7 +14,7 @@ public static class StationFastTravelDestination_ResampleEquidistant_Patch
 {
     private static void Postfix(ref StationFastTravelDestination __result, Vector3 positionToCheck)
     {
-        if (__result != null)
+        if (Maps.IsDefaultMap || __result != null)
         {
             return;
         }

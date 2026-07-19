@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using DV.Signs;
 using HarmonyLib;
+using Mapify.Map;
 
 namespace Mapify.Patches;
 
@@ -10,8 +11,10 @@ namespace Mapify.Patches;
 [HarmonyPatch(typeof(SignPlacerUtils), nameof(SignPlacerUtils.ChunkifyNumbers))]
 public static class SignPlacerUtils_ChunkifyNumbers_Patch
 {
-    private static void Prefix(List<float> numbers, float minSum)
+    private static void Prefix(List<float> numbers)
     {
+        if(Maps.IsDefaultMap) return;
+
         for (int i = 0; i < numbers.Count; i++)
         {
             if(numbers[i] > 0) continue;

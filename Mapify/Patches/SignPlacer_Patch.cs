@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using DV.Signs;
+﻿using DV.Signs;
 using HarmonyLib;
+using Mapify.Map;
 
 namespace Mapify.Patches;
 
@@ -13,7 +12,7 @@ public static class SignPlacer_GetSegmentInfoAfterJunction_Patch
 {
     private static bool Prefix(ref SignPlacer.CurveSegmentInfo __result, Junction.Branch branch)
     {
-        if (branch.track == null) { return true; }
+        if (Maps.IsDefaultMap || branch.track == null) { return true; }
 
         Junction junction = branch.first ? branch.track.outJunction : branch.track.inJunction;
         if (junction != null)

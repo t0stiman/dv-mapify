@@ -12,6 +12,6 @@ public static class DerailedTrainCarIsKinematicHandler_UpdateIsKinematicDependin
 {
     private static bool Prefix()
     {
-        return false;
+        return Maps.IsDefaultMap;
     }
 }
