@@ -7,13 +7,15 @@ namespace Mapify.Editor
     public class CargoSetMonoBehaviour : MonoBehaviour
     {
         public List<Cargo> cargoTypes;
+        public List<string> customCargoTypes;
         public List<Station> stations;
 
         public CargoSet ToOriginal()
         {
             return new CargoSet {
-                cargoTypes = cargoTypes,
-                stations = stations
+                cargoTypes = this.cargoTypes,
+                customCargoTypes = this.customCargoTypes,
+                stations = this.stations
             };
         }
     }

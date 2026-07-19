@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using DV;
 using DV.Teleporters;
 using DV.ThingTypes;
 using DV.Utils;
@@ -100,6 +101,21 @@ namespace Mapify.SceneInitializers.GameContent
                 WarehouseMachineController machineController = machine.GetComponentInParent<WarehouseMachineController>();
                 machineController.warehouseTrackName = machine.LoadingTrack.name;
                 machineController.supportedCargoTypes = machine.supportedCargoTypes.ConvertByName<Cargo, CargoType>();
+
+                // custom cargo mod
+                var cargoTypesById = Globals.G.Types._cargoTypesById;
+                foreach (var cargoIdentifier in machine.supportedCustomCargoTypes)
+                {
+                    if(cargoTypesById.TryGetValue(cargoIdentifier, out var cargoTypeV2))
+                    {
+                        machineController.supportedCargoTypes.Add(cargoTypeV2.v1);
+                    }
+                    else
+                    {
+                        Mapify.LogError($"{nameof(SetupWarehouseMachines)}: could not find custom cargo type '{cargoIdentifier}' in Globals");
+                    }
+                }
+
                 return machineController;
             }).ToList();
         }

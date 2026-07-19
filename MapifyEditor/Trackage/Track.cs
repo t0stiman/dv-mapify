@@ -12,7 +12,6 @@ namespace Mapify.Editor
     {
         public const float SNAP_RANGE = 1.0f;
         public const float SNAP_UPDATE_RANGE_SQR = 250000;
-        public const float SNAP_RANGE_SQR = SNAP_RANGE * SNAP_RANGE;
         public const float TURNTABLE_SEARCH_RANGE = 0.05f;
 
         // ReSharper disable MemberCanBePrivate.Global

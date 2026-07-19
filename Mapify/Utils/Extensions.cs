@@ -128,12 +128,34 @@ namespace Mapify.Utils
 
         public static List<CargoGroup> ToVanilla(this IEnumerable<CargoSet> list)
         {
-            return list?.Select(l =>
+            return list?.Select(cargoSet =>
                 new CargoGroup(
-                    l.cargoTypes.ConvertByName<Cargo, CargoType>(),
-                    l.stations.Select(s => s.GetComponent<StationController>()).ToList()
+                    GetCargoTypes(cargoSet),
+                    cargoSet.stations.Select(s => s.GetComponent<StationController>()).ToList()
                 )
             ).ToList();
+        }
+
+        private static List<CargoType> GetCargoTypes(CargoSet cargoSet)
+        {
+            // base game cargo
+            var cargoTypes = cargoSet.cargoTypes.ConvertByName<Cargo, CargoType>();
+
+            // custom cargo mod
+            var cargoTypesById = Globals.G.Types._cargoTypesById;
+            foreach (var customCargoTypeId in cargoSet.customCargoTypes)
+            {
+                if (cargoTypesById.TryGetValue(customCargoTypeId, out var cargoTypeV2))
+                {
+                    cargoTypes.Add(cargoTypeV2.v1);
+                }
+                else
+                {
+                    Mapify.LogError($"{nameof(GetCargoTypes)}: could not find custom cargo type '{customCargoTypeId}' in Globals");
+                }
+            }
+
+            return cargoTypes;
         }
 
         #endregion
