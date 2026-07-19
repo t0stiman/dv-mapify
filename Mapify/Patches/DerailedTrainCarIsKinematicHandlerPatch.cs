@@ -10,7 +10,7 @@ namespace Mapify.Patches;
 [HarmonyPatch(typeof(DerailedTrainCarIsKinematicHandler), nameof(DerailedTrainCarIsKinematicHandler.UpdateIsKinematicDependingOnLoadedCells ))]
 public static class DerailedTrainCarIsKinematicHandler_UpdateIsKinematicDependingOnLoadedCells_Patch
 {
-    private static bool Postfix()
+    private static bool Prefix()
     {
         return false;
     }
