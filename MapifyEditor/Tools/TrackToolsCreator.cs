@@ -1,7 +1,6 @@
 using Mapify.Editor.Tools.OptionData;
 using Mapify.Editor.Utils;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 using static Mapify.Editor.Tools.ToolEnums;
 
