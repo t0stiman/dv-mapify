@@ -67,14 +67,12 @@ namespace MapifyEditor.Export.Validators.Project
             if (mapInfo.LoadingScreenLogo != null)
             {
                 var logo = mapInfo.LoadingScreenLogo;
+                var recommendedWidth = 1920;
+                var recommendedHeight = 1080;
 
-                const int width = 16;
-                const int height = 9;
-                const float optimalRatio = width/(float)height;
-
-                if (Mathf.Abs(logo.width/(float)logo.height - optimalRatio) > 0.01)
+                if (logo.width < recommendedWidth || logo.height < recommendedHeight)
                 {
-                    yield return Result.Warning($"MapInfo: '{nameof(MapInfo.LoadingScreenLogo)}' should have a {width}:{height} aspect ratio to show up correctly", mapInfo);
+                    yield return Result.Warning($"MapInfo: '{nameof(MapInfo.LoadingScreenLogo)}' has a low resolution. We recommend at least {recommendedWidth}x{recommendedHeight}", mapInfo);
                 }
             }
         }
