@@ -247,26 +247,94 @@ namespace Mapify.Utils
 
         public static void ConnectInToClosestJunctionOrBranch(this RailTrack track)
         {
-            var closestJunction = track.FindClosestJunction(track.curve[0].position);
-            if (closestJunction)
+            if (Mapify.Settings.VerboseLogging)
             {
+                Mapify.LogDebug($"{nameof(ConnectInToClosestJunctionOrBranch)} '{track.gameObject.GetPath()}'");
+            }
+
+            var pointPosition = track.curve[0].position;
+            var closestJunction = track.FindClosestJunction(pointPosition, Track.SNAP_RANGE);
+            var closestBranch = track.FindClosestBranch(pointPosition, Track.SNAP_RANGE);
+
+            if (closestBranch is null && closestJunction is null)
+            {
+                return;
+            }
+
+            bool junctionIsClosest;
+            if (closestJunction is null)
+            {
+                junctionIsClosest = false;
+            }
+            else if (closestBranch is null)
+            {
+                junctionIsClosest = true;
+            }
+            else
+            {
+                junctionIsClosest = Vector3.SqrMagnitude(pointPosition - closestJunction.position) <
+                                    Vector3.SqrMagnitude(pointPosition - closestBranch.GetBezierPoint().position);
+            }
+
+            if (junctionIsClosest)
+            {
+                if (Mapify.Settings.VerboseLogging)
+                {
+                    Mapify.LogDebug($"connecting IN to junction '{closestJunction.gameObject.GetPath()}'");
+                }
+
                 track.ConnectInToClosestJunction();
             }
             else
             {
+                Mapify.LogDebug($"connecting IN to a branch");
                 track.ConnectInToClosestBranch();
             }
         }
 
         public static void ConnectOutToClosestJunctionOrBranch(this RailTrack track)
         {
-            var closestJunction = track.FindClosestJunction(track.curve.Last().position);
-            if (closestJunction)
+            if (Mapify.Settings.VerboseLogging)
             {
+                Mapify.LogDebug($"{nameof(ConnectOutToClosestJunctionOrBranch)} '{track.gameObject.GetPath()}'");
+            }
+
+            var pointPosition = track.curve.Last().position;
+            var closestJunction = track.FindClosestJunction(pointPosition, Track.SNAP_RANGE);
+            var closestBranch = track.FindClosestBranch(pointPosition, Track.SNAP_RANGE);
+
+            if (closestBranch is null && closestJunction is null)
+            {
+                return;
+            }
+
+            bool junctionIsClosest;
+            if (closestJunction is null)
+            {
+                junctionIsClosest = false;
+            }
+            else if (closestBranch is null)
+            {
+                junctionIsClosest = true;
+            }
+            else
+            {
+                junctionIsClosest = Vector3.SqrMagnitude(pointPosition - closestJunction.position) <
+                                    Vector3.SqrMagnitude(pointPosition - closestBranch.GetBezierPoint().position);
+            }
+
+            if (junctionIsClosest)
+            {
+                if (Mapify.Settings.VerboseLogging)
+                {
+                    Mapify.LogDebug($"connecting OUT to junction '{closestJunction.gameObject.GetPath()}'");
+                }
+
                 track.ConnectOutToClosestJunction();
             }
             else
             {
+                Mapify.LogDebug($"connecting OUT to a branch");
                 track.ConnectOutToClosestBranch();
             }
         }
