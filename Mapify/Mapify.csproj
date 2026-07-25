@@ -68,6 +68,7 @@
         <Reference Include="Unity.Collections" />
         <Reference Include="Unity.Postprocessing.Runtime" />
         <Reference Include="Unity.TextMeshPro" />
+        <Reference Include="Unity.Mathematics" />
         <Reference Include="UnityEngine"/>
         <Reference Include="UnityEngine.AnimationModule"/>
         <Reference Include="UnityEngine.AssetBundleModule"/>
