@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Mapify.Editor
@@ -14,6 +15,9 @@ namespace Mapify.Editor
         public string homePage = "https://www.nexusmods.com/derailvalley/mods/MOD-ID-HERE";
         [Tooltip("Link to your repository.json file (for updates)")]
         public string repository = "";
+
+        [Tooltip("Mod dependencies of this map (enter the mod ID, not the name)")]
+        public List<string> requiredMods = new List<string>();
 
         [Header("Loading Screen")]
         public Texture2D[] LoadingScreenImages;

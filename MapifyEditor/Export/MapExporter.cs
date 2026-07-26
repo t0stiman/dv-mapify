@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using Mapify.Editor.StateUpdaters;
 using Mapify.Editor.Utils;
 using UnityEditor;
@@ -326,12 +327,23 @@ namespace Mapify.Editor
 
         private static void CreateModInfo(string filePath, MapInfo mapInfo)
         {
+            var requirements = new List<string>(mapInfo.requiredMods);
+
+            //remove mapify
+            requirements = requirements.Where(x =>
+                    x != Names.MAPIFY_MOD_ID
+                    && !Regex.IsMatch(x, $"^{Names.MAPIFY_MOD_ID}" + @"-\d+\.\d+\.\d+$"))
+                .ToList();
+
+            //add mapify
+            requirements.Add($"{Names.MAPIFY_MOD_ID}-{mapInfo.mapifyVersion}");
+
             UnityModManagerInfo modInfo = new UnityModManagerInfo {
                 Id = mapInfo.name,
                 Version = mapInfo.version,
                 DisplayName = mapInfo.name,
                 ManagerVersion = "0.27.13",
-                Requirements = new[] { "Mapify" },
+                Requirements = mapInfo.requiredMods.ToArray(),
                 HomePage = mapInfo.homePage,
                 Repository = mapInfo.repository
             };

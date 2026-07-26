@@ -25,6 +25,14 @@ There are 2 ways to specify cargo types on a warehouse machine or station. Under
 
 ![cargo-types.png](../assets/cargo-types.png)
 
+You should also add Custom Cargo mod and the mod that contains your custom cargo to the 'Required Mods' list on your [MapInfo](https://t0stiman.github.io/dv-mapify/creatingmaps/project-setup.html#mapinfo). Add the ID of the mod, not the name.  
+The ID of Custom Cargo mod is `DVCustomCargo`.  
+You can find the ID of custom cargo mods by going to the folder of the mod -> open `info.json` -> look for `Id`.
+
+The required mods list on MapInfo should look something like this:
+
+![required-mods.png](../assets/required-mods.png)
+
 ## Assigning Tracks
 
 On each `Track` component there are four fields related to job generation
