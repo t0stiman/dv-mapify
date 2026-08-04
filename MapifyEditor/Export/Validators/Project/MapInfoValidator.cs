@@ -42,16 +42,19 @@ namespace MapifyEditor.Export.Validators.Project
                 yield return Result.Error("Water level cannot be lower than -1", mapInfo);
 
             Terrain[] terrains = scenes.terrainScene.GetAllComponents<Terrain>();
-            float worldSize = terrains.CalculateWorldSize();
-            float worldHeight = terrains[0].transform.position.y;
+            if (terrains.Length > 0)
+            {
+                float worldSize = terrains.CalculateWorldSize();
+                float worldHeight = terrains[0].transform.position.y;
 
-            Vector3 spawnPos = mapInfo.defaultSpawnPosition;
-            if (spawnPos.x < 0 || spawnPos.z < 0 || spawnPos.x > worldSize || spawnPos.x > worldSize)
-                yield return Result.Error($"The spawn position's X and Z values must be within the world's bounds (0-{worldSize})", mapInfo);
-            if (spawnPos.y < worldHeight)
-                yield return Result.Error($"The spawn position's Y value must be above the terrain ({worldHeight})", mapInfo);
-            if (spawnPos.y < mapInfo.waterLevel)
-                yield return Result.Error($"The spawn position must be above the water level ({mapInfo.waterLevel}", mapInfo);
+                Vector3 spawnPos = mapInfo.defaultSpawnPosition;
+                if (spawnPos.x < 0 || spawnPos.z < 0 || spawnPos.x > worldSize || spawnPos.x > worldSize)
+                    yield return Result.Error($"The spawn position's X and Z values must be within the world's bounds (0-{worldSize})", mapInfo);
+                if (spawnPos.y < worldHeight)
+                    yield return Result.Error($"The spawn position's Y value must be above the terrain ({worldHeight})", mapInfo);
+                if (spawnPos.y < mapInfo.waterLevel)
+                    yield return Result.Error($"The spawn position must be above the water level ({mapInfo.waterLevel}", mapInfo);
+            }
 
             if (mapInfo.useFixedMapImage)
             {
