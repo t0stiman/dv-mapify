@@ -256,7 +256,7 @@ namespace Mapify.Editor.Tools
             TrackOrientation orientation, SwitchPoint connectingPoint)
         {
             // Create switch object.
-            Switch s = Object.Instantiate(orientation == TrackOrientation.Left ? leftPrefab : rightPrefab, parent);
+            Switch s = Object.Instantiate(orientation == TrackOrientation.Left ? leftPrefab : rightPrefab, parent, true);
             s.gameObject.name = $"[Switch {orientation}]";
             // Helper variables.
             Vector3 pivot;
