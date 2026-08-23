@@ -13,6 +13,8 @@ namespace Mapify.Editor
 
         private void OnDrawGizmos()
         {
+            //TODO improve performance of this function #9
+
             if (transform.DistToSceneCamera() >= Track.SNAP_UPDATE_RANGE_SQR)
                 return;
             BezierPoint[] snapPoints = FindObjectsOfType<BezierCurve>().SelectMany(curve => onlySnapToEnds ? curve.GetFirstAndLastPoints() : curve.GetAnchorPoints()).ToArray();

@@ -42,7 +42,7 @@
         <Copy Condition="'$(IsEditor)' != 'true'" SourceFiles="$(TargetPath)" DestinationFolder="../build/runtime" />
 
         <!-- Copy to package build and test map -->
-        <Copy Condition="'$(IsEditor)' == 'true'" SourceFiles="$(TargetPath);$(OutDir)BezierCurves.dll" DestinationFolder="$(PackageBuilderDir);" />
+        <Copy Condition="'$(IsEditor)' == 'true'" SourceFiles="$(TargetPath)" DestinationFolder="$(PackageBuilderDir);" />
         <Copy Condition="'$(IsEditor)' == 'true' And Exists('$(TestMapDir)')" SourceFiles="$(TargetPath)" DestinationFolder="$(TestMapDir)" />
 
         <!-- Copy to game install folder -->
