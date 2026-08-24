@@ -38,7 +38,7 @@ namespace MapifyEditor.Export.Validators
 
                 foreach (var track in switchTracks)
                 {
-                    track.SnapTrack();
+                    track.TrySnapTrack();
                     if (track.isInSnapped && track.isOutSnapped) continue;
 
                     yield return Result.Error("Switches must have a track attached to all points", track);

@@ -55,6 +55,12 @@ namespace Mapify.Editor
         private BezierCurve _curve;
 
 #if UNITY_EDITOR
+
+        [SerializeField]
+        private SphereCollider frontSnapCollider;
+        [SerializeField]
+        private SphereCollider rearSnapCollider;
+
         private bool snapShouldUpdate = true;
         private Vector3 previousPositionFirstPoint;
         private Vector3 previousPositionLastPoint;
@@ -88,8 +94,15 @@ namespace Mapify.Editor
 
         private void OnValidate()
         {
+            SyncSnapRangeToSnapColliders();
+            SyncDrawColorToGizmos();
+        }
+
+        private void SyncDrawColorToGizmos()
+        {
             if (!isActiveAndEnabled || IsSwitch || IsTurntable)
                 return;
+
             switch (trackType)
             {
                 case TrackType.Road:
@@ -119,7 +132,38 @@ namespace Mapify.Editor
             }
         }
 
+        private void SyncSnapRangeToSnapColliders()
+        {
+            if (frontSnapCollider)
+            {
+                frontSnapCollider.radius = SNAP_RANGE / 2f;
+            }
+            if (rearSnapCollider)
+            {
+                rearSnapCollider.radius = SNAP_RANGE / 2f;
+            }
+        }
+
 #if UNITY_EDITOR
+
+        private void SetupSnapColliders()
+        {
+            if (!frontSnapCollider)
+            {
+                frontSnapCollider = CreateSnapCollider(_curve[0]);
+            }
+            if(!rearSnapCollider)
+            {
+                rearSnapCollider = CreateSnapCollider(_curve.Last());
+            }
+        }
+
+        private SphereCollider CreateSnapCollider(BezierPoint parentPoint)
+        {
+            var snapCollider = parentPoint.gameObject.AddComponent<SphereCollider>();
+            snapCollider.radius = SNAP_RANGE/2f;
+            return snapCollider;
+        }
 
         private void OnEnable()
         {
@@ -161,53 +205,46 @@ namespace Mapify.Editor
 
             if (snapShouldUpdate)
             {
-                SnapTrack();
+                TrySnapTrack();
                 snapShouldUpdate = false;
             }
         }
 
-        internal void SnapTrack()
+        internal void TrySnapTrack()
         {
-            BezierPoint[] snapPoints = FindObjectsOfType<BezierCurve>().SelectMany(curve => new[] { curve[0], curve.Last() }).ToArray();
-
-            var firstCandidatePoint = FindClosestSnapPoint(snapPoints, true);
-            var lastCandidatePoint = FindClosestSnapPoint(snapPoints, false);
-
-            // Avoid snapping both to the same point
-            if ((firstCandidatePoint.Type == SnapType.Track && lastCandidatePoint.Type == SnapType.Track
-                && firstCandidatePoint.Point == lastCandidatePoint.Point)
-                ||
-                (firstCandidatePoint.Type == SnapType.Turntable && lastCandidatePoint.Type == SnapType.Turntable
-                && firstCandidatePoint.TurnTableTrack == lastCandidatePoint.TurnTableTrack))
-            {
-                if (firstCandidatePoint.Distance < lastCandidatePoint.Distance)
-                {
-                    lastCandidatePoint = new SnapCandidate();
-                }
-                else
-                {
-                    firstCandidatePoint = new SnapCandidate();
-                }
-            }
-
             GameObject[] selectedObjects = Selection.gameObjects;
             bool shouldMove = !IsSwitch && !IsTurntable && (selectedObjects.Contains(gameObject) || selectedObjects.Contains(Curve[0].gameObject) || selectedObjects.Contains(Curve.Last().gameObject));
 
-            if (firstCandidatePoint.Type != SnapType.None)
+            //TODO turntables
+            TrySnapPoint(true, shouldMove);
+            TrySnapPoint(false, shouldMove);
+        }
+
+        private Collider[] colliderResults = new Collider[10];
+
+        internal void TrySnapPoint(bool first, bool shouldMove)
+        {
+            SetupSnapColliders();
+            var snapCollider = first ? frontSnapCollider : rearSnapCollider;
+
+            var resultCount = Physics.OverlapSphereNonAlloc(snapCollider.transform.position, snapCollider.radius, colliderResults);
+
+            var closestPoint = colliderResults.Take(resultCount)
+                .Select(collider => collider.GetComponent<BezierPoint>())
+                .Where(point => point != null
+                    //dont snap to itself
+                    && point._curve != Curve)
+
+                //order by distance
+                .OrderBy(point => Vector3.SqrMagnitude(point.transform.position - snapCollider.transform.position))
+                .FirstOrDefault();
+
+            if (closestPoint)
             {
-                SnapPoint(true, firstCandidatePoint, shouldMove);
+                SnapPoint(first, new SnapCandidate(closestPoint, 0), shouldMove); //todo distance
             }
-            else
-            {
-                UnSnapPoint(true);
-            }
-            if (lastCandidatePoint.Type != SnapType.None)
-            {
-                SnapPoint(false, lastCandidatePoint, shouldMove);
-            }
-            else
-            {
-                UnSnapPoint(false);
+            else {
+                UnSnapPoint(first);
             }
         }
 
