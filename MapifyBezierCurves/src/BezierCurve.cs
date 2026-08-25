@@ -218,7 +218,7 @@ public class BezierCurve : MonoBehaviour, ISerializationCallbackReceiver
             var p1 = points[i];
             var p2 = points[i + 1];
 
-            interpolationCache[i] = Interpolate(p1.position, p1.globalHandle2, p2.position, p2.globalHandle1, 0.05f);
+            interpolationCache[i] = Interpolate(p1.position, p1.globalHandle2, p2.position, p2.globalHandle1, 1f);
         }
     }
 
@@ -618,40 +618,6 @@ public class BezierCurve : MonoBehaviour, ISerializationCallbackReceiver
     {
         int numPoints = GetNumPoints(p1, p1Handle2, p2, p2Handle1, resolution);
         return Interpolate(p1, p1Handle2, p2, p2Handle1, numPoints);
-    }
-
-    /// <summary>
-    ///     - Draws the curve in the Editor
-    /// </summary>
-    /// <param name='p1'>
-    ///     - The bezier point at the beginning of the curve
-    /// </param>
-    /// <param name='p2'>
-    ///     - The bezier point at the end of the curve
-    /// </param>
-    /// <param name='resolution'>
-    ///     - The number of segments along the curve to draw
-    /// </param>
-    public static void DrawCurve(BezierPoint p1, BezierPoint p2, int resolution)
-    {
-        var interpolated = Interpolate(p1.position, p1.globalHandle2, p2.position, p2.globalHandle1, resolution);
-
-        Vector3 lastPoint = interpolated[0];
-        Vector3 currentPoint = Vector3.zero;
-        DrawInterpolatedPoint(lastPoint);
-
-        for (int i = 1; i < interpolated.Length; i++)
-        {
-            currentPoint = interpolated[i];
-            Gizmos.DrawLine(lastPoint, currentPoint);
-            lastPoint = currentPoint;
-            DrawInterpolatedPoint(lastPoint);
-        }
-    }
-
-    public static void DrawCurve(BezierPoint p1, BezierPoint p2, float resolution)
-    {
-
     }
 
 
