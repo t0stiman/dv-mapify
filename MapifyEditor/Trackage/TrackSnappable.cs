@@ -1,6 +1,6 @@
-using System.Collections.Generic;
 using System.Linq;
 using Mapify.Editor.Utils;
+using UnityEditor;
 using UnityEngine;
 
 namespace Mapify.Editor
@@ -9,39 +9,85 @@ namespace Mapify.Editor
     {
         [Tooltip("The transform to use as a reference when snapping. Will use self if not set")]
         public Transform referencePoint;
-        public bool onlySnapToEnds = true;
+
+#if UNITY_EDITOR
+
+        [SerializeField] [HideInInspector]
+        private SphereCollider snapCollider;
+        private SnappedTrack snappedToTrack;
+        private readonly Collider[] colliderResults = new Collider[10];
 
         private void OnDrawGizmos()
         {
-            //TODO improve performance of this function #9
-
-            if (transform.DistToSceneCamera() >= Track.SNAP_UPDATE_RANGE_SQR)
-                return;
-            BezierPoint[] snapPoints = FindObjectsOfType<BezierCurve>().SelectMany(curve => onlySnapToEnds ? curve.GetFirstAndLastPoints() : curve.GetAnchorPoints()).ToArray();
-            TrySnap(snapPoints);
-            TrySnap(snapPoints);
-        }
-
-        private void TrySnap(IEnumerable<BezierPoint> snapPoints)
-        {
-            Vector3 selfPos = transform.position;
-            Vector3 pos = referencePoint == null ? selfPos : referencePoint.position;
-            BezierPoint closestPoint = null;
-            float closestDist = float.MaxValue;
-            foreach (BezierPoint otherPoint in snapPoints)
+            if (!transform.hasChanged || transform.SqrDistanceToSceneCamera() >= Track.SNAP_UPDATE_RANGE_SQR)
             {
-                Vector3 otherPos = otherPoint.transform.position;
-                float dist = Mathf.Abs(Vector3.Distance(otherPos, pos));
-                if (dist > Track.SNAP_RANGE || dist >= closestDist) continue;
-                closestPoint = otherPoint;
-                closestDist = dist;
+                return;
             }
 
-            if (closestDist >= float.MaxValue || closestPoint == null)
-                return;
-
-            closestPoint.Curve().GetComponent<Track>().Snapped(closestPoint);
-            transform.position = closestPoint.position + (selfPos - pos);
+            TrySnap();
+            transform.hasChanged = false;
         }
+
+        private void TrySnap()
+        {
+            SetupSnapCollider();
+
+            var resultCount = Physics.OverlapSphereNonAlloc(snapCollider.transform.position, snapCollider.radius, colliderResults);
+
+            var resultsByDistance = colliderResults.Take(resultCount)
+                .OrderBy(collider => Vector3.SqrMagnitude(collider.transform.position - snapCollider.transform.position))
+                .ToArray();
+
+            foreach (var collider in resultsByDistance)
+            {
+                var point = collider.GetComponent<BezierPoint>();
+                if (!point) continue;
+
+                var track = point.Curve().GetComponent<Track>();
+                if (!track) continue;
+
+                SnapToPoint(point, track);
+                return;
+            }
+
+            //not snapped to anything, unsnap if we were snapped to something before
+            UnSnap();
+        }
+
+        private void UnSnap()
+        {
+            snappedToTrack?.UnSnapped();
+            snappedToTrack = null;
+        }
+
+        private void SnapToPoint(BezierPoint point, Track track)
+        {
+            if (track != snappedToTrack?.Track)
+            {
+                UnSnap();
+                track.Snapped(point);
+                snappedToTrack = new SnappedTrack(track, point);
+            }
+
+            if (Selection.gameObjects.Contains(gameObject))
+            {
+                transform.position = point.position + (transform.position - snapCollider.transform.position);
+            }
+        }
+
+        private void SetupSnapCollider()
+        {
+            if (!snapCollider)
+            {
+                snapCollider = Track.CreateSnapCollider(referencePoint.gameObject);
+            }
+            else if(snapCollider.transform.parent != referencePoint)
+            {
+                DestroyImmediate(snapCollider);
+                snapCollider = Track.CreateSnapCollider(referencePoint.gameObject);
+            }
+        }
+
+        #endif
     }
 }

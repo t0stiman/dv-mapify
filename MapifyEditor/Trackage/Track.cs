@@ -56,9 +56,9 @@ namespace Mapify.Editor
 
 #if UNITY_EDITOR
 
-        [SerializeField]
+        [SerializeField] [HideInInspector]
         private SphereCollider frontSnapCollider;
-        [SerializeField]
+        [SerializeField] [HideInInspector]
         private SphereCollider rearSnapCollider;
 
         private bool snapShouldUpdate = true;
@@ -91,6 +91,14 @@ namespace Mapify.Editor
             trackType == TrackType.Road
                 ? $"{(generateSigns ? "" : "[#] ")}{name}"
                 : $"[Y]_[{stationId}]_[{yardId}-{trackId:D2}-{trackType.LetterId()}]";
+
+#if UNITY_EDITOR
+
+        private void Start()
+        {
+            // necessary for SetupSnapColliders after updating Mapify
+            snapShouldUpdate = true;
+        }
 
         private void OnValidate()
         {
@@ -144,24 +152,23 @@ namespace Mapify.Editor
             }
         }
 
-#if UNITY_EDITOR
-
         private void SetupSnapColliders()
         {
             if (!frontSnapCollider)
             {
-                frontSnapCollider = CreateSnapCollider(_curve[0]);
+                frontSnapCollider = CreateSnapCollider(_curve[0].gameObject);
             }
             if(!rearSnapCollider)
             {
-                rearSnapCollider = CreateSnapCollider(_curve.Last());
+                rearSnapCollider = CreateSnapCollider(_curve.Last().gameObject);
             }
         }
 
-        private SphereCollider CreateSnapCollider(BezierPoint parentPoint)
+        public static SphereCollider CreateSnapCollider(GameObject parent)
         {
-            var snapCollider = parentPoint.gameObject.AddComponent<SphereCollider>();
+            var snapCollider = parent.AddComponent<SphereCollider>();
             snapCollider.radius = SNAP_RANGE/2f;
+            snapCollider.hideFlags = HideFlags.HideInInspector | HideFlags.DontSaveInBuild;
             return snapCollider;
         }
 
@@ -186,7 +193,7 @@ namespace Mapify.Editor
         {
             if (showLoadingGauge)
                 DrawLoadingGauge();
-            if (Curve[0].transform.DistToSceneCamera() >= SNAP_UPDATE_RANGE_SQR && Curve.Last().transform.DistToSceneCamera() >= SNAP_UPDATE_RANGE_SQR)
+            if (Curve[0].transform.SqrDistanceToSceneCamera() >= SNAP_UPDATE_RANGE_SQR && Curve.Last().transform.SqrDistanceToSceneCamera() >= SNAP_UPDATE_RANGE_SQR)
                 return;
             if (!isInSnapped)
                 DrawDisconnectedIcon(Curve[0].position);

@@ -15,14 +15,24 @@ namespace Mapify.Editor.Utils
     {
         #region GameObjects & Components
 
-        public static float DistToSceneCamera(this Transform t)
-        {
 #if UNITY_EDITOR
-            return (t.position - Camera.current.transform.position).sqrMagnitude;
-#else
-            throw new InvalidOperationException($"{nameof(Extensions)}.{nameof(DistToSceneCamera)} can only be used in the editor");
-#endif
+
+        public static string GetPath(this Transform obj)
+        {
+            string path = obj.name;
+            while (obj.parent != null)
+            {
+                obj = obj.parent;
+                path = $"{obj.name}/{path}";
+            }
+            return path;
         }
+
+        public static float SqrDistanceToSceneCamera(this Transform t)
+        {
+            return (t.position - Camera.current.transform.position).sqrMagnitude;
+        }
+#endif
 
         public static T GetComponentInSelfOrParent<T>(this Component component)
         {

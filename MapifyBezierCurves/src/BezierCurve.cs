@@ -13,7 +13,7 @@ using UnityEngine;
 /// </summary>
 [ExecuteInEditMode]
 [Serializable]
-public class BezierCurve : MonoBehaviour
+public class BezierCurve : MonoBehaviour, ISerializationCallbackReceiver
 {
     // the number of interpolated points for each curve segment (pair of BezierPoints) is calculated
     // by approximating the segment length using this crude value, just to get enough precision to
@@ -32,7 +32,7 @@ public class BezierCurve : MonoBehaviour
     /// </summary>
     public float resolution = 5;
 
-    [NonSerialized] public bool dirty = true;
+    [NonSerialized] public bool lengthDirty = true;
 
     /// <summary>
     ///     - color this curve will be drawn with in the editor
@@ -60,7 +60,7 @@ public class BezierCurve : MonoBehaviour
         {
             if (_close == value) return;
             _close = value;
-            dirty = true;
+            lengthDirty = true;
             interpolationCacheDirty = true;
         }
     }
@@ -74,7 +74,7 @@ public class BezierCurve : MonoBehaviour
         {
             if (_mirror == value) return;
             _mirror = value;
-            dirty = true;
+            lengthDirty = true;
             interpolationCacheDirty = true;
         }
     }
@@ -90,7 +90,7 @@ public class BezierCurve : MonoBehaviour
         {
             if (_axis == value) return;
             _axis = value;
-            dirty = true;
+            lengthDirty = true;
             interpolationCacheDirty = true;
         }
     }
@@ -130,7 +130,7 @@ public class BezierCurve : MonoBehaviour
     {
         get
         {
-            if (dirty || _length == 0)
+            if (lengthDirty || _length == 0)
             {
                 _length = 0;
                 for (int i = 0; i < points.Length - 1; i++)
@@ -140,7 +140,7 @@ public class BezierCurve : MonoBehaviour
 
                 if (close) _length += ApproximateLength(points[points.Length - 1], points[0], resolution);
 
-                dirty = false;
+                lengthDirty = false;
             }
 
             return _length;
@@ -176,6 +176,7 @@ public class BezierCurve : MonoBehaviour
         if (interpolationCacheDirty)
         {
             RecalculateInterpolationCache();
+            interpolationCacheDirty = false;
         }
 
         for (int i = 0; i < interpolationCache.Length - 1; i++)
@@ -208,14 +209,6 @@ public class BezierCurve : MonoBehaviour
         // }
     }
 
-    private void Update()
-    {
-        if(transform.hasChanged)
-        {
-            interpolationCacheDirty = true;
-        }
-    }
-
     private void RecalculateInterpolationCache()
     {
         interpolationCache = new Vector3[points.Length][];
@@ -227,14 +220,12 @@ public class BezierCurve : MonoBehaviour
 
             interpolationCache[i] = Interpolate(p1.position, p1.globalHandle2, p2.position, p2.globalHandle1, 0.05f);
         }
-
-        interpolationCacheDirty = false;
     }
 
     void Awake()
     {
         BezierCurveUpgrade.Upgrade(this);
-        dirty = true;
+        lengthDirty = true;
         interpolationCacheDirty = true;
     }
 
@@ -300,7 +291,7 @@ public class BezierCurve : MonoBehaviour
         List<BezierPoint> tempArray = new List<BezierPoint>(points);
         tempArray.Add(point);
         points = tempArray.ToArray();
-        dirty = true;
+        lengthDirty = true;
         interpolationCacheDirty = true;
     }
 
@@ -309,7 +300,7 @@ public class BezierCurve : MonoBehaviour
         List<BezierPoint> tempArray = new List<BezierPoint>(points);
         tempArray.Insert(index, point);
         points = tempArray.ToArray();
-        dirty = true;
+        lengthDirty = true;
         interpolationCacheDirty = true;
     }
 
@@ -376,7 +367,7 @@ public class BezierCurve : MonoBehaviour
         List<BezierPoint> tempArray = new List<BezierPoint>(points);
         tempArray.Remove(point);
         points = tempArray.ToArray();
-        dirty = false;
+        lengthDirty = false;
         interpolationCacheDirty = true;
     }
 
@@ -385,7 +376,7 @@ public class BezierCurve : MonoBehaviour
         List<BezierPoint> tempArray = new List<BezierPoint>(points);
         tempArray.RemoveAt(index);
         points = tempArray.ToArray();
-        dirty = false;
+        lengthDirty = false; // i wonder why this is false, not true... -Tostiman
         interpolationCacheDirty = true;
     }
 
@@ -401,8 +392,7 @@ public class BezierCurve : MonoBehaviour
             if (p != null) cleanPoints.Add(p);
         }
         points = cleanPoints.ToArray();
-        dirty = false;
-        interpolationCacheDirty = true;
+        lengthDirty = false;
     }
 
     /// <summary>
@@ -597,7 +587,7 @@ public class BezierCurve : MonoBehaviour
     /// </summary>
     public void SetDirty()
     {
-        dirty = true;
+        lengthDirty = true;
         interpolationCacheDirty = true;
     }
 
@@ -970,48 +960,15 @@ public class BezierCurve : MonoBehaviour
 
     #endregion
 
-    /* needs testing
-    public Vector3 GetPointAtDistance(float distance)
+
+    public void OnBeforeSerialize()
     {
-        if(close)
-        {
-            if(distance < 0) while(distance < 0) { distance += length; }
-            else if(distance > length) while(distance > length) { distance -= length; }
-        }
-
-        else
-        {
-            if(distance <= 0) return points[0].position;
-            else if(distance >= length) return points[points.Length - 1].position;
-        }
-
-        float totalLength = 0;
-        float curveLength = 0;
-
-        BezierPoint firstPoint = null;
-        BezierPoint secondPoint = null;
-
-        for(int i = 0; i < points.Length - 1; i++)
-        {
-            curveLength = ApproximateLength(points[i], points[i + 1], resolution);
-            if(totalLength + curveLength >= distance)
-            {
-                firstPoint = points[i];
-                secondPoint = points[i+1];
-                break;
-            }
-            else totalLength += curveLength;
-        }
-
-        if(firstPoint == null)
-        {
-            firstPoint = points[points.Length - 1];
-            secondPoint = points[0];
-            curveLength = ApproximateLength(firstPoint, secondPoint, resolution);
-        }
-
-        distance -= totalLength;
-        return GetPoint(distance / curveLength, firstPoint, secondPoint);
+        // nothing here, but ISerializationCallbackReceiver requires it
     }
-    */
+
+    public void OnAfterDeserialize()
+    {
+        // without this, gizmos disappear after reloading Mapify DLLs
+        interpolationCacheDirty = true;
+    }
 }
