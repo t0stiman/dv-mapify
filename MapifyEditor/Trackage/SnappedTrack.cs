@@ -1,5 +1,7 @@
 ﻿namespace Mapify.Editor
 {
+#if UNITY_EDITOR
+
     internal class SnappedTrack
     {
         public Track Track { get; private set; }
@@ -17,4 +19,6 @@
             Track.UnSnapped(Point);
         }
     }
+
+#endif
 }

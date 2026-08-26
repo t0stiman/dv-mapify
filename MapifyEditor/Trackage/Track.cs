@@ -44,17 +44,15 @@ namespace Mapify.Editor
         [Tooltip("The purpose of this track")]
         public TrackType trackType;
 
+        private BezierCurve _curve;
+
 #if UNITY_EDITOR
         [Header("Editor Visualization")]
         [SerializeField]
         private bool showLoadingGauge;
-#endif
 
         public bool isInSnapped { get; private set; }
         public bool isOutSnapped { get; private set; }
-        private BezierCurve _curve;
-
-#if UNITY_EDITOR
 
         [SerializeField] [HideInInspector]
         private SphereCollider frontSnapCollider;
@@ -77,6 +75,7 @@ namespace Mapify.Editor
 
         public BezierCurve Curve {
             get {
+                //TODO can we get rid of this and set _curve in Start or something like that
                 if (_curve != null) return _curve;
                 return _curve = GetComponent<BezierCurve>();
             }
@@ -200,6 +199,15 @@ namespace Mapify.Editor
             if (!isOutSnapped)
                 DrawDisconnectedIcon(Curve.Last().position);
 
+            // switch snapping is done in SwitchBase
+            if (!IsTurntable && !IsSwitch)
+            {
+                TrySnapTrack();
+            }
+        }
+
+        internal void TrySnapTrack()
+        {
             // first or last point moved?
             if (Curve[0].position != previousPositionFirstPoint ||
                 Curve.Last().position != previousPositionLastPoint)
@@ -212,26 +220,22 @@ namespace Mapify.Editor
 
             if (snapShouldUpdate)
             {
-                TrySnapTrack();
+                GameObject[] selectedObjects = Selection.gameObjects;
+                bool shouldMove = !IsSwitch && !IsTurntable && (selectedObjects.Contains(gameObject) || selectedObjects.Contains(Curve[0].gameObject) || selectedObjects.Contains(Curve.Last().gameObject));
+
+                //TODO turntables
+                SetupSnapColliders();
+                TrySnapPoint(true, shouldMove);
+                TrySnapPoint(false, shouldMove);
+
                 snapShouldUpdate = false;
             }
         }
 
-        internal void TrySnapTrack()
-        {
-            GameObject[] selectedObjects = Selection.gameObjects;
-            bool shouldMove = !IsSwitch && !IsTurntable && (selectedObjects.Contains(gameObject) || selectedObjects.Contains(Curve[0].gameObject) || selectedObjects.Contains(Curve.Last().gameObject));
-
-            //TODO turntables
-            TrySnapPoint(true, shouldMove);
-            TrySnapPoint(false, shouldMove);
-        }
-
-        private Collider[] colliderResults = new Collider[10];
+        private readonly Collider[] colliderResults = new Collider[10];
 
         internal void TrySnapPoint(bool first, bool shouldMove)
         {
-            SetupSnapColliders();
             var snapCollider = first ? frontSnapCollider : rearSnapCollider;
 
             var resultCount = Physics.OverlapSphereNonAlloc(snapCollider.transform.position, snapCollider.radius, colliderResults);
@@ -396,7 +400,6 @@ namespace Mapify.Editor
                 }
             }
         }
-#endif
 
         internal void Snapped(BezierPoint point)
         {
@@ -406,6 +409,11 @@ namespace Mapify.Editor
                 isOutSnapped = true;
         }
 
+        internal void InSnapped()
+        {
+            isInSnapped = true;
+        }
+
         internal void UnSnapped(BezierPoint point)
         {
             if (point == Curve[0])
@@ -413,6 +421,7 @@ namespace Mapify.Editor
             if (point == Curve.Last())
                 isOutSnapped = false;
         }
+#endif
 
         public static Track Find(string stationId, char yardId, byte trackId, TrackType trackType)
         {

@@ -30,6 +30,11 @@ namespace Mapify.Editor.Utils
 
         public static float SqrDistanceToSceneCamera(this Transform t)
         {
+            if (!Camera.current)
+            {
+                return 0;
+            }
+
             return (t.position - Camera.current.transform.position).sqrMagnitude;
         }
 #endif
@@ -212,14 +217,14 @@ namespace Mapify.Editor.Utils
             return curve;
         }
 
-        public static BezierPoint[] GetFirstAndLastPoints(this BezierCurve curve)
+        public static Track GetTrack(this BezierPoint point)
         {
-            return new[] { curve[0], curve.Last() };
+            return point.GetComponentInParent<Track>();
         }
 
         public static Vector3[] AsControlPoints(this BezierCurve curve, int from)
         {
-            return new Vector3[] { curve[from].position,
+            return new[] { curve[from].position,
                 curve[from].globalHandle2,
                 curve[from + 1].globalHandle1,
                 curve[from + 1].position};

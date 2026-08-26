@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Mapify.Editor
@@ -22,6 +21,11 @@ namespace Mapify.Editor
         [Tooltip("Which way the switch should be flipped by default")]
         public StandSide defaultState;
 
+        public override Track[] GetTracks()
+        {
+            return new[] { ThroughTrack, DivergingTrack };
+        }
+
         public Track ThroughTrack => transform.Find(THROUGH_TRACK_NAME).GetComponent<Track>();
         public Track DivergingTrack => transform.Find(DIVERGING_TRACK_NAME).GetComponent<Track>();
         public bool IsLeft => DivergingTrack.Curve.Last().localPosition.x < 0;
@@ -31,9 +35,14 @@ namespace Mapify.Editor
         public BezierPoint GetDivergingPoint() => DivergingTrack.Curve[1];
         public BezierPoint GetDivergeJoinPoint() => DivergingTrack.Curve[0];
 
-        public override List<BezierPoint> GetPoints()
+        public override BezierPoint[] GetPoints()
         {
-            return new List<BezierPoint> { GetJointPoint(), GetThroughPoint(), GetDivergingPoint() };
+            return new[] { GetJointPoint(), GetThroughPoint(), GetDivergingPoint() };
+        }
+
+        public override int GetPointCount()
+        {
+            return 3;
         }
     }
 }

@@ -43,8 +43,8 @@ namespace Mapify.Editor
                 var point = collider.GetComponent<BezierPoint>();
                 if (!point) continue;
 
-                var track = point.Curve().GetComponent<Track>();
-                if (!track) continue;
+                var track = point.GetTrack();
+                if (!track || track.IsSwitch || track.IsTurntable) continue;
 
                 SnapToPoint(point, track);
                 return;

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Mapify.Editor.Utils;
 using UnityEditor;
@@ -9,21 +10,20 @@ namespace Mapify.Editor
     [ExecuteInEditMode] // this is necessary for snapping to work
     public abstract class SwitchBase: MonoBehaviour
     {
-        public virtual Track[] GetTracks()
-        {
-            var tracks = gameObject.GetComponentsInChildren<Track>();
-            return tracks ?? new Track[] {};
-        }
+        public abstract Track[] GetTracks();
 
         public abstract BezierPoint GetJointPoint();
-
-        public abstract List<BezierPoint> GetPoints();
+        public abstract BezierPoint[] GetPoints();
+        public abstract int GetPointCount();
 
 #if UNITY_EDITOR
         private bool snapShouldUpdate = true;
 
         private Vector3[] previousPositionsPoints;
-        private SnappedTrack[] snappedTracks;
+        private SnappedTrack[] snappedTracks = Array.Empty<SnappedTrack>();
+
+        [SerializeField] [HideInInspector]
+        private SphereCollider[] snapColliders = Array.Empty<SphereCollider>();
 
         private void OnEnable()
         {
@@ -40,20 +40,14 @@ namespace Mapify.Editor
             UnsnapConnectedTracks();
         }
 
-        private void OnDrawGizmos()
+        private void Update()
         {
             if (transform.SqrDistanceToSceneCamera() >= Track.SNAP_UPDATE_RANGE_SQR)
             {
                 return;
             }
 
-            CheckSwitchMoved();
-
-            if (snapShouldUpdate)
-            {
-                Snap();
-                snapShouldUpdate = false;
-            }
+            TrySnap();
         }
 
         private void CheckSwitchMoved()
@@ -78,78 +72,109 @@ namespace Mapify.Editor
 
         private void UnsnapConnectedTracks()
         {
-            if(snappedTracks is null) { return; }
-
             foreach (var snapped in snappedTracks)
             {
                 snapped?.UnSnapped();
             }
         }
 
-        public void Snap()
+        public void TrySnap()
         {
-            var bezierPoints = FindObjectsOfType<BezierPoint>();
-            bool isSelected = Selection.gameObjects.Contains(gameObject);
+            CheckSwitchMoved();
 
-            var points = GetPoints();
-            for (var pointIndex = 0; pointIndex < points.Count; pointIndex++)
+            var switchPointsCount = GetPointCount();
+            if (snapColliders.Length != switchPointsCount)
             {
-                TrySnap(bezierPoints, isSelected, points[pointIndex], pointIndex);
+                SetupSnapColliders();
+                snapShouldUpdate = true;
             }
-        }
 
-        private void TrySnap(IEnumerable<BezierPoint> points, bool move, BezierPoint snapPoint, int snapPointIndex)
-        {
-            var reference = snapPoint.transform;
+            if (!snapShouldUpdate) return;
 
-            var position = reference.position;
-            var closestPosition = Vector3.zero;
-            var closestDistance = float.MaxValue;
-
-            var switchPointsCount = GetPoints().Count;
-            if (snappedTracks is null || snappedTracks.Length != switchPointsCount)
+            if (snappedTracks.Length != switchPointsCount)
             {
                 snappedTracks = new SnappedTrack[switchPointsCount];
             }
 
-            foreach (BezierPoint otherSnapPoint in points)
+            bool isSelected = Selection.gameObjects.Contains(gameObject);
+
+            var points = GetPoints();
+            for (var pointIndex = 0; pointIndex < points.Length; pointIndex++)
             {
-                // don't connect to itself
-                if (otherSnapPoint.Curve().GetComponentInParent<Switch>() == this) continue;
-
-                Vector3 otherPosition = otherSnapPoint.transform.position;
-                float distance = Mathf.Abs(Vector3.Distance(otherPosition, position));
-
-                // too far away
-                if (distance > Track.SNAP_RANGE || distance >= closestDistance) continue;
-
-                var otherTrack = otherSnapPoint.GetComponentInParent<Track>();
-
-                // don't snap a switch to another switch
-                if (otherTrack.IsSwitch) continue;
-
-                closestPosition = otherPosition;
-                closestDistance = distance;
-
-                otherTrack.Snapped(otherSnapPoint);
-
-                // remember what track we snapped to
-                snappedTracks[snapPointIndex] = new SnappedTrack(otherTrack, otherSnapPoint);
+                TrySnapPoint(points[pointIndex], pointIndex, isSelected);
             }
 
-            // No snap target found
-            if (closestDistance >= float.MaxValue)
+            // prevent duplicate "disconnected" text on the join point
+            var switchTracks = GetTracks();
+            for (int i = 1; i < switchTracks.Length; i++)
             {
-                snappedTracks[snapPointIndex]?.UnSnapped();
-                snappedTracks[snapPointIndex] = null;
-                return;
+                switchTracks[i].InSnapped();
             }
 
-            if (move)
+            snapShouldUpdate = false;
+        }
+
+        private void SetupSnapColliders()
+        {
+            foreach (var old in snapColliders)
             {
-                transform.position = closestPosition + (transform.position - reference.position);
+                DestroyImmediate(old);
+            }
+
+            var points = GetPoints();
+            snapColliders = new SphereCollider[points.Length];
+
+            for (int i = 0; i < points.Length; i++)
+            {
+                snapColliders[i] = Track.CreateSnapCollider(points[i].gameObject);
             }
         }
+
+        private readonly Collider[] colliderResults = new Collider[10];
+
+        private void TrySnapPoint(BezierPoint point, int pointIndex, bool shouldMove)
+        {
+            var snapCollider = snapColliders[pointIndex];
+
+            var resultCount = Physics.OverlapSphereNonAlloc(snapCollider.transform.position, snapCollider.radius, colliderResults);
+
+            var resultsByDistance = colliderResults.Take(resultCount)
+                .OrderBy(collider => Vector3.SqrMagnitude(collider.transform.position - point.transform.position))
+                .ToArray();
+
+            foreach (var collider in resultsByDistance)
+            {
+                var foundPoint = collider.GetComponent<BezierPoint>();
+                if (!foundPoint) continue;
+
+                var track = foundPoint.GetComponentInParent<Track>();
+                //switches cannot attach directly to other switches
+                if (!track || track.IsSwitch || track.IsTurntable) continue;
+
+                SnapToPoint(foundPoint, track, point, pointIndex, shouldMove);
+                return;
+            }
+        }
+
+        private void SnapToPoint(BezierPoint otherPoint, Track otherTrack, BezierPoint ownPoint, int ownPointIndex, bool shouldMove)
+        {
+            if (otherTrack != snappedTracks[ownPointIndex]?.Track)
+            {
+                snappedTracks[ownPointIndex]?.Track?.UnSnapped(otherPoint);
+
+                otherTrack.Snapped(otherPoint);
+                ownPoint.GetTrack().Snapped(ownPoint);
+
+                snappedTracks[ownPointIndex] = new SnappedTrack(otherTrack, otherPoint);
+            }
+
+            if (shouldMove)
+            {
+                transform.position += otherPoint.position - ownPoint.transform.position;
+            }
+        }
+
 #endif
+
     }
 }
