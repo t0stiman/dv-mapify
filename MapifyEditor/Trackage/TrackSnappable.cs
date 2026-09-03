@@ -1,3 +1,4 @@
+using System;
 using System.Linq;
 using Mapify.Editor.Utils;
 using UnityEditor;
@@ -5,6 +6,7 @@ using UnityEngine;
 
 namespace Mapify.Editor
 {
+    [ExecuteInEditMode]
     public class TrackSnappable : MonoBehaviour
     {
         [Tooltip("The transform to use as a reference when snapping. Will use self if not set")]
@@ -16,16 +18,25 @@ namespace Mapify.Editor
         private SphereCollider snapCollider;
         private SnappedTrack snappedToTrack;
         private readonly Collider[] colliderResults = new Collider[10];
+        private bool snapShouldUpdate;
+
+        private void Start()
+        {
+            snapShouldUpdate = true;
+        }
 
         private void OnDrawGizmos()
         {
-            if (!transform.hasChanged || transform.SqrDistanceToSceneCamera() >= Track.SNAP_UPDATE_RANGE_SQR)
+            if (transform.hasChanged)
             {
-                return;
+                snapShouldUpdate = true;
+                transform.hasChanged = false;
             }
 
+            if (!snapShouldUpdate || transform.SqrDistanceToSceneCamera() > Track.SNAP_UPDATE_RANGE_SQR) return;
+
             TrySnap();
-            transform.hasChanged = false;
+            snapShouldUpdate = false;
         }
 
         private void TrySnap()

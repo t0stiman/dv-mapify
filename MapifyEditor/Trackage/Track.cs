@@ -195,7 +195,7 @@ namespace Mapify.Editor
                 DrawLoadingGauge();
             }
             if (IsTurntable ||
-                (Curve[0].transform.SqrDistanceToSceneCamera() >= SNAP_UPDATE_RANGE_SQR && Curve.Last().transform.SqrDistanceToSceneCamera() >= SNAP_UPDATE_RANGE_SQR))
+                (Curve[0].transform.SqrDistanceToSceneCamera() > SNAP_UPDATE_RANGE_SQR && Curve.Last().transform.SqrDistanceToSceneCamera() > SNAP_UPDATE_RANGE_SQR))
             {
                 return;
             }

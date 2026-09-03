@@ -42,7 +42,7 @@ namespace Mapify.Editor
 
         private void Update()
         {
-            if (transform.SqrDistanceToSceneCamera() >= Track.SNAP_UPDATE_RANGE_SQR)
+            if (transform.SqrDistanceToSceneCamera() > Track.SNAP_UPDATE_RANGE_SQR)
             {
                 return;
             }
