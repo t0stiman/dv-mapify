@@ -6,7 +6,8 @@ namespace Mapify.Editor
     {
         None,
         Track,
-        Turntable
+        Turntable,
+        TrackSnappable
     }
 
     internal sealed class SnapCandidate
@@ -33,6 +34,14 @@ namespace Mapify.Editor
             Type = SnapType.Turntable;
             SquaredDistance = squaredDistance;
             SnapPosition = snapPosition;
+        }
+
+        // TrackSnappable
+        internal SnapCandidate(TrackSnappable snappable, float distanceSquared)
+        {
+            Type = SnapType.TrackSnappable;
+            SquaredDistance = distanceSquared;
+            SnapPosition = snappable.transform.position;
         }
 
         public SnapType Type { get; private set; }

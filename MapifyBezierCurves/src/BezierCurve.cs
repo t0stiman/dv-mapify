@@ -934,7 +934,7 @@ public class BezierCurve : MonoBehaviour, ISerializationCallbackReceiver
 
     public void OnAfterDeserialize()
     {
-        // without this, gizmos disappear after reloading Mapify DLLs
+        // without this, gizmos disappear after rebuilding Mapify
         interpolationCacheDirty = true;
     }
 }

@@ -11,7 +11,8 @@ namespace Mapify.Editor
     {
         public const float SNAP_RANGE = 1.0f;
         public const float SNAP_RANGE_SQUARED = SNAP_RANGE * SNAP_RANGE; // yeah i know, 1x1 = 1. It's futureproofing, okay?
-        public const float SNAP_UPDATE_RANGE_SQR = 250000;
+        public const float SNAP_UPDATE_RANGE = 500;
+        public const float SNAP_UPDATE_RANGE_SQR = SNAP_UPDATE_RANGE*SNAP_UPDATE_RANGE;
         public const float TURNTABLE_SEARCH_RANGE = 0.05f;
 
         // ReSharper disable MemberCanBePrivate.Global
@@ -254,6 +255,24 @@ namespace Mapify.Editor
             {
                 var collider = colliderResults[i];
 
+                // tracks
+                {
+                    var point = collider.GetComponent<BezierPoint>();
+                    if (point)
+                    {
+                        if (point._curve != Curve)
+                        {
+                            var distanceSquared = Vector3.SqrMagnitude(point.transform.position - snapCollider.transform.position);
+                            if (distanceSquared < closest.SquaredDistance)
+                            {
+                                closest = new SnapCandidate(point, distanceSquared);
+                            }
+                        }
+
+                        continue;
+                    }
+                }
+
                 // turntables
                 {
                     var turnTable = collider.GetComponentInParent<Turntable>();
@@ -277,15 +296,17 @@ namespace Mapify.Editor
                     }
                 }
 
-                // tracks
+                // TrackSnappables
                 {
-                    var point = collider.GetComponent<BezierPoint>();
-                    if (!point || point._curve == Curve) continue;
-
-                    var distanceSquared = Vector3.SqrMagnitude(point.transform.position - snapCollider.transform.position);
-                    if (distanceSquared < closest.SquaredDistance)
+                    var snappable = collider.GetComponentInParent<TrackSnappable>();
+                    if (snappable)
                     {
-                        closest = new SnapCandidate(point, distanceSquared);
+                        var distanceSquared = Vector3.SqrMagnitude(snappable.transform.position - snapCollider.transform.position);
+                        if (distanceSquared < closest.SquaredDistance)
+                        {
+                            closest = new SnapCandidate(snappable, distanceSquared);
+                        }
+                        continue;
                     }
                 }
             }
@@ -301,21 +322,16 @@ namespace Mapify.Editor
 
         private void SnapPoint(bool first, SnapCandidate candidate, bool move)
         {
-            if (candidate.Type == SnapType.Turntable)
+            if (first)
             {
-                // no need to remember snapped turntables because they don't have the "Disconnected" indicator
-                if (first)
-                {
-                    snappedTrackBefore = null;
-                    isInSnapped = true;
-                }
-                else
-                {
-                    snappedTrackAfter = null;
-                    isOutSnapped = true;
-                }
+                isInSnapped = true;
             }
             else
+            {
+                isOutSnapped = true;
+            }
+
+            if (candidate.Type == SnapType.Track)
             {
                 var otherTrack = candidate.Point.GetTrack();
                 otherTrack.Snapped(candidate.Point);
@@ -324,12 +340,22 @@ namespace Mapify.Editor
                 if (first)
                 {
                     snappedTrackBefore = new SnappedTrack(otherTrack, candidate.Point);
-                    isInSnapped = true;
                 }
                 else
                 {
                     snappedTrackAfter = new SnappedTrack(otherTrack, candidate.Point);
-                    isOutSnapped = true;
+                }
+            }
+            else
+            {
+                // no need to remember because only tracks have the "Disconnected" indicator
+                if (first)
+                {
+                    snappedTrackBefore = null;
+                }
+                else
+                {
+                    snappedTrackAfter = null;
                 }
             }
 
@@ -337,6 +363,7 @@ namespace Mapify.Editor
             {
                 var mySnapPoint = first ? Curve[0] : Curve.Last();
                 mySnapPoint.transform.position = candidate.SnapPosition;
+                //TODO transform the whole track #40
             }
         }
 
