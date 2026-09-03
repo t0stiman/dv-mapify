@@ -147,20 +147,32 @@ namespace Mapify.Editor
                 var foundPoint = collider.GetComponent<BezierPoint>();
                 if (!foundPoint) continue;
 
-                var track = foundPoint.GetComponentInParent<Track>();
+                var foundTrack = foundPoint.GetComponentInParent<Track>();
                 //switches cannot attach directly to other switches
-                if (!track || track.IsSwitch || track.IsTurntable) continue;
+                if (!foundTrack || foundTrack.IsSwitch || foundTrack.IsTurntable) continue;
 
-                SnapToPoint(foundPoint, track, point, pointIndex, shouldMove);
+                SnapToPoint(foundPoint, foundTrack, point, pointIndex, shouldMove);
                 return;
             }
+
+            UnSnapPoint(pointIndex, point);
+        }
+
+        private void UnSnapPoint(int pointIndex, BezierPoint point)
+        {
+            if(snappedTracks[pointIndex] is null) { return; }
+
+            snappedTracks[pointIndex].UnSnapped();
+            snappedTracks[pointIndex] = null;
+
+            point.GetTrack().UnSnapped(point);
         }
 
         private void SnapToPoint(BezierPoint otherPoint, Track otherTrack, BezierPoint ownPoint, int ownPointIndex, bool shouldMove)
         {
             if (otherTrack != snappedTracks[ownPointIndex]?.Track)
             {
-                snappedTracks[ownPointIndex]?.Track?.UnSnapped(otherPoint);
+                UnSnapPoint(ownPointIndex, ownPoint);
 
                 otherTrack.Snapped(otherPoint);
                 ownPoint.GetTrack().Snapped(ownPoint);

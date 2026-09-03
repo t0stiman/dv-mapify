@@ -15,7 +15,7 @@
 
         public void UnSnapped()
         {
-            if (Track == null){ return; }
+            if (!Track){ return; }
             Track.UnSnapped(Point);
         }
     }
