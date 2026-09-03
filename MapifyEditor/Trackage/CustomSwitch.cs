@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using UnityEditor;
 using UnityEngine;
 
 namespace Mapify.Editor
@@ -25,16 +23,14 @@ namespace Mapify.Editor
             return Tracks[branchIndex].Curve.Last();
         }
 
-        public List<BezierPoint> GetOutPoints()
+        public BezierPoint[] GetOutPoints()
         {
-            return Tracks.Select(track => track.Curve.Last()).ToList();
+            return Tracks.Select(track => track.Curve.Last()).ToArray();
         }
 
-        public override List<BezierPoint> GetPoints()
+        public override BezierPoint[] GetPoints()
         {
-            var points = new List<BezierPoint>{ GetJointPoint() };
-            points.AddRange(GetOutPoints());
-            return points;
+            return GetOutPoints().Append( GetJointPoint() ).ToArray();
         }
 
         [Tooltip("Which way the switch should be flipped by default")]
@@ -50,6 +46,11 @@ namespace Mapify.Editor
         public override Track[] GetTracks()
         {
             return Tracks;
+        }
+
+        public override int GetPointCount()
+        {
+            return Tracks.Length+1;
         }
 
         public void SetTracks(Track[] newTracks)
