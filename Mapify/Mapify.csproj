@@ -88,6 +88,6 @@
         <Copy SourceFiles="$(TargetPath)" DestinationFolder="../build/runtime" />
 
         <!-- Copy to game install folder -->
-        <Exec Condition="Exists('$(DvInstallDir)')" Command="pwsh  -Command &quot;(../package.ps1 -NoArchive -OutputDirectory '$(DvInstallDir)/Mods')&quot;" />
+        <Copy Condition="Exists('$(DvInstallDir)')" SourceFiles="$(TargetPath)" DestinationFolder="$(DvInstallDir)/Mods/Mapify" />
     </Target>
 </Project>
