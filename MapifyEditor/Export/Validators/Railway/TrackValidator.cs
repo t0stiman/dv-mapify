@@ -24,7 +24,7 @@ namespace MapifyEditor.Export.Validators
             Station[] stations = scenes.gameContentScene.GetAllComponents<Station>();
             foreach (Track track in tracks)
             {
-                track.TrySnapTrack();
+                track.TrySnapTrack(true);
                 if (track.IsSwitch || track.IsTurntable)
                     continue;
 

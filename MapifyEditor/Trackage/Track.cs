@@ -217,7 +217,7 @@ namespace Mapify.Editor
             }
         }
 
-        internal void TrySnapTrack()
+        internal void TrySnapTrack(bool forceUpdate = false)
         {
             // first or last point moved?
             if (Curve[0].position != previousPositionFirstPoint ||
@@ -229,7 +229,7 @@ namespace Mapify.Editor
                 previousPositionLastPoint = Curve.Last().position;
             }
 
-            if (snapShouldUpdate)
+            if (snapShouldUpdate || forceUpdate)
             {
                 GameObject[] selectedObjects = Selection.gameObjects;
                 bool shouldMove = !IsSwitch && !IsTurntable && (selectedObjects.Contains(gameObject) || selectedObjects.Contains(Curve[0].gameObject) || selectedObjects.Contains(Curve.Last().gameObject));
