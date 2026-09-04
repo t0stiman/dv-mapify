@@ -66,7 +66,7 @@ namespace Mapify.Patches
             // pause
             animator.SetFloat(Speed, 0);
 
-            Mapify.Log($"{nameof(Pause)} {animator.GetCurrentAnimatorStateInfo(ANIMATION_LAYER).normalizedTime} PAUSED");
+            Mapify.LogInfo($"{nameof(Pause)} {animator.GetCurrentAnimatorStateInfo(ANIMATION_LAYER).normalizedTime} PAUSED");
         }
     }
 }

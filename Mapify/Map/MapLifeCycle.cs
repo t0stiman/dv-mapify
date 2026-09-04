@@ -175,7 +175,7 @@ namespace Mapify.Map
 
             DisplayLoadingInfo_OnLoadingStatusChanged_Patch.what = null;
 
-            Mapify.Log("Vanilla scenes unloaded");
+            Mapify.LogInfo("Vanilla scenes unloaded");
             MonoBehaviourDisablerPatch.EnableAll();
 
             SetLevelInfo(mapInfo);
@@ -208,7 +208,7 @@ namespace Mapify.Map
 
         private static void ShowLoadingScreenImage(MapInfo mapInfo)
         {
-            Mapify.Log("Showing custom loading screen image");
+            Mapify.LogInfo("Showing custom loading screen image");
 
             var randomImageIndex = Random.Range(0, mapInfo.LoadingScreenImages.Length);
             var customImage = mapInfo.LoadingScreenImages[randomImageIndex];
@@ -231,7 +231,7 @@ namespace Mapify.Map
                 return;
             }
 
-            Mapify.Log("Showing custom loading screen logo");
+            Mapify.LogInfo("Showing custom loading screen logo");
 
             var canvasGameObject = Object.FindObjectsOfType<GameObject>().FirstOrDefault(gameObject => gameObject.name == "LogoImage_alignedByHand");
             if (canvasGameObject is null)
@@ -248,7 +248,7 @@ namespace Mapify.Map
         {
             if (loadingScreenMusic == null) return;
 
-            Mapify.Log("Playing custom loading screen music");
+            Mapify.LogInfo("Playing custom loading screen music");
             var mainMenuMusicSource = GameObject.Find("Audio Source - main menu music")?.GetComponent<AudioSource>();
             if (!mainMenuMusicSource)
             {
@@ -272,7 +272,7 @@ namespace Mapify.Map
             if (collection.names == null || collection.names.Length == 0)
             {
                 // A streamer with no scenes will mark all positions as unloaded, and the game will get stuck on the loading screen.
-                Mapify.Log("No streamer scenes found, destroying!");
+                Mapify.LogInfo("No streamer scenes found, destroying!");
                 Object.Destroy(streamerObj);
                 return;
             }
@@ -300,28 +300,28 @@ namespace Mapify.Map
             if (wsi == null) return;
             if (scene.path == wsi.terrainsScenePath)
             {
-                Mapify.Log($"Loaded terrain scene at {wsi.terrainsScenePath}");
+                Mapify.LogInfo($"Loaded terrain scene at {wsi.terrainsScenePath}");
                 new TerrainSceneInitializer(scene).Run();
             }
             else if (scene.path == wsi.railwayScenePath)
             {
-                Mapify.Log($"Loaded railway scene at {wsi.railwayScenePath}");
+                Mapify.LogInfo($"Loaded railway scene at {wsi.railwayScenePath}");
                 new RailwaySceneInitializer(scene).Run();
             }
             else if (scene.path == wsi.gameContentScenePath)
             {
-                Mapify.Log($"Loaded game content scene at {wsi.gameContentScenePath}");
+                Mapify.LogInfo($"Loaded game content scene at {wsi.gameContentScenePath}");
                 new GameContentSceneInitializer(scene).Run();
             }
             else if (scene.path == originalRailwayScenePath)
             {
-                Mapify.Log($"Loaded vanilla railway scene at {originalRailwayScenePath}");
+                Mapify.LogInfo($"Loaded vanilla railway scene at {originalRailwayScenePath}");
                 new RailwayCopier().CopyAssets(scene);
                 scenesToLoad--;
             }
             else if (scene.path == originalGameContentScenePath)
             {
-                Mapify.Log($"Loaded vanilla game content scene at {originalGameContentScenePath}");
+                Mapify.LogInfo($"Loaded vanilla game content scene at {originalGameContentScenePath}");
                 new GameContentCopier().CopyAssets(scene);
                 scenesToLoad--;
             }

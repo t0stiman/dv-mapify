@@ -75,7 +75,7 @@ namespace Mapify.Map
 
                 if (!modEntry.Enabled)
                 {
-                    Mapify.Log($"Skipping map from '{modEntry.Info.DisplayName}' in '{dir}' because it is disabled.");
+                    Mapify.LogInfo($"Skipping map from '{modEntry.Info.DisplayName}' in '{dir}' because it is disabled.");
                     continue;
                 }
 

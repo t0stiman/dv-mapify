@@ -84,8 +84,8 @@ namespace Mapify.Utils
         public static void PrintHierarchy(this GameObject gameObject, string indent = "")
         {
             Transform t = gameObject.transform;
-            Mapify.Log($"{indent}+-- {t.name}");
-            foreach (Component component in t.GetComponents<Component>()) Mapify.Log($"{indent}|   +-- {component.GetType().Name}");
+            Mapify.LogInfo($"{indent}+-- {t.name}");
+            foreach (Component component in t.GetComponents<Component>()) Mapify.LogInfo($"{indent}|   +-- {component.GetType().Name}");
             foreach (Transform child in t) PrintHierarchy(child.gameObject, $"{indent}|   ");
         }
 

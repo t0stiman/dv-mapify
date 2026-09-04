@@ -44,10 +44,10 @@ namespace Mapify
 
         private static void Patch()
         {
-            Log("Patching...");
+            LogInfo("Patching...");
             Harmony = new Harmony(ModEntry.Info.Id);
             Harmony.PatchAll();
-            Log("Successfully patched");
+            LogInfo("Successfully patched");
         }
 
         #region Logging
@@ -68,7 +68,7 @@ namespace Mapify
 	        }
         }
 
-        public static void Log(object msg)
+        public static void LogInfo(object msg)
         {
             ModEntry.Logger.Log($"[Info] {msg}");
         }
