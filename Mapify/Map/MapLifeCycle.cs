@@ -250,9 +250,9 @@ namespace Mapify.Map
 
             Mapify.Log("Playing custom loading screen music");
             var mainMenuMusicSource = GameObject.Find("Audio Source - main menu music")?.GetComponent<AudioSource>();
-            if (mainMenuMusicSource == null)
+            if (!mainMenuMusicSource)
             {
-                Mapify.LogError(nameof(PlayLoadingScreenMusic)+": can't find audio source");
+                Mapify.LogWarning(nameof(PlayLoadingScreenMusic)+": can't find audio source. This is normal if the user has muted music in DV settings");
                 return;
             }
 
