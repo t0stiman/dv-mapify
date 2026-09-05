@@ -27,6 +27,200 @@ namespace Mapify.Editor.Tools
             return t;
         }
 
+        // Multi-track helper methods.
+        /// <summary>
+        /// Calculates the offset position for a parallel track.
+        /// </summary>
+        /// <param name="position">Original position.</param>
+        /// <param name="direction">Forward direction of the track.</param>
+        /// <param name="offset">Lateral offset distance.</param>
+        /// <param name="toLeft">Whether to offset to the left (true) or right (false).</param>
+        /// <returns>The offset position.</returns>
+        private static Vector3 CalculateParallelOffset(Vector3 position, Vector3 direction, float offset, bool toLeft)
+        {
+            // Get perpendicular direction (cross with up vector)
+            Vector3 perpendicular = Vector3.Cross(direction.normalized, Vector3.up).normalized;
+            // Flip for left side
+            if (toLeft)
+            {
+                perpendicular = -perpendicular;
+            }
+            return position + perpendicular * offset;
+        }
+
+        /// <summary>
+        /// Offsets a bezier curve laterally for parallel track creation.
+        /// Uses radius-based scaling for circular arcs and tangent-based offsetting for general curves.
+        /// </summary>
+        /// <param name="bezier">Original bezier curve.</param>
+        /// <param name="offset">Lateral offset distance.</param>
+        /// <param name="toLeft">Whether to offset to the left (true) or right (false).</param>
+        /// <returns>The offset bezier curve.</returns>
+        public static SimpleBezier OffsetBezier(SimpleBezier bezier, float offset, bool toLeft)
+        {
+            // Calculate tangents at endpoints
+            Vector3 tangent0 = GetBezierTangent(bezier, 0f);
+            if (tangent0.sqrMagnitude < 0.0001f)
+                tangent0 = bezier.P3 - bezier.P0;
+
+            Vector3 tangent1 = GetBezierTangent(bezier, 1f);
+            if (tangent1.sqrMagnitude < 0.0001f)
+                tangent1 = bezier.P3 - bezier.P0;
+
+            // Offset endpoints perpendicular to tangents
+            Vector3 offsetP0 = CalculateParallelOffset(bezier.P0, tangent0, offset, toLeft);
+            Vector3 offsetP3 = CalculateParallelOffset(bezier.P3, tangent1, offset, toLeft);
+
+            // Calculate handle properties
+            Vector3 p0ToP1 = bezier.P1 - bezier.P0;
+            Vector3 p2ToP3 = bezier.P3 - bezier.P2;
+            float handleLength1 = p0ToP1.magnitude;
+            float handleLength2 = p2ToP3.magnitude;
+
+            // Estimate radius to detect circular arcs
+            float estimatedRadius = EstimateCircularRadius(bezier);
+
+            // Use radius-based scaling for circular arcs
+            if (estimatedRadius > 0.5f && estimatedRadius < 1000f)
+            {
+                // Determine if we're on inside or outside of curve
+                Vector3 handlePerp1 = Vector3.Cross(p0ToP1.normalized, Vector3.up).normalized;
+                Vector3 chord = bezier.P3 - bezier.P0;
+                bool curveGoesLeft = Vector3.Dot(handlePerp1, chord) > 0;
+                bool isInside = (curveGoesLeft && !toLeft) || (!curveGoesLeft && toLeft);
+
+                // Calculate new radius and scaling ratio
+                float newRadius = isInside ? (estimatedRadius - offset) : (estimatedRadius + offset);
+                if (newRadius < 0.1f) newRadius = 0.1f;
+                float radiusRatio = newRadius / estimatedRadius;
+
+                // Scale handle lengths proportionally
+                float newHandleLength1 = handleLength1 * radiusRatio;
+                float newHandleLength2 = handleLength2 * radiusRatio;
+
+                // Apply scaled handles using tangent directions
+                Vector3 offsetP1 = offsetP0 + tangent0.normalized * newHandleLength1;
+                Vector3 offsetP2 = offsetP3 - tangent1.normalized * newHandleLength2;
+
+                return new SimpleBezier(offsetP0, offsetP1, offsetP2, offsetP3);
+            }
+            else
+            {
+                // Fall back to perpendicular offset for non-circular curves
+                Vector3 handleDir1 = p0ToP1.normalized;
+                Vector3 handleDir2 = p2ToP3.normalized;
+
+                Vector3 offsetP1 = CalculateParallelOffset(bezier.P1, handleDir1, offset, toLeft);
+                Vector3 offsetP2 = CalculateParallelOffset(bezier.P2, handleDir2, offset, toLeft);
+
+                return new SimpleBezier(offsetP0, offsetP1, offsetP2, offsetP3);
+            }
+        }
+
+        /// <summary>
+        /// Estimates the radius of a circular arc from a bezier curve.
+        /// </summary>
+        private static float EstimateCircularRadius(SimpleBezier bezier)
+        {
+            // Sample 3 points and fit a circle through them
+            Vector3 p1 = bezier.P0;
+            Vector3 p2 = GetBezierPoint(bezier, 0.5f);
+            Vector3 p3 = bezier.P3;
+
+            // Calculate radius from 3 points using circumradius formula
+            float a = (p2 - p1).magnitude;
+            float b = (p3 - p2).magnitude;
+            float c = (p1 - p3).magnitude;
+
+            if (a < 0.01f || b < 0.01f || c < 0.01f) return float.MaxValue;
+
+            // Area using Heron's formula
+            float s = (a + b + c) * 0.5f;
+            float area = Mathf.Sqrt(Mathf.Max(0, s * (s - a) * (s - b) * (s - c)));
+
+            if (area < 0.001f) return float.MaxValue;
+
+            float radius = (a * b * c) / (4f * area);
+
+            return radius;
+        }
+
+        /// <summary>
+        /// Calculate a point on the bezier curve at parameter t.
+        /// </summary>
+        private static Vector3 GetBezierPoint(SimpleBezier bezier, float t)
+        {
+            float oneMinusT = 1f - t;
+            float oneMinusTCubed = oneMinusT * oneMinusT * oneMinusT;
+            float oneMinusTSquared = oneMinusT * oneMinusT;
+            float tSquared = t * t;
+            float tCubed = tSquared * t;
+
+            return oneMinusTCubed * bezier.P0
+                 + 3f * oneMinusTSquared * t * bezier.P1
+                 + 3f * oneMinusT * tSquared * bezier.P2
+                 + tCubed * bezier.P3;
+        }
+
+        /// <summary>
+        /// Calculate the tangent vector at a specific point on a bezier curve.
+        /// </summary>
+        /// <param name="bezier">The bezier curve.</param>
+        /// <param name="t">Parameter t (0 to 1).</param>
+        /// <returns>The tangent vector at point t.</returns>
+        private static Vector3 GetBezierTangent(SimpleBezier bezier, float t)
+        {
+            // Derivative of cubic bezier: B'(t) = 3(1-t)²(P1-P0) + 6(1-t)t(P2-P1) + 3t²(P3-P2)
+            float oneMinusT = 1f - t;
+            float oneMinusTSquared = oneMinusT * oneMinusT;
+            float tSquared = t * t;
+
+            Vector3 tangent = 3f * oneMinusTSquared * (bezier.P1 - bezier.P0)
+                            + 6f * oneMinusT * t * (bezier.P2 - bezier.P1)
+                            + 3f * tSquared * (bezier.P3 - bezier.P2);
+
+            return tangent.sqrMagnitude > 0.0001f ? tangent : (bezier.P3 - bezier.P0);
+        }
+
+        /// <summary>
+        /// Generates offset bezier curves for parallel tracks on circular arcs.
+        /// This properly adjusts the radius to maintain constant track spacing.
+        /// </summary>
+        /// <param name="attachPoint">Attachment point for the main track.</param>
+        /// <param name="handlePosition">Handle of the attachment point.</param>
+        /// <param name="orientation">Whether the curve turns left or right.</param>
+        /// <param name="radius">Radius of the main track in meters.</param>
+        /// <param name="arc">Arc in degrees.</param>
+        /// <param name="maxArc">Maximum arc before splitting.</param>
+        /// <param name="endGrade">Grade at the end.</param>
+        /// <param name="offset">Lateral offset distance.</param>
+        /// <param name="toLeft">Whether to offset to the left.</param>
+        /// <returns>Array of offset bezier curves.</returns>
+        public static SimpleBezier[] GenerateOffsetCurveBeziers(Vector3 attachPoint, Vector3 handlePosition,
+            TrackOrientation orientation, float radius, float arc, float maxArc, float endGrade,
+            float offset, bool toLeft)
+        {
+            // Calculate the adjusted radius for the parallel track
+            // For curves turning left, offset to left means smaller radius (inside), right means larger (outside)
+            // For curves turning right, it's the opposite
+            bool isLeftCurve = orientation == TrackOrientation.Left;
+
+            // Determine if this parallel track is on the inside or outside of the curve
+            bool isInside = (isLeftCurve && toLeft) || (!isLeftCurve && !toLeft);
+
+            // Adjust radius - inside tracks have smaller radius, outside tracks have larger radius
+            float adjustedRadius = isInside ? (radius - offset) : (radius + offset);
+
+            // Make sure we don't go to zero or negative radius
+            if (adjustedRadius < 0.1f)
+            {
+                adjustedRadius = 0.1f;
+            }
+
+            // Generate the curve with the adjusted radius
+            return GenerateCurveBeziers(attachPoint, handlePosition, orientation, adjustedRadius, arc, maxArc, endGrade);
+        }
+
         // Bézier generation.
         // Separate functions so they can be used for previews, avoiding duplicating the code.
         /// <summary>
@@ -176,6 +370,91 @@ namespace Mapify.Editor.Tools
         }
 
         /// <summary>
+        /// Instantiates multiple parallel straight <see cref="Track"/>s and returns them.
+        /// </summary>
+        /// <param name="parent">The parent <see cref="Transform"/> for the new tracks.</param>
+        /// <param name="attachPoint">Attachment point for the main track.</param>
+        /// <param name="handlePosition">Handle of the attachment point for the main track.</param>
+        /// <param name="length">Horizontal length for the tracks.</param>
+        /// <param name="endGrade">Grade at the end of the tracks.</param>
+        /// <param name="trackCount">Number of parallel tracks (not including main track).</param>
+        /// <param name="spacing">Distance between parallel tracks.</param>
+        /// <param name="toLeft">Create tracks to the left side.</param>
+        /// <param name="bothSides">Create tracks on both sides of the main track.</param>
+        /// <returns>Array of instantiated <see cref="Track"/>s with the main track at index 0.</returns>
+        public static Track[] CreateStraightMulti(Transform parent, Vector3 attachPoint, Vector3 handlePosition,
+            float length, float endGrade, int trackCount, float spacing, bool toLeft, bool bothSides)
+        {
+            // Calculate total number of tracks
+            int totalTracks = bothSides ? (trackCount * 2 + 1) : (trackCount + 1);
+            Track[] tracks = new Track[totalTracks];
+
+            // Create parent container for organization
+            GameObject container = new GameObject($"[Straight Multi][{length}m][{totalTracks} tracks]");
+            container.transform.parent = parent;
+            container.transform.position = attachPoint;
+
+            // Generate the main bezier
+            var mainCurves = GenerateStraightBezier(attachPoint, handlePosition, length, endGrade);
+            Vector3 direction = (attachPoint - handlePosition).normalized;
+
+            // Create main track
+            tracks[0] = GetEmptyTrack($"Track 0 (Main)", container.transform, attachPoint);
+            BezierPoint bp;
+            bp = tracks[0].Curve.AddPointAt(mainCurves[0].P0);
+            bp.handleStyle = BezierPoint.HandleStyle.Broken;
+            bp.globalHandle2 = mainCurves[0].P1;
+            bp = tracks[0].Curve.AddPointAt(mainCurves[0].P3);
+            bp.handleStyle = BezierPoint.HandleStyle.Broken;
+            bp.globalHandle1 = mainCurves[0].P2;
+
+            int trackIndex = 1;
+
+            // Create tracks on the specified side (or right side if both)
+            for (int i = 1; i <= trackCount; i++)
+            {
+                float offset = spacing * i;
+                SimpleBezier offsetBezier = OffsetBezier(mainCurves[0], offset, bothSides ? false : toLeft);
+
+                tracks[trackIndex] = GetEmptyTrack($"Track {trackIndex} ({(bothSides ? "Right" : (toLeft ? "Left" : "Right"))} {i})",
+                    container.transform, offsetBezier.P0);
+
+                bp = tracks[trackIndex].Curve.AddPointAt(offsetBezier.P0);
+                bp.handleStyle = BezierPoint.HandleStyle.Broken;
+                bp.globalHandle2 = offsetBezier.P1;
+                bp = tracks[trackIndex].Curve.AddPointAt(offsetBezier.P3);
+                bp.handleStyle = BezierPoint.HandleStyle.Broken;
+                bp.globalHandle1 = offsetBezier.P2;
+
+                trackIndex++;
+            }
+
+            // Create tracks on the left side if bothSides is true
+            if (bothSides)
+            {
+                for (int i = 1; i <= trackCount; i++)
+                {
+                    float offset = spacing * i;
+                    SimpleBezier offsetBezier = OffsetBezier(mainCurves[0], offset, true);
+
+                    tracks[trackIndex] = GetEmptyTrack($"Track {trackIndex} (Left {i})",
+                        container.transform, offsetBezier.P0);
+
+                    bp = tracks[trackIndex].Curve.AddPointAt(offsetBezier.P0);
+                    bp.handleStyle = BezierPoint.HandleStyle.Broken;
+                    bp.globalHandle2 = offsetBezier.P1;
+                    bp = tracks[trackIndex].Curve.AddPointAt(offsetBezier.P3);
+                    bp.handleStyle = BezierPoint.HandleStyle.Broken;
+                    bp.globalHandle1 = offsetBezier.P2;
+
+                    trackIndex++;
+                }
+            }
+
+            return tracks;
+        }
+
+        /// <summary>
         /// Instantiates a straight <see cref="Track"/> between 2 points and returns it.
         /// </summary>
         /// <param name="parent">The parent <see cref="Transform"/> for the new track.</param>
@@ -234,6 +513,124 @@ namespace Mapify.Editor.Tools
             t.Curve.Last().handle2 = Vector3.zero;
 
             return t;
+        }
+
+        /// <summary>
+        /// Instantiates multiple parallel <see cref="Track"/>s that approximate circular arcs and returns them.
+        /// </summary>
+        /// <param name="parent">The parent <see cref="Transform"/> for the new tracks.</param>
+        /// <param name="attachPoint">Attachment point for the main track.</param>
+        /// <param name="handlePosition">Handle of the attachment point for the main track.</param>
+        /// <param name="orientation">Whether the curve turns left or right.</param>
+        /// <param name="radius">Radius in meters.</param>
+        /// <param name="arc">Arc in degrees.</param>
+        /// <param name="maxArc">Maximum arc allowed before the curve needs to be divided into multiple parts.</param>
+        /// <param name="endGrade">The grade at the end of the tracks.</param>
+        /// <param name="trackCount">Number of parallel tracks (not including main track).</param>
+        /// <param name="spacing">Distance between parallel tracks.</param>
+        /// <param name="toLeft">Create tracks to the left side.</param>
+        /// <param name="bothSides">Create tracks on both sides of the main track.</param>
+        /// <returns>Array of instantiated <see cref="Track"/>s with the main track at index 0.</returns>
+        public static Track[] CreateArcCurveMulti(Transform parent, Vector3 attachPoint, Vector3 handlePosition,
+            TrackOrientation orientation, float radius, float arc, float maxArc, float endGrade,
+            int trackCount, float spacing, bool toLeft, bool bothSides)
+        {
+            // Calculate total number of tracks
+            int totalTracks = bothSides ? (trackCount * 2 + 1) : (trackCount + 1);
+            Track[] tracks = new Track[totalTracks];
+
+            // Create parent container for organization
+            GameObject container = new GameObject($"[Arc Curve Multi {orientation}][R{radius}m][{arc}°][{totalTracks} tracks]");
+            container.transform.parent = parent;
+            container.transform.position = attachPoint;
+
+            // Generate the main bezier curves
+            var mainCurves = GenerateCurveBeziers(attachPoint, handlePosition, orientation, radius, arc, maxArc, endGrade);
+
+            // Create main track
+            tracks[0] = GetEmptyTrack($"Track 0 (Main)", container.transform, attachPoint);
+            BezierPoint bp = tracks[0].Curve.AddPointAt(attachPoint);
+            bp.handleStyle = BezierPoint.HandleStyle.Broken;
+
+            for (int i = 0; i < mainCurves.Length; i++)
+            {
+                bp.globalHandle2 = mainCurves[i].P1;
+                bp = tracks[0].Curve.AddPointAt(mainCurves[i].P3);
+                bp.handleStyle = BezierPoint.HandleStyle.Connected;
+                bp.globalHandle1 = mainCurves[i].P2;
+            }
+
+            tracks[0].Curve.Last().handleStyle = BezierPoint.HandleStyle.Broken;
+            tracks[0].Curve.Last().handle2 = Vector3.zero;
+
+            int trackIndex = 1;
+
+            // Create tracks on the specified side (or right side if both)
+            for (int j = 1; j <= trackCount; j++)
+            {
+                float offset = spacing * j;
+                tracks[trackIndex] = GetEmptyTrack($"Track {trackIndex} ({(bothSides ? "Right" : (toLeft ? "Left" : "Right"))} {j})",
+                    container.transform, attachPoint);
+
+                // Offset all bezier curves for this parallel track
+                SimpleBezier[] offsetCurves = new SimpleBezier[mainCurves.Length];
+                for (int i = 0; i < mainCurves.Length; i++)
+                {
+                    offsetCurves[i] = OffsetBezier(mainCurves[i], offset, bothSides ? false : toLeft);
+                }
+
+                bp = tracks[trackIndex].Curve.AddPointAt(offsetCurves[0].P0);
+                bp.handleStyle = BezierPoint.HandleStyle.Broken;
+
+                for (int i = 0; i < offsetCurves.Length; i++)
+                {
+                    bp.globalHandle2 = offsetCurves[i].P1;
+                    bp = tracks[trackIndex].Curve.AddPointAt(offsetCurves[i].P3);
+                    bp.handleStyle = BezierPoint.HandleStyle.Connected;
+                    bp.globalHandle1 = offsetCurves[i].P2;
+                }
+
+                tracks[trackIndex].Curve.Last().handleStyle = BezierPoint.HandleStyle.Broken;
+                tracks[trackIndex].Curve.Last().handle2 = Vector3.zero;
+
+                trackIndex++;
+            }
+
+            // Create tracks on the left side if bothSides is true
+            if (bothSides)
+            {
+                for (int j = 1; j <= trackCount; j++)
+                {
+                    float offset = spacing * j;
+                    tracks[trackIndex] = GetEmptyTrack($"Track {trackIndex} (Left {j})",
+                        container.transform, attachPoint);
+
+                    // Offset all bezier curves for this parallel track
+                    SimpleBezier[] offsetCurves = new SimpleBezier[mainCurves.Length];
+                    for (int i = 0; i < mainCurves.Length; i++)
+                    {
+                        offsetCurves[i] = OffsetBezier(mainCurves[i], offset, true);
+                    }
+
+                    bp = tracks[trackIndex].Curve.AddPointAt(offsetCurves[0].P0);
+                    bp.handleStyle = BezierPoint.HandleStyle.Broken;
+
+                    for (int i = 0; i < offsetCurves.Length; i++)
+                    {
+                        bp.globalHandle2 = offsetCurves[i].P1;
+                        bp = tracks[trackIndex].Curve.AddPointAt(offsetCurves[i].P3);
+                        bp.handleStyle = BezierPoint.HandleStyle.Connected;
+                        bp.globalHandle1 = offsetCurves[i].P2;
+                    }
+
+                    tracks[trackIndex].Curve.Last().handleStyle = BezierPoint.HandleStyle.Broken;
+                    tracks[trackIndex].Curve.Last().handle2 = Vector3.zero;
+
+                    trackIndex++;
+                }
+            }
+
+            return tracks;
         }
 
         // Switches.
@@ -1152,7 +1549,7 @@ namespace Mapify.Editor.Tools
         {
             GameObject crossObj = new GameObject($"[Crossover {orientation}]");
             crossObj.transform.parent = parent;
-            crossObj.transform.position = attachPoint;
+            // Don't set position - keep at parent's origin so child positions work correctly
 
             SwitchPoint sp;
 
@@ -1252,7 +1649,7 @@ namespace Mapify.Editor.Tools
             // Create the parent object.
             GameObject obj = new GameObject("[Double Slip]");
             obj.transform.parent = parent;
-            obj.transform.position = attachPoint;
+            // Don't set position - keep at parent's origin so child positions work correctly
 
             // Double slips use the switch radius for the curve.
             float radius = TrackToolsHelper.CalculateSwitchRadius(leftPrefab);
@@ -1319,6 +1716,92 @@ namespace Mapify.Editor.Tools
             t.gameObject.name = $"[Bezier Track {t.GetHorizontalLength():F3}m]";
 
             return t;
+        }
+
+        /// <summary>
+        /// Instantiates multiple parallel bezier <see cref="Track"/>s and returns them.
+        /// </summary>
+        /// <param name="parent">The parent <see cref="Transform"/> for the new tracks.</param>
+        /// <param name="p0">The starting point of the main track.</param>
+        /// <param name="p1">The handle at the starting point.</param>
+        /// <param name="p2">The handle at the ending point.</param>
+        /// <param name="p3">The ending point of the main track.</param>
+        /// <param name="trackCount">Number of parallel tracks (not including main track).</param>
+        /// <param name="spacing">Distance between parallel tracks.</param>
+        /// <param name="toLeft">Create tracks to the left side.</param>
+        /// <param name="bothSides">Create tracks on both sides of the main track.</param>
+        /// <returns>Array of instantiated <see cref="Track"/>s with the main track at index 0.</returns>
+        public static Track[] CreateBezierMulti(Transform parent, Vector3 p0, Vector3 p1, Vector3 p2, Vector3 p3,
+            int trackCount, float spacing, bool toLeft, bool bothSides)
+        {
+            // Calculate total number of tracks
+            int totalTracks = bothSides ? (trackCount * 2 + 1) : (trackCount + 1);
+            Track[] tracks = new Track[totalTracks];
+
+            // Create parent container for organization
+            GameObject container = new GameObject($"[Bezier Multi][{totalTracks} tracks]");
+            container.transform.parent = parent;
+            container.transform.position = p0;
+
+            // Create main bezier
+            SimpleBezier mainBezier = new SimpleBezier(p0, p1, p2, p3);
+
+            // Create main track
+            BezierPoint bp;
+            tracks[0] = GetEmptyTrack("Track 0 (Main)", container.transform, p0);
+
+            bp = tracks[0].Curve.AddPointAt(p0);
+            bp.handleStyle = BezierPoint.HandleStyle.Broken;
+            bp.globalHandle2 = p1;
+            bp = tracks[0].Curve.AddPointAt(p3);
+            bp.handleStyle = BezierPoint.HandleStyle.Broken;
+            bp.globalHandle1 = p2;
+
+            int trackIndex = 1;
+
+            // Create tracks on the specified side (or right side if both)
+            for (int i = 1; i <= trackCount; i++)
+            {
+                float offset = spacing * i;
+                SimpleBezier offsetBezier = OffsetBezier(mainBezier, offset, bothSides ? false : toLeft);
+
+                string trackName = $"Track {trackIndex} ({(bothSides ? "Right" : (toLeft ? "Left" : "Right"))} {i})";
+                tracks[trackIndex] = GetEmptyTrack(trackName, container.transform, offsetBezier.P0);
+
+                bp = tracks[trackIndex].Curve.AddPointAt(offsetBezier.P0);
+                bp.handleStyle = BezierPoint.HandleStyle.Broken;
+                bp.globalHandle2 = offsetBezier.P1;
+                bp = tracks[trackIndex].Curve.AddPointAt(offsetBezier.P3);
+                bp.handleStyle = BezierPoint.HandleStyle.Broken;
+                bp.globalHandle1 = offsetBezier.P2;
+
+                trackIndex++;
+            }
+
+            // Create tracks on the left side if bothSides is true
+            if (bothSides)
+            {
+                for (int i = 1; i <= trackCount; i++)
+                {
+                    float offset = spacing * i;
+                    SimpleBezier offsetBezier = OffsetBezier(mainBezier, offset, true);
+
+                    string trackName = $"Track {trackIndex} (Left {i})";
+                    tracks[trackIndex] = GetEmptyTrack(trackName, container.transform, offsetBezier.P0);
+
+                    bp = tracks[trackIndex].Curve.AddPointAt(offsetBezier.P0);
+                    bp.handleStyle = BezierPoint.HandleStyle.Broken;
+                    bp.globalHandle2 = offsetBezier.P1;
+                    bp = tracks[trackIndex].Curve.AddPointAt(offsetBezier.P3);
+                    bp.handleStyle = BezierPoint.HandleStyle.Broken;
+                    bp.globalHandle1 = offsetBezier.P2;
+
+
+                    trackIndex++;
+                }
+            }
+
+            return tracks;
         }
     }
 }

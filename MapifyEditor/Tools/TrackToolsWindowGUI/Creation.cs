@@ -21,6 +21,13 @@ namespace Mapify.Editor.Tools
         private bool _generateBallast = true;
         private bool _generateSleepers = true;
 
+        // Multi-track options.
+        private bool _multiTrackMode = false;
+        private int _parallelTrackCount = 2;
+        private float _parallelTrackSpacing = 4.5f;
+        private TrackOrientation _parallelTrackSide = TrackOrientation.Right;
+        private bool _parallelBothSides = false;
+
         // Options used in multiple pieces.
         private TrackOrientation _orientation;
         private float _endGrade = 0.0f;
@@ -156,6 +163,44 @@ namespace Mapify.Editor.Tools
                 _generateSleepers);
 
             EditorGUILayout.Space();
+            EditorHelper.Separator();
+
+            // Multi-track mode options
+            _multiTrackMode = EditorGUILayout.Toggle(
+                new GUIContent("Multi-track mode", "Create multiple parallel tracks at once"),
+                _multiTrackMode);
+
+            if (_multiTrackMode)
+            {
+                EditorGUI.indentLevel++;
+
+                _parallelBothSides = EditorGUILayout.Toggle(
+                    new GUIContent("Both sides", "Create tracks on both sides of the main track"),
+                    _parallelBothSides);
+
+                if (!_parallelBothSides)
+                {
+                    _parallelTrackSide = (TrackOrientation)EditorGUILayout.EnumPopup(
+                        new GUIContent("Track side", "Which side to create parallel tracks"),
+                        _parallelTrackSide);
+                }
+
+                _parallelTrackCount = EditorGUILayout.IntSlider(
+                    new GUIContent("Track count", "Number of parallel tracks (excluding main track)"),
+                    _parallelTrackCount, 1, 19);
+
+                _parallelTrackSpacing = EditorGUILayout.FloatField(
+                    new GUIContent("Track spacing", "Distance between parallel tracks in meters"),
+                    _parallelTrackSpacing);
+
+                // Show total track count
+                int totalTracks = _parallelBothSides ? (_parallelTrackCount * 2 + 1) : (_parallelTrackCount + 1);
+                EditorGUILayout.LabelField("Total tracks", totalTracks.ToString());
+
+                EditorGUI.indentLevel--;
+            }
+
+            EditorGUILayout.Space();
         }
 
         private void DrawCreationFreeformOptions()
@@ -223,9 +268,20 @@ namespace Mapify.Editor.Tools
                 Undo.CollapseUndoOperations(_freeformTrackHelper.UndoIndex.Value);
             }
 
-            if (_freeformTrackHelper != null && _freeformTrackHelper.WorkingTrack)
+            if (_freeformTrackHelper != null)
             {
-                Selection.activeGameObject = _freeformTrackHelper.WorkingTrack.gameObject;
+                if (_multiTrackMode && _freeformTrackHelper.WorkingTracks != null && _freeformTrackHelper.WorkingTracks.Length > 0)
+                {
+                    // Select the parent container for multi-track
+                    if (_freeformTrackHelper.WorkingTracks[0] && _freeformTrackHelper.WorkingTracks[0].transform.parent)
+                    {
+                        Selection.activeGameObject = _freeformTrackHelper.WorkingTracks[0].transform.parent.gameObject;
+                    }
+                }
+                else if (_freeformTrackHelper.WorkingTrack)
+                {
+                    Selection.activeGameObject = _freeformTrackHelper.WorkingTrack.gameObject;
+                }
             }
 
             _freeformTrackHelper = null;
@@ -239,6 +295,13 @@ namespace Mapify.Editor.Tools
             _currentPiece = (TrackPiece)GUILayout.SelectionGrid((int)_currentPiece, _pieceContents, 6, EditorStyles.miniButtonMid);
             GUI.backgroundColor = Color.white;
             EditorGUILayout.Space();
+
+            // Show warning if multi-track mode is enabled but not supported for current piece
+            if (_multiTrackMode && _currentPiece != TrackPiece.Straight && _currentPiece != TrackPiece.Curve)
+            {
+                EditorGUILayout.HelpBox("Multi-track mode is currently only supported for Straight and Curve pieces. " +
+                    "Switches, Yards, Turntables, and Special pieces will be created as single tracks.", MessageType.Info);
+            }
 
             switch (_currentPiece)
             {
