@@ -18,6 +18,7 @@
         <Publicize Include="DV.RailTrack" IncludeCompilerGeneratedMembers="false" />
         <Publicize Include="DV.SignPlacer" IncludeCompilerGeneratedMembers="false" />
         <Publicize Include="DV.ThingTypes" IncludeCompilerGeneratedMembers="false" />
+        <Publicize Include="WorldStreamer" IncludeCompilerGeneratedMembers="false" />
     </ItemGroup>
 
     <!-- Derail Valley -->

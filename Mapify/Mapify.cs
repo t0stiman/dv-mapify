@@ -1,11 +1,7 @@
 ﻿using System;
-using System.IO;
-using DV.UI;
 using HarmonyLib;
 using Mapify.Map;
-using Mapify.Patches;
 using UnityModManagerNet;
-using Object = UnityEngine.Object;
 
 namespace Mapify
 {

@@ -68,7 +68,7 @@ namespace Mapify.Map
             MapInfo mapInfo = null;
             if (mapInfoRequest.assetBundle is null)
             {
-                // Warning and not Error because this occurs if the map is built with an older version of Mapify, and then its not a problem
+                // Warning and not Error because this occurs if the map is built with an older version of Mapify, and then it's not a problem
                 Debug.LogWarning("Failed to load the mapinfo bundle");
             }
             else
@@ -285,6 +285,10 @@ namespace Mapify.Map
             streamer.destroyTileDelay = 1.3f;
             streamer.sceneLoadWaitFrames = 1;
             streamer.sceneCollection = collection;
+
+            var streamerInit = streamerObj.AddComponent<StreamerInit>();
+            streamerInit.streamer = streamer;
+
             streamerObj.SetActive(true);
         }
 
@@ -341,7 +345,6 @@ namespace Mapify.Map
         private static void Cleanup()
         {
             WorldMapSetup.Cleanup();
-            StreamedObjectInitPatch.ResetStreamers();
             Maps.UnregisterLoadedMap();
             SceneManager.sceneLoaded -= OnSceneLoad;
             WorldStreamingInit_Awake_Patch.CanInitialize = false;
