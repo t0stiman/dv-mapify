@@ -270,6 +270,11 @@ namespace Mapify.Utils
             {
                 junctionIsClosest = true;
             }
+            else if (closestJunction.outBranches.Any(outBranch => outBranch.track == closestBranch.track))
+            {
+                // connect to the switch, not the track in the switch
+                junctionIsClosest = true;
+            }
             else
             {
                 junctionIsClosest = Vector3.SqrMagnitude(pointPosition - closestJunction.position) <
@@ -315,6 +320,11 @@ namespace Mapify.Utils
             }
             else if (closestBranch is null)
             {
+                junctionIsClosest = true;
+            }
+            else if (closestJunction.outBranches.Any(outBranch => outBranch.track == closestBranch.track))
+            {
+                // connect to the switch, not the track in the switch
                 junctionIsClosest = true;
             }
             else
