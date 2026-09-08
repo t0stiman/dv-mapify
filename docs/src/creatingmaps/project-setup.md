@@ -97,9 +97,6 @@ You'll need to create a 'MapInfo' to define some properties about your map, such
 To do this, right-click in the Project window, and go to `Create > Mapify > MapInfo`.
 The name doesn't matter, but I'd recommend naming it `MapInfo` for simplicity.
 
-Inside you'll see four properties, each of which should be self-explanatory. Set them as needed.
-
-
 ## Tooltips
 
 Most, if not all, fields on components have tooltips explaining their functionality.

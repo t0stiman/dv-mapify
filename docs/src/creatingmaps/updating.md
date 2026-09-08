@@ -1,6 +1,6 @@
 ﻿# Updating
 
-When it comes to updating Mapify, you can simply [download the latest release from GitHub][github-releases],
+When it comes to updating Mapify, you can simply download the .unitypackage file from the [latest release from GitHub][github-releases],
 then go to `Mapify > Package > Import` and select the file you downloaded.
 
 There may be breaking changes between Mapify versions.
