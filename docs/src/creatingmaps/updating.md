@@ -1,6 +1,6 @@
 ﻿# Updating
 
-When it comes to updating Mapify, you can simply [download the latest release from GitHub][github-releases],
+When it comes to updating Mapify, you can simply download the .unitypackage file from the [latest release from GitHub][github-releases],
 then go to `Mapify > Package > Import` and select the file you downloaded.
 
 There may be breaking changes between Mapify versions.
@@ -24,4 +24,4 @@ If you're upgrading through multiple versions, read the list bottom-up, starting
 - All service station resources must be reassigned.
 - Diesel service station resources are now required to be last in the list.
 
-[github-releases]: https://github.com/Insprill/dv-mapify/releases
+[github-releases]: https://github.com/t0stiman/dv-mapify/releases

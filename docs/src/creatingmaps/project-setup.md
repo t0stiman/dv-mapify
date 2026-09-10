@@ -60,8 +60,8 @@ To toggle Gizmos, click the "Gizmos" button in the top right of the scene view.
 
 ## Importing The Creation Package
 
-To import the map creation package, [download the latest release from GitHub][github-releases].
-Then, back in Unity, go to `Assets > Import Package > Custom Package` and select the `.unitypacakge` file you downloaded.
+To import the map creation package, [download the .unitypackage file from the latest release from GitHub][github-releases].
+Then, back in Unity, go to `Assets > Import Package > Custom Package` and select the `.unitypackage` file you downloaded.
 When the import prompt comes up, import everything.
 
 
@@ -97,9 +97,6 @@ You'll need to create a 'MapInfo' to define some properties about your map, such
 To do this, right-click in the Project window, and go to `Create > Mapify > MapInfo`.
 The name doesn't matter, but I'd recommend naming it `MapInfo` for simplicity.
 
-Inside you'll see four properties, each of which should be self-explanatory. Set them as needed.
-
-
 ## Tooltips
 
 Most, if not all, fields on components have tooltips explaining their functionality.
@@ -108,5 +105,5 @@ To view them, hover over the field momentarily, and it'll appear.
 
 [unity-hub]: https://unity.com/download
 [unity-download]: unityhub://2019.4.40f1/ffc62b691db5
-[github-releases]: https://github.com/Insprill/dv-mapify/releases
+[github-releases]: https://github.com/t0stiman/dv-mapify/releases
 [code-monkey]: https://www.youtube.com/@CodeMonkeyUnitys

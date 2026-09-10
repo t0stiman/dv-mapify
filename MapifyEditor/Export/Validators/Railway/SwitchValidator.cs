@@ -17,27 +17,31 @@ namespace MapifyEditor.Export.Validators
                 var switchTracks = switch_.GetTracks();
                 if (switchTracks.Length < 2)
                 {
-                    yield return Result.Error("Switches must have at least 2 branches", switch_);
+                    yield return Result.Error($"Switches must have at least 2 branches but this one has {switchTracks.Length}", switch_);
+                    continue;
                 }
-                else
-                {
-                    var jointPointPos = switchTracks[0].Curve[0].position;
-                    for (int i = 1; i < switchTracks.Length; i++)
-                    {
-                        if (Vector3.Distance(jointPointPos, switchTracks[i].Curve[0].position) <= Track.SNAP_RANGE) continue;
 
-                        yield return Result.Error("All tracks in switches must connect to each other at point 0", switch_);
-                        break;
-                    }
+                if (switchTracks.Any(switchTrack => switchTrack == null))
+                {
+                    yield return Result.Error($"Switch track is null", switch_);
+                    continue;
+                }
+
+                var jointPointPos = switch_.GetJointPoint().position;
+                for (int i = 1; i < switchTracks.Length; i++)
+                {
+                    if (Vector3.Distance(jointPointPos, switchTracks[i].Curve[0].position) <= Track.SNAP_RANGE) continue;
+
+                    yield return Result.Error("All tracks in switches must connect to each other at point 0", switch_);
+                    break;
                 }
 
                 foreach (var track in switchTracks)
                 {
-                    track.Snap();
-
+                    track.TrySnapTrack(true);
                     if (track.isInSnapped && track.isOutSnapped) continue;
 
-                    yield return Result.Error("Tracks in switches must have a track attached on both sides.", track);
+                    yield return Result.Error("Switches must have a track attached to all points", track);
                 }
             }
         }

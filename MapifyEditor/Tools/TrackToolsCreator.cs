@@ -2,7 +2,6 @@ using System;
 using Mapify.Editor.Tools.OptionData;
 using Mapify.Editor.Utils;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 using static Mapify.Editor.Tools.ToolEnums;
 using Object = UnityEngine.Object;
@@ -259,7 +258,7 @@ namespace Mapify.Editor.Tools
             TrackOrientation orientation, SwitchPoint connectingPoint)
         {
             // Create switch object.
-            Switch s = Object.Instantiate(orientation == TrackOrientation.Left ? leftPrefab : rightPrefab, parent);
+            Switch s = Object.Instantiate(orientation == TrackOrientation.Left ? leftPrefab : rightPrefab, parent, true);
             s.gameObject.name = $"[Switch {orientation}]";
             // Helper variables.
             Vector3 pivot;
@@ -300,16 +299,16 @@ namespace Mapify.Editor.Tools
         /// <summary>
         /// Creates a switch without the limitations of the base game switches
         /// </summary>
-        public static CustomSwitch CreateCustomSwitch(Transform parent, Vector3 attachPoint, Vector3 handlePosition, int switchBranchesCount,
-            int connectingPoint, float radius, float arc, float endGrade)
+        public static CustomSwitch CreateCustomSwitch(Transform parent, Vector3 attachPoint, Vector3 handlePosition, int switchBranchesCount, float radius, float arc, float endGrade)
         {
-            //TODO connectingPoint
-
             var switchObject = new GameObject($"[Switch w/ {switchBranchesCount} branches]");
             switchObject.transform.position = attachPoint;
             switchObject.transform.parent = parent;
 
             var switchComponent = switchObject.AddComponent<CustomSwitch>();
+
+            switchComponent.defaultBranch = 0;
+            switchComponent.standSide = CustomSwitch.StandSide.LEFT;
 
             var tracks = new Track[switchBranchesCount];
             var length = radius * arc * Mathf.Deg2Rad;
@@ -318,7 +317,7 @@ namespace Mapify.Editor.Tools
             {
                 if (switchBranchesCount % 2 == 1 && branchIndex == (switchBranchesCount-1) / 2)
                 {
-                    //middle track
+                    // middle track
                     tracks[branchIndex] = CreateStraight(switchObject.transform, attachPoint, handlePosition, length, endGrade);
                     continue;
                 }
@@ -328,13 +327,13 @@ namespace Mapify.Editor.Tools
 
                 if (branchIndex < switchBranchesCount / 2.0)
                 {
-                    //left of center
+                    // left of center
                     trackOrientation = TrackOrientation.Left;
                     thisRadius = (branchIndex + 1) * radius;
                 }
                 else
                 {
-                    //right of center
+                    // right of center
                     trackOrientation = TrackOrientation.Right;
                     thisRadius = (switchBranchesCount - branchIndex) * radius;
                 }
@@ -343,8 +342,6 @@ namespace Mapify.Editor.Tools
                 tracks[branchIndex] = CreateArcCurve(switchObject.transform, attachPoint, handlePosition, trackOrientation, thisRadius, thisArc, 360, endGrade);
             }
 
-            //middle track with uneven amount of branches, track left of middle with even amount of branches
-            switchComponent.defaultBranch = (byte)(Math.Round(switchBranchesCount/2.0-1));
             switchComponent.SetTracks(tracks);
             return switchComponent;
         }

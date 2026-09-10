@@ -23,6 +23,16 @@ namespace Mapify.Editor
             return Tracks[branchIndex].Curve.Last();
         }
 
+        public BezierPoint[] GetOutPoints()
+        {
+            return Tracks.Select(track => track.Curve.Last()).ToArray();
+        }
+
+        public override BezierPoint[] GetPoints()
+        {
+            return GetOutPoints().Append( GetJointPoint() ).ToArray();
+        }
+
         [Tooltip("Which way the switch should be flipped by default")]
         public byte defaultBranch = 0;
 
@@ -38,11 +48,17 @@ namespace Mapify.Editor
             return Tracks;
         }
 
+        public override int GetPointCount()
+        {
+            return Tracks.Length+1;
+        }
+
         public void SetTracks(Track[] newTracks)
         {
             Tracks = newTracks;
         }
 
+        //TODO is this used?
         public void AddTrack(Track newTrack)
         {
             if (Tracks is null)
