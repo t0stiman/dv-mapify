@@ -24,12 +24,6 @@ namespace Mapify.Editor.Tools.OSM
         public bool SameLengthHandles = true;
         public float TrackHeight = 0.5f;
 
-        // Mapify prefabs
-        public Track TrackPrefab;
-        public BufferStop BufferPrefab;
-        public Turntable TurntablePrefab;
-
-        private bool _showPrefabs = false;
         // Ways created from extracted data.
         private Dictionary<long, TrackWay> _ways = new();
         // Nodes created from the extracted data.
@@ -38,11 +32,6 @@ namespace Mapify.Editor.Tools.OSM
         private Dictionary<long, CustomSwitch> _switchInstances = new();
 
         public bool TestMode = false;
-
-        private void OnEnable()
-        {
-            TryGetDefaultAssets();
-        }
 
         private void OnGUI()
         {
@@ -114,65 +103,12 @@ namespace Mapify.Editor.Tools.OSM
             }
 
             GUI.enabled = true;
-            EditorGUILayout.Space();
-
-            DrawPrefabFoldout();
-
-        }
-
-        // Foldout with the 5 prefabs used for track creation.
-        private void DrawPrefabFoldout()
-        {
-            GUI.backgroundColor *= 1.1f;
-
-            _showPrefabs = EditorGUILayout.BeginFoldoutHeaderGroup(_showPrefabs,
-                new GUIContent("Prefabs", "The prefabs to be used for track creation"),
-                null, PrefabFoldoutContextMenu);
-
-            GUI.backgroundColor = Color.white;
-
-            if (_showPrefabs)
-            {
-                EditorGUI.indentLevel++;
-
-                TrackPrefab = EditorHelper.ObjectField(
-                    new GUIContent("Track prefab"),
-                    TrackPrefab, true);
-                BufferPrefab = EditorHelper.ObjectField(
-                    new GUIContent("Buffer prefab"),
-                    BufferPrefab, true);
-                TurntablePrefab = EditorHelper.ObjectField(
-                    new GUIContent("Turntable prefab"),
-                    TurntablePrefab, true);
-
-                EditorGUI.indentLevel--;
-                EditorGUILayout.Space();
-            }
-
-            EditorGUILayout.EndFoldoutHeaderGroup();
-        }
-
-        private void PrefabFoldoutContextMenu(Rect rect)
-        {
-            GenericMenu menu = new GenericMenu();
-            menu.AddItem(new GUIContent("Get default prefabs",
-                "Tries to get the default Mapify prefabs at their default location"),
-                false, TryGetDefaultAssets);
-            menu.AddItem(new GUIContent("Clear prefabs",
-                "Sets all prefabs to null"),
-                false, () => { TrackPrefab = null; BufferPrefab = null; TurntablePrefab = null; });
-            menu.DropDown(rect);
         }
 
         [ContextMenu("Test Mode")]
         private void ToggleTest()
         {
             TestMode = !TestMode;
-        }
-
-        public void TryGetDefaultAssets()
-        {
-            TrackToolsHelper.TryGetDefaultPrefabs(ref TrackPrefab, ref BufferPrefab, ref TurntablePrefab);
         }
 
         public void ClearExistingTracks()
@@ -402,12 +338,15 @@ namespace Mapify.Editor.Tools.OSM
             var startNode = _nodes[segment.First];
             var endNode = _nodes[segment.Last];
 
-            // In DV, a track can only belong to 1 switch. We will ensure this by splitting the track in 2 if the start and end node of the segment are both a switch.
+            // In DV, a track can only belong to 1 switch and switches can't connect directly to another switch.
             if (startNode.IsSwitch() &&
                 endNode.IsSwitch())
             {
                 oneOrMultipleTracks = TrackToolsEditor.Split(track);
-                //todo moet 2x? of verderop
+
+                //todo
+                var two = TrackToolsEditor.Split(oneOrMultipleTracks[1]);
+                oneOrMultipleTracks = new []{oneOrMultipleTracks[0], two[0], two[1]};
             }
 
             // A switch branch mustn't be a dead end, it always needs to connect to track.
@@ -429,13 +368,13 @@ namespace Mapify.Editor.Tools.OSM
             {
                 var switch_ = CreateOrAddToSwitch(startNode, oneOrMultipleTracks[0]);
 
-                // A branch of a switch cannot be attached directly to the branch of another switch
-                if (oneOrMultipleTracks[0].CanOnlySnapToSwitch(false)) // if zou aan branch snappen
-                {
-                    var split = TrackToolsEditor.Split(oneOrMultipleTracks[0]);
-                    //get it out of the switch
-                    split[1].transform.parent = switch_.transform.parent;
-                }
+                // // A branch of a switch cannot be attached directly to the branch of another switch
+                // if (oneOrMultipleTracks[0].CanOnlySnapToSwitch(false)) // if zou aan branch snappen
+                // {
+                //     var split = TrackToolsEditor.Split(oneOrMultipleTracks[0]);
+                //     //get it out of the switch
+                //     split[1].transform.parent = switch_.transform.parent;
+                // }
             }
 
             // Check if it ends on a switch.
@@ -446,13 +385,13 @@ namespace Mapify.Editor.Tools.OSM
             {
                 var switch_ = CreateOrAddToSwitch(endNode, oneOrMultipleTracks.Last());
 
-                // An branch of a switch cannot be attached directly to the branch of another switch
-                if (oneOrMultipleTracks.Last().CanOnlySnapToSwitch(false))
-                {
-                    var split = TrackToolsEditor.Split(oneOrMultipleTracks.Last());
-                    //get it out of the switch
-                    split[0].transform.parent = switch_.transform.parent;
-                }
+                // // An branch of a switch cannot be attached directly to the branch of another switch
+                // if (oneOrMultipleTracks.Last().CanOnlySnapToSwitch(false))
+                // {
+                //     var split = TrackToolsEditor.Split(oneOrMultipleTracks.Last());
+                //     //get it out of the switch
+                //     split[0].transform.parent = switch_.transform.parent;
+                // }
             }
         }
 
@@ -494,7 +433,8 @@ namespace Mapify.Editor.Tools.OSM
 
         private void CreateTrack(Transform parent, TrackWaySegment segment, out Track track)
         {
-            track = Instantiate(TrackPrefab, parent);
+            track = TrackToolsCreator.GetEmptyTrack();
+            track.transform.parent = parent;
 
             // Place the track segment in the correct spot.
             track.name = $"[{_nodes[segment.First].Name}] TO [{_nodes[segment.Last].Name}]";
