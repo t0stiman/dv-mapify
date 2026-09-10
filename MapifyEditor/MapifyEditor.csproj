@@ -54,7 +54,7 @@
 
         <!-- Copy to package build and test map -->
         <Copy Condition="'$(IsEditor)' == 'true'" SourceFiles="$(TargetPath);$(OutDir)OsmSharp.dll;$(OutDir)protobuf-net.dll" DestinationFolder="$(PackageBuilderDir);" />
-        <Copy Condition="'$(IsEditor)' == 'true' And Exists('$(TestMapDir)')" SourceFiles="$(TargetPath)" DestinationFolder="$(TestMapDir)" />
+        <Copy Condition="'$(IsEditor)' == 'true' And Exists('$(TestMapDir)')" SourceFiles="$(TargetPath);$(OutDir)OsmSharp.dll;$(OutDir)protobuf-net.dll" DestinationFolder="$(TestMapDir)" />
 
         <!-- Copy to game install folder -->
         <Copy Condition="Exists('$(DvInstallDir)') And '$(IsEditor)' != 'true'" SourceFiles="../info.json;$(TargetPath);../LICENSE;../locale.csv" DestinationFolder="$(DvInstallDir)/Mods/Mapify" />
