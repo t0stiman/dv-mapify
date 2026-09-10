@@ -38,10 +38,14 @@ namespace MapifyEditor.Export.Validators
                     break;
                 }
 
-                if (switch_.SnappedTracks.Length != switch_.GetPointCount()
-                    || switch_.SnappedTracks.Any(x => x is null || x.Track is null))
+                for (int pointIndex = 0; pointIndex < switch_.GetPointCount(); pointIndex++)
                 {
-                    yield return Result.Error("Switches must have a track attached to all points", switch_);
+                    if (pointIndex >= switch_.SnappedTracks.Length
+                        || switch_.SnappedTracks[pointIndex] is null
+                        || switch_.SnappedTracks[pointIndex].Track is null)
+                    {
+                        yield return Result.Error($"Switches must have a track attached to all points. Point {pointIndex} is not attached", switch_.GetPoints()[pointIndex]);
+                    }
                 }
 
                 if (switch_.SnappedTracks.Any(x => x is not null && x.Track.IsSwitch))

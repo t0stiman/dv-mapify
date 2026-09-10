@@ -30,10 +30,16 @@ namespace Mapify.Editor
         public static bool OpenAndValidate()
         {
             bool wasOpen = HasOpenInstances<MapValidationGui>();
-            if (wasOpen) window.Close();
+            if (wasOpen)
+            {
+                window.Close();
+            }
             List<Result> results = Validator.Validate().ToList();
             if (results.Count == 0)
+            {
                 return true;
+            }
+
             window = GetWindow<MapValidationGui>();
             window.titleContent = new GUIContent(WINDOW_TITLE);
             window.errors = results.Where(r => r.type == Result.ResultType.ERROR).ToArray();

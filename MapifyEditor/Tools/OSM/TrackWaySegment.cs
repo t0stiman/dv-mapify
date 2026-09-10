@@ -22,5 +22,7 @@ namespace Mapify.Editor.Tools.OSM
             get => nodeIDs[index];
             set => nodeIDs[index] = value;
         }
+
+        public bool ContainsNode(long nodeID) => nodeIDs.Contains(nodeID);
     }
 }

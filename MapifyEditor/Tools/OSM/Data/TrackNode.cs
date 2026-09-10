@@ -62,10 +62,9 @@ namespace Mapify.Editor.Tools.OSM.Data
             }
         }
 
-        public bool IsSwitch()
-        {
-            return GetNodeType() == NodeType.Switch;
-        }
+        public bool IsDeadEnd() => GetNodeType() == NodeType.End;
+        public bool IsTrack() => GetNodeType() == NodeType.Connected;
+        public bool IsSwitch() => GetNodeType() == NodeType.Switch;
 
         public Vector3 GetHandle(int index)
         {

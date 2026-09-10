@@ -21,7 +21,6 @@ namespace Mapify.Editor.Tools.OSM
 
         public DataExtractor DataExtractor;
         public bool TryUseTagData = true;
-        public bool SameLengthHandles = true;
         public float TrackHeight = 0.5f;
 
         // Ways created from extracted data.
@@ -69,9 +68,6 @@ namespace Mapify.Editor.Tools.OSM
                 new GUIContent("Try to use tag data",
                 "If true, will try to get age, yards and/or station info from the data and assign it."),
                 TryUseTagData);
-            SameLengthHandles = EditorGUILayout.Toggle(new GUIContent("Handles have same length",
-                "If true, handle length will be shared between both sides, else it may differ."),
-                SameLengthHandles);
             TrackHeight = EditorGUILayout.FloatField(new GUIContent("Track height",
                 "How much to offset the track vertically."),
                 TrackHeight);
@@ -314,44 +310,68 @@ namespace Mapify.Editor.Tools.OSM
 
             CalculateHandles();
 
-            Track track;
+            var createdTracks = new List<Track>();
 
             foreach (var way in _ways.Values)
             {
                 foreach (var segment in way.Segments)
                 {
-                    CreateTrack(way.transform, segment, out track);
+                    var track = CreateTrack(way.transform, segment);
 
                     if (TryUseTagData)
                     {
                         AssignTrackProperties(way, ref track);
                     }
 
-                    SwitchStuff(segment, track);
+                    createdTracks.AddRange(SwitchFixes(segment, track));
                 }
+            }
+
+            foreach (var track in createdTracks)
+            {
+                track.TrySnapTrack(true);
+            }
+            foreach (var switch_ in _switchInstances.Values)
+            {
+                switch_.TrySnap(true);
             }
         }
 
-        private void SwitchStuff(TrackWaySegment segment, Track track)
+        private Track[] SwitchFixes(TrackWaySegment segment, Track track)
         {
             Track[] oneOrMultipleTracks;
             var startNode = _nodes[segment.First];
             var endNode = _nodes[segment.Last];
 
-            // In DV, a track can only belong to 1 switch and switches can't connect directly to another switch.
+            // A track can only belong to 1 switch and switches can't connect directly to another switch.
             if (startNode.IsSwitch() &&
                 endNode.IsSwitch())
             {
-                oneOrMultipleTracks = TrackToolsEditor.Split(track);
-
-                //todo
-                var two = TrackToolsEditor.Split(oneOrMultipleTracks[1]);
-                oneOrMultipleTracks = new []{oneOrMultipleTracks[0], two[0], two[1]};
+                // split twice
+                var one = TrackToolsEditor.Split(track);
+                var two = TrackToolsEditor.Split(one[1]);
+                oneOrMultipleTracks = new []{one[0], two[0], two[1]};
             }
-
             // A switch branch mustn't be a dead end, it always needs to connect to track.
-            else if (startNode.IsSwitch() && endNode.Connected.Count == 1 ||
-                     endNode.IsSwitch() && startNode.Connected.Count == 1)
+            else if (startNode.IsSwitch() && endNode.IsDeadEnd() ||
+                     endNode.IsSwitch() && startNode.IsDeadEnd())
+            {
+                oneOrMultipleTracks = TrackToolsEditor.Split(track);
+            }
+            // switches can't connect directly to another switch
+            else if (
+                (
+                    startNode.IsSwitch()
+                    && endNode.IsTrack()
+                    && endNode.Connected.Single(x => !segment.ContainsNode(x.Id)).IsSwitch()
+                )
+                ||
+                (
+                    endNode.IsSwitch()
+                    && startNode.IsTrack()
+                    && startNode.Connected.Single(x => !segment.ContainsNode(x.Id)).IsSwitch()
+                )
+            )
             {
                 oneOrMultipleTracks = TrackToolsEditor.Split(track);
             }
@@ -366,15 +386,7 @@ namespace Mapify.Editor.Tools.OSM
                 && !startNode.IsBeforeTrackNode(_nodes[segment[1]])
                )
             {
-                var switch_ = CreateOrAddToSwitch(startNode, oneOrMultipleTracks[0]);
-
-                // // A branch of a switch cannot be attached directly to the branch of another switch
-                // if (oneOrMultipleTracks[0].CanOnlySnapToSwitch(false)) // if zou aan branch snappen
-                // {
-                //     var split = TrackToolsEditor.Split(oneOrMultipleTracks[0]);
-                //     //get it out of the switch
-                //     split[1].transform.parent = switch_.transform.parent;
-                // }
+                CreateOrAddToSwitch(startNode, oneOrMultipleTracks[0]);
             }
 
             // Check if it ends on a switch.
@@ -383,16 +395,10 @@ namespace Mapify.Editor.Tools.OSM
                 && !endNode.IsBeforeTrackNode(_nodes[segment[segment.Count - 2]])
                )
             {
-                var switch_ = CreateOrAddToSwitch(endNode, oneOrMultipleTracks.Last());
-
-                // // An branch of a switch cannot be attached directly to the branch of another switch
-                // if (oneOrMultipleTracks.Last().CanOnlySnapToSwitch(false))
-                // {
-                //     var split = TrackToolsEditor.Split(oneOrMultipleTracks.Last());
-                //     //get it out of the switch
-                //     split[0].transform.parent = switch_.transform.parent;
-                // }
+                CreateOrAddToSwitch(endNode, oneOrMultipleTracks.Last());
             }
+
+            return oneOrMultipleTracks;
         }
 
         private void CalculateHandles()
@@ -408,7 +414,7 @@ namespace Mapify.Editor.Tools.OSM
 
             for (int i = 0; i < orderedNodes.Length; i++)
             {
-                orderedNodes[i].CalculateHandles(SameLengthHandles);
+                orderedNodes[i].CalculateHandles(false);
             }
         }
 
@@ -431,13 +437,12 @@ namespace Mapify.Editor.Tools.OSM
             }
         }
 
-        private void CreateTrack(Transform parent, TrackWaySegment segment, out Track track)
+        private Track CreateTrack(Transform parent, TrackWaySegment segment)
         {
-            track = TrackToolsCreator.GetEmptyTrack();
-            track.transform.parent = parent;
+            var track = TrackToolsCreator.CreateStraight(parent, Vector3.zero, new Vector3(0, 0, -1), 10, 0);
 
             // Place the track segment in the correct spot.
-            track.name = $"[{_nodes[segment.First].Name}] TO [{_nodes[segment.Last].Name}]";
+            track.name = $"[{_nodes[segment.First].Name}] - [{_nodes[segment.Last].Name}]";
             track.transform.position = _nodes[segment.First].Position;
 
             BezierCurve curve = track.Curve;
@@ -446,45 +451,26 @@ namespace Mapify.Editor.Tools.OSM
             TrackNode hereNode = _nodes[segment[1]];
             BezierPoint point;
 
-            if (SameLengthHandles)
+            curve[0].position = previousNode.Position;
+            curve[0].handleStyle = BezierPoint.HandleStyle.Broken;
+            curve[0].globalHandle2 = previousNode.GetGlobalHandle(hereNode);
+            curve[1].position = hereNode.Position;
+            curve[1].handleStyle = BezierPoint.HandleStyle.Broken;
+            curve[1].globalHandle1 = hereNode.GetGlobalHandle(previousNode);
+
+            for (int i = 2; i < segment.Count; i++)
             {
-                curve[0].position = previousNode.Position;
-                curve[0].handleStyle = BezierPoint.HandleStyle.Connected;
-                curve[0].globalHandle2 = previousNode.GetGlobalHandle(hereNode);
-                curve[1].position = hereNode.Position;
-                curve[1].handleStyle = BezierPoint.HandleStyle.Connected;
-                curve[1].globalHandle1 = hereNode.GetGlobalHandle(previousNode);
+                previousNode = hereNode;
+                hereNode = _nodes[segment[i]];
 
-                for (int i = 2; i < segment.Count; i++)
-                {
-                    previousNode = hereNode;
-                    hereNode = _nodes[segment[i]];
+                curve[i - 1].globalHandle2 = previousNode.GetGlobalHandle(hereNode);
 
-                    point = curve.AddPointAt(hereNode.Position);
-                    point.globalHandle1 = hereNode.GetGlobalHandle(previousNode);
-                }
+                point = curve.AddPointAt(hereNode.Position);
+                point.handleStyle = BezierPoint.HandleStyle.Broken;
+                point.globalHandle1 = hereNode.GetGlobalHandle(previousNode);
             }
-            else
-            {
-                curve[0].position = previousNode.Position;
-                curve[0].handleStyle = BezierPoint.HandleStyle.Broken;
-                curve[0].globalHandle2 = previousNode.GetGlobalHandle(hereNode);
-                curve[1].position = hereNode.Position;
-                curve[1].handleStyle = BezierPoint.HandleStyle.Broken;
-                curve[1].globalHandle1 = hereNode.GetGlobalHandle(previousNode);
 
-                for (int i = 2; i < segment.Count; i++)
-                {
-                    previousNode = hereNode;
-                    hereNode = _nodes[segment[i]];
-
-                    curve[i - 1].globalHandle2 = previousNode.GetGlobalHandle(hereNode);
-
-                    point = curve.AddPointAt(hereNode.Position);
-                    point.handleStyle = BezierPoint.HandleStyle.Broken;
-                    point.globalHandle1 = hereNode.GetGlobalHandle(previousNode);
-                }
-            }
+            return track;
         }
 
         private CustomSwitch CreateOrAddToSwitch(TrackNode node, Track track)
@@ -552,6 +538,8 @@ namespace Mapify.Editor.Tools.OSM
         private void AssignTrackProperties(TrackWay way, ref Track track)
         {
             NodeTag current;
+
+            //todo save raw OSM tags for future implementations
 
             for (int i = 0; i < way.Tags.Length; i++)
             {

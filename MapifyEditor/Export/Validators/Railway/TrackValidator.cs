@@ -24,9 +24,10 @@ namespace MapifyEditor.Export.Validators
             Station[] stations = scenes.gameContentScene.GetAllComponents<Station>();
             foreach (Track track in tracks)
             {
-                track.TrySnapTrack(true);
                 if (track.IsSwitch || track.IsTurntable)
                     continue;
+
+                track.TrySnapTrack(true);
 
                 if (PrefabUtility.IsPartOfPrefabInstance(track))
                     yield return Result.Warning("Track prefabs should be unpacked completely before being used", track);

@@ -210,15 +210,17 @@ namespace Mapify.Editor
                 DrawDisconnectedIcon(Curve.Last().position);
             }
 
-            // switch snapping is done in SwitchBase
-            if (!IsSwitch)
-            {
-                TrySnapTrack();
-            }
+            TrySnapTrack();
         }
 
         internal void TrySnapTrack(bool forceUpdate = false)
         {
+            // switch snapping is done in SwitchBase
+            if (IsSwitch || IsTurntable)
+            {
+                return;
+            }
+
             // first or last point moved?
             if (Curve[0].position != previousPositionFirstPoint ||
                 Curve.Last().position != previousPositionLastPoint)
