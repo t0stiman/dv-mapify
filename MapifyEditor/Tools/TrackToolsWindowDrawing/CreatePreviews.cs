@@ -79,6 +79,14 @@ namespace Mapify.Editor.Tools
                     FillCache(ref _newCache);
                     FillCache(ref _nextCache);
                     FillCache(ref _backCache);
+
+                    if (_multiTrackMode)
+                    {
+                        AddMultiTrackStraightPreviews(ref _newCache);
+                        AddMultiTrackStraightPreviews(ref _nextCache);
+                        AddMultiTrackStraightPreviews(ref _backCache);
+                    }
+
                     break;
 
                     void FillCache(ref List<PreviewPointCache> caches)
@@ -91,12 +99,62 @@ namespace Mapify.Editor.Tools
                                 _length, _endGrade, out cache.Points, _sampleCount) };
                         }
                     }
+
+                    void AddMultiTrackStraightPreviews(ref List<PreviewPointCache> caches)
+                    {
+                        int originalCount = caches.Count;
+                        bool isLeft = _parallelTrackSide == TrackOrientation.Left;
+
+                        for (int c = 0; c < originalCount; c++)
+                        {
+                            var mainBezier = TrackToolsCreator.GenerateStraightBezier(
+                                caches[c].Attach.Position, caches[c].Attach.Handle, _length, _endGrade)[0];
+
+                            for (int i = 1; i <= _parallelTrackCount; i++)
+                            {
+                                float offset = _parallelTrackSpacing * i;
+                                SimpleBezier offsetBezier = TrackToolsCreator.OffsetBezier(mainBezier, offset,
+                                    _parallelBothSides ? false : isLeft);
+
+                                AttachPoint parallelAp = new AttachPoint(offsetBezier.P0, offsetBezier.P1);
+                                var previewCache = new PreviewPointCache(parallelAp);
+                                previewCache.Lines = new[] { MathHelper.SampleBezier(
+                                    new Vector3[] { offsetBezier.P0, offsetBezier.P1, offsetBezier.P2, offsetBezier.P3 }, _sampleCount) };
+                                previewCache.DrawButton = false;
+                                caches.Add(previewCache);
+                            }
+
+                            if (_parallelBothSides)
+                            {
+                                for (int i = 1; i <= _parallelTrackCount; i++)
+                                {
+                                    float offset = _parallelTrackSpacing * i;
+                                    SimpleBezier offsetBezier = TrackToolsCreator.OffsetBezier(mainBezier, offset, true);
+
+                                    AttachPoint parallelAp = new AttachPoint(offsetBezier.P0, offsetBezier.P1);
+                                    var previewCache = new PreviewPointCache(parallelAp);
+                                    previewCache.Lines = new[] { MathHelper.SampleBezier(
+                                        new Vector3[] { offsetBezier.P0, offsetBezier.P1, offsetBezier.P2, offsetBezier.P3 }, _sampleCount) };
+                                    previewCache.DrawButton = false;
+                                    caches.Add(previewCache);
+                                }
+                            }
+                        }
+                    }
                 }
                 case TrackPiece.Curve:
                 {
                     FillCache(ref _newCache);
                     FillCache(ref _nextCache);
                     FillCache(ref _backCache);
+
+                    if (_multiTrackMode)
+                    {
+                        AddMultiTrackCurvePreviews(ref _newCache);
+                        AddMultiTrackCurvePreviews(ref _nextCache);
+                        AddMultiTrackCurvePreviews(ref _backCache);
+                    }
+
                     break;
 
                     void FillCache(ref List<PreviewPointCache> caches)
@@ -109,6 +167,63 @@ namespace Mapify.Editor.Tools
                                     cache.Attach.Position, cache.Attach.Handle,
                                     _orientation, _radius, _arc, _maxArcPerPoint, _endGrade, out cache.Points, _sampleCount)
                             };
+                        }
+                    }
+
+                    void AddMultiTrackCurvePreviews(ref List<PreviewPointCache> caches)
+                    {
+                        int originalCount = caches.Count;
+                        bool isLeft = _parallelTrackSide == TrackOrientation.Left;
+
+                        for (int c = 0; c < originalCount; c++)
+                        {
+                            var mainCurves = TrackToolsCreator.GenerateCurveBeziers(
+                                caches[c].Attach.Position, caches[c].Attach.Handle,
+                                _orientation, _radius, _arc, _maxArcPerPoint, _endGrade);
+
+                            for (int i = 1; i <= _parallelTrackCount; i++)
+                            {
+                                float offset = _parallelTrackSpacing * i;
+                                List<Vector3> allPoints = new List<Vector3>();
+                                SimpleBezier firstOffset = default;
+
+                                for (int j = 0; j < mainCurves.Length; j++)
+                                {
+                                    SimpleBezier offsetBezier = TrackToolsCreator.OffsetBezier(mainCurves[j], offset,
+                                        _parallelBothSides ? false : isLeft);
+                                    if (j == 0) firstOffset = offsetBezier;
+                                    allPoints.AddRange(offsetBezier.Sample(_sampleCount));
+                                }
+
+                                AttachPoint parallelAp = new AttachPoint(firstOffset.P0, firstOffset.P1);
+                                var previewCache = new PreviewPointCache(parallelAp);
+                                previewCache.Lines = new[] { allPoints.ToArray() };
+                                previewCache.DrawButton = false;
+                                caches.Add(previewCache);
+                            }
+
+                            if (_parallelBothSides)
+                            {
+                                for (int i = 1; i <= _parallelTrackCount; i++)
+                                {
+                                    float offset = _parallelTrackSpacing * i;
+                                    List<Vector3> allPoints = new List<Vector3>();
+                                    SimpleBezier firstOffset = default;
+
+                                    for (int j = 0; j < mainCurves.Length; j++)
+                                    {
+                                        SimpleBezier offsetBezier = TrackToolsCreator.OffsetBezier(mainCurves[j], offset, true);
+                                        if (j == 0) firstOffset = offsetBezier;
+                                        allPoints.AddRange(offsetBezier.Sample(_sampleCount));
+                                    }
+
+                                    AttachPoint parallelAp = new AttachPoint(firstOffset.P0, firstOffset.P1);
+                                    var previewCache = new PreviewPointCache(parallelAp);
+                                    previewCache.Lines = new[] { allPoints.ToArray() };
+                                    previewCache.DrawButton = false;
+                                    caches.Add(previewCache);
+                                }
+                            }
                         }
                     }
                 }
