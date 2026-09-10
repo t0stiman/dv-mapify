@@ -2,7 +2,6 @@ using System.Linq;
 using Mapify.Editor.Utils;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 namespace Mapify.Editor
 {
@@ -244,6 +243,11 @@ namespace Mapify.Editor
         }
 
         private readonly Collider[] colliderResults = new Collider[10];
+
+        public bool CanOnlySnapToSwitch(bool firstPoint)
+        {
+            return false; //TODO
+        }
 
         internal void TrySnapPoint(bool first, bool shouldMove)
         {

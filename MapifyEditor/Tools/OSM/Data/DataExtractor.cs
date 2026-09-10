@@ -1,16 +1,12 @@
-using Mapify.Editor.Utils;
 using OsmSharp;
 using OsmSharp.Complete;
 using OsmSharp.Streams;
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading.Tasks;
 using UnityEditor;
 using UnityEngine;
-using UnityEngine.Serialization;
 
 #if UNITY_EDITOR
 namespace Mapify.Editor.Tools.OSM.Data

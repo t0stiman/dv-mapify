@@ -5,8 +5,8 @@ namespace Mapify.Editor
 {
     [Serializable]
     // Unity doing Unity things and not supporting nested lists in the editor
-    public class VanillaLocomotiveList
+    public class VanillaRollingStockList
     {
-        public List<VanillaLocomotiveType> rollingStock;
+        public List<VanillaRollingStockType> rollingStock;
     }
 }

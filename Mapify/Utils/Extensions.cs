@@ -5,7 +5,6 @@ using System.Reflection;
 using CommandTerminal;
 using DV;
 using DV.JObjectExtstensions;
-using DV.Logic.Job;
 using DV.PointSet;
 using DV.ThingTypes;
 using HarmonyLib;
@@ -15,7 +14,6 @@ using Mapify.Map;
 using Newtonsoft.Json.Linq;
 using UnityEngine;
 using Object = UnityEngine.Object;
-using Track = DV.Logic.Job.Track;
 
 namespace Mapify.Utils
 {
@@ -255,8 +253,8 @@ namespace Mapify.Utils
             }
 
             var pointPosition = track.curve[0].position;
-            var closestJunction = track.FindClosestJunction(pointPosition, Track.SNAP_RANGE);
-            var closestBranch = track.FindClosestBranch(pointPosition, Track.SNAP_RANGE);
+            var closestJunction = track.FindClosestJunction(pointPosition, Editor.Track.SNAP_RANGE);
+            var closestBranch = track.FindClosestBranch(pointPosition, Editor.Track.SNAP_RANGE);
 
             if (closestBranch is null && closestJunction is null)
             {
@@ -307,8 +305,8 @@ namespace Mapify.Utils
             }
 
             var pointPosition = track.curve.Last().position;
-            var closestJunction = track.FindClosestJunction(pointPosition, Track.SNAP_RANGE);
-            var closestBranch = track.FindClosestBranch(pointPosition, Track.SNAP_RANGE);
+            var closestJunction = track.FindClosestJunction(pointPosition, Editor.Track.SNAP_RANGE);
+            var closestBranch = track.FindClosestBranch(pointPosition, Editor.Track.SNAP_RANGE);
 
             if (closestBranch is null && closestJunction is null)
             {
@@ -351,7 +349,7 @@ namespace Mapify.Utils
             }
         }
 
-        public static Track GetLogicTrack(this RailTrack track)
+        public static DV.Logic.Job.Track GetLogicTrack(this RailTrack track)
         {
             return RailTrackRegistry.RailTrackToLogicTrack[track];
         }
@@ -483,7 +481,7 @@ namespace Mapify.Utils
             return vanillaObject.gameObject.Replace(AssetCopier.Instantiate(vanillaObject.asset, active, originShift), preserveTypes, vanillaObject.keepChildren, vanillaObject.rotationOffset);
         }
 
-        public static string GetLocalizedStationName(this Station station)
+        public static string GetLocalizedStationName(this Editor.Station station)
         {
             if(Locale.TryGetMapSpecificTranslation(Locale.STATION_PREFIX+station.stationID, out var localizedName))
             {

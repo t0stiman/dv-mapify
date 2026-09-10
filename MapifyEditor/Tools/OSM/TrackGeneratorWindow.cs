@@ -398,24 +398,30 @@ namespace Mapify.Editor.Tools.OSM
 
         private void SwitchStuff(TrackWaySegment segment, Track track)
         {
-            List<Track> oneOrMultipleTracks = new(){track};
+            Track[] oneOrMultipleTracks;
+            var startNode = _nodes[segment.First];
+            var endNode = _nodes[segment.Last];
 
             // In DV, a track can only belong to 1 switch. We will ensure this by splitting the track in 2 if the start and end node of the segment are both a switch.
-            if (_nodes[segment.First].IsSwitch() &&
-                _nodes[segment.Last].IsSwitch())
+            if (startNode.IsSwitch() &&
+                endNode.IsSwitch())
             {
-                oneOrMultipleTracks = TrackToolsEditor.Split(track).ToList();
+                oneOrMultipleTracks = TrackToolsEditor.Split(track);
+                //todo moet 2x? of verderop
             }
 
             // A switch branch mustn't be a dead end, it always needs to connect to track.
-            else if (_nodes[segment.First].IsSwitch() && _nodes[segment.Last].Connected.Count == 1 ||
-                     _nodes[segment.Last].IsSwitch() && _nodes[segment.First].Connected.Count == 1)
+            else if (startNode.IsSwitch() && endNode.Connected.Count == 1 ||
+                     endNode.IsSwitch() && startNode.Connected.Count == 1)
             {
-                oneOrMultipleTracks = TrackToolsEditor.Split(track).ToList();
+                oneOrMultipleTracks = TrackToolsEditor.Split(track);
+            }
+            else
+            {
+                oneOrMultipleTracks = new[]{track};
             }
 
             // Check if it starts on a switch.
-            var startNode = _nodes[segment.First];
             if (startNode.IsSwitch()
                 //ignore the track before the switch:
                 && !startNode.IsBeforeTrackNode(_nodes[segment[1]])
@@ -424,7 +430,7 @@ namespace Mapify.Editor.Tools.OSM
                 var switch_ = CreateOrAddToSwitch(startNode, oneOrMultipleTracks[0]);
 
                 // A branch of a switch cannot be attached directly to the branch of another switch
-                if (oneOrMultipleTracks[0].CanOnlySnapToSwitch(false))
+                if (oneOrMultipleTracks[0].CanOnlySnapToSwitch(false)) // if zou aan branch snappen
                 {
                     var split = TrackToolsEditor.Split(oneOrMultipleTracks[0]);
                     //get it out of the switch
@@ -433,7 +439,6 @@ namespace Mapify.Editor.Tools.OSM
             }
 
             // Check if it ends on a switch.
-            var endNode = _nodes[segment.Last];
             if (endNode.IsSwitch()
                 //ignore the track before the switch:
                 && !endNode.IsBeforeTrackNode(_nodes[segment[segment.Count - 2]])
@@ -446,7 +451,7 @@ namespace Mapify.Editor.Tools.OSM
                 {
                     var split = TrackToolsEditor.Split(oneOrMultipleTracks.Last());
                     //get it out of the switch
-                    split[1].transform.parent = switch_.transform.parent;
+                    split[0].transform.parent = switch_.transform.parent;
                 }
             }
         }

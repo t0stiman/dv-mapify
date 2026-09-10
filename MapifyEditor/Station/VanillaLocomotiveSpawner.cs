@@ -9,7 +9,7 @@ namespace Mapify.Editor
     {
         [SerializeField]
         [Tooltip("What all locomotives to spawn. Each element is a group to spawn together (e.g. the steamer and it's tender)")]
-        internal List<VanillaLocomotiveList> locomotiveGroups;
+        internal List<VanillaRollingStockList> locomotiveGroups;
 
         public override IEnumerable<string> CondenseLocomotiveTypes()
         {

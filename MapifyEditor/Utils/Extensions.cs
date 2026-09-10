@@ -15,8 +15,6 @@ namespace Mapify.Editor.Utils
     {
         #region GameObjects & Components
 
-#if UNITY_EDITOR
-
         public static string GetPath(this Transform obj)
         {
             string path = obj.name;
@@ -27,6 +25,8 @@ namespace Mapify.Editor.Utils
             }
             return path;
         }
+
+#if UNITY_EDITOR
 
         public static float SqrDistanceToSceneCamera(this Transform t)
         {
