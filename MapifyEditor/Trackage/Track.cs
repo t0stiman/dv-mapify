@@ -244,12 +244,7 @@ namespace Mapify.Editor
 
         private readonly Collider[] colliderResults = new Collider[10];
 
-        public bool CanOnlySnapToSwitch(bool firstPoint)
-        {
-            return false; //TODO
-        }
-
-        internal void TrySnapPoint(bool first, bool shouldMove)
+        private void TrySnapPoint(bool first, bool shouldMove)
         {
             var snapCollider = first ? frontSnapCollider : rearSnapCollider;
             var resultCount = Physics.OverlapSphereNonAlloc(snapCollider.transform.position, snapCollider.radius, colliderResults);

@@ -14,6 +14,8 @@ namespace MapifyEditor.Export.Validators
         {
             foreach (var switch_ in scenes.railwayScene.GetAllComponents<SwitchBase>())
             {
+                switch_.TrySnap(true);
+
                 var switchTracks = switch_.GetTracks();
                 if (switchTracks.Length < 2)
                 {
@@ -36,12 +38,15 @@ namespace MapifyEditor.Export.Validators
                     break;
                 }
 
-                foreach (var track in switchTracks)
+                if (switch_.SnappedTracks.Length != switch_.GetPointCount()
+                    || switch_.SnappedTracks.Any(x => x is null || x.Track is null))
                 {
-                    track.TrySnapTrack(true);
-                    if (track.isInSnapped && track.isOutSnapped) continue;
+                    yield return Result.Error("Switches must have a track attached to all points", switch_);
+                }
 
-                    yield return Result.Error("Switches must have a track attached to all points", track);
+                if (switch_.SnappedTracks.Any(x => x is not null && x.Track.IsSwitch))
+                {
+                    yield return Result.Error("Switches cannot attach directly to another switch", switch_);
                 }
             }
         }

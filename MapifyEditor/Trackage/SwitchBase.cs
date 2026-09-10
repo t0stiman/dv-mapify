@@ -19,7 +19,7 @@ namespace Mapify.Editor
         private bool snapShouldUpdate = true;
 
         private Vector3[] previousPositionsPoints;
-        private SnappedTrack[] snappedTracks = Array.Empty<SnappedTrack>();
+        internal SnappedTrack[] SnappedTracks { get; private set; } = Array.Empty<SnappedTrack>();
 
         [SerializeField] [HideInInspector]
         private SphereCollider[] snapColliders = Array.Empty<SphereCollider>();
@@ -71,13 +71,13 @@ namespace Mapify.Editor
 
         private void UnsnapConnectedTracks()
         {
-            foreach (var snapped in snappedTracks)
+            foreach (var snapped in SnappedTracks)
             {
                 snapped?.UnSnapped();
             }
         }
 
-        public void TrySnap()
+        public void TrySnap(bool forceUpdate = false)
         {
             CheckSwitchMoved();
 
@@ -88,11 +88,11 @@ namespace Mapify.Editor
                 snapShouldUpdate = true;
             }
 
-            if (!snapShouldUpdate) return;
+            if (!forceUpdate && !snapShouldUpdate) return;
 
-            if (snappedTracks.Length != switchPointsCount)
+            if (SnappedTracks.Length != switchPointsCount)
             {
-                snappedTracks = new SnappedTrack[switchPointsCount];
+                SnappedTracks = new SnappedTrack[switchPointsCount];
             }
 
             bool isSelected = Selection.gameObjects.Contains(gameObject);
@@ -159,24 +159,24 @@ namespace Mapify.Editor
 
         private void UnSnapPoint(int pointIndex, BezierPoint point)
         {
-            if(snappedTracks[pointIndex] is null) { return; }
+            if(SnappedTracks[pointIndex] is null) { return; }
 
-            snappedTracks[pointIndex].UnSnapped();
-            snappedTracks[pointIndex] = null;
+            SnappedTracks[pointIndex].UnSnapped();
+            SnappedTracks[pointIndex] = null;
 
             point.GetTrack().UnSnapped(point);
         }
 
         private void SnapToPoint(BezierPoint otherPoint, Track otherTrack, BezierPoint ownPoint, int ownPointIndex, bool shouldMove)
         {
-            if (otherTrack != snappedTracks[ownPointIndex]?.Track)
+            if (otherTrack != SnappedTracks[ownPointIndex]?.Track)
             {
                 UnSnapPoint(ownPointIndex, ownPoint);
 
                 otherTrack.Snapped(otherPoint);
                 ownPoint.GetTrack().Snapped(ownPoint);
 
-                snappedTracks[ownPointIndex] = new SnappedTrack(otherTrack, otherPoint);
+                SnappedTracks[ownPointIndex] = new SnappedTrack(otherTrack, otherPoint);
             }
 
             if (shouldMove)
