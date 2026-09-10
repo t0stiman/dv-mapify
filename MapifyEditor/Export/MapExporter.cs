@@ -5,6 +5,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text.RegularExpressions;
 using Mapify.Editor.StateUpdaters;
 using Mapify.Editor.Utils;
 using UnityEditor;
@@ -273,8 +274,8 @@ namespace Mapify.Editor
 
         private static void CreateMiscAssetsBuilds(List<string> assetPaths, ref List<AssetBundleBuild> builds)
         {
-            //put big assets in their own assetbundle to avoid the combined assetbundle getting too big.
-            //Unity cannot load assetbundles larger then 4GB.
+            // put big assets in their own assetbundle to avoid the combined assetbundle getting too big.
+            // Unity cannot load assetbundles larger then 4GB.
             long assetBundleSize = 0;
             long assetBundleNumber = 1;
             var asssetBundleFiles = new List<string>();
@@ -283,7 +284,7 @@ namespace Mapify.Editor
             {
                 string absolutePath = Path.GetFullPath(assetPaths[i]);
 
-                //skip directories
+                // skip directories
                 if ((File.GetAttributes(absolutePath) & FileAttributes.Directory) == FileAttributes.Directory)
                 {
                     continue;
@@ -292,7 +293,7 @@ namespace Mapify.Editor
                 long fileSize = new FileInfo(absolutePath).Length;
 
                 // if the asset would get too big, create a new assetbundle
-                const long maxBundleSize = 500 * 1000000; //500MB
+                const long maxBundleSize = 500 * 1000000; // 500MB
                 if (assetBundleSize > 0 && assetBundleSize + fileSize > maxBundleSize)
                 {
                     builds.Add(new AssetBundleBuild {
@@ -308,7 +309,7 @@ namespace Mapify.Editor
                 asssetBundleFiles.Add(assetPaths[i]);
                 assetBundleSize += fileSize;
 
-                //if this is the last asset, create a new assetbundle
+                // if this is the last asset, create a new assetbundle
                 if(assetBundleSize > 0 && i >= assetPaths.Count-1)
                 {
                     builds.Add(new AssetBundleBuild {
@@ -326,12 +327,23 @@ namespace Mapify.Editor
 
         private static void CreateModInfo(string filePath, MapInfo mapInfo)
         {
+            var requirements = new List<string>(mapInfo.requiredMods);
+
+            //remove mapify
+            requirements = requirements.Where(x =>
+                    x != Names.MAPIFY_MOD_ID
+                    && !Regex.IsMatch(x, $"^{Names.MAPIFY_MOD_ID}" + @"-\d+\.\d+\.\d+$"))
+                .ToList();
+
+            //add mapify
+            requirements.Add($"{Names.MAPIFY_MOD_ID}-{mapInfo.mapifyVersion}");
+
             UnityModManagerInfo modInfo = new UnityModManagerInfo {
                 Id = mapInfo.name,
                 Version = mapInfo.version,
                 DisplayName = mapInfo.name,
                 ManagerVersion = "0.27.13",
-                Requirements = new[] { "Mapify" },
+                Requirements = mapInfo.requiredMods.ToArray(),
                 HomePage = mapInfo.homePage,
                 Repository = mapInfo.repository
             };

@@ -77,11 +77,9 @@ namespace Mapify.Editor.Tools
                 };
             }
 
-            public static Vector3[][] PreviewCustomSwitch(Vector3 attachPoint, Vector3 handlePosition, int switchBranchesCount, int connectingPoint, float radius, float arc, float endGrade,
+            public static Vector3[][] PreviewCustomSwitch(Vector3 attachPoint, Vector3 handlePosition, int switchBranchesCount, float radius, float arc, float endGrade,
                 int samples = 8)
             {
-                //TODO implement connectingPoint
-
                 var curves = new Vector3[switchBranchesCount][];
                 var length = radius * arc * Mathf.Deg2Rad;
 
@@ -89,7 +87,7 @@ namespace Mapify.Editor.Tools
                 {
                     if (switchBranchesCount % 2 == 1 && branchIndex == (switchBranchesCount-1) / 2)
                     {
-                        //middle track
+                        // middle track
                         curves[branchIndex] = PreviewStraight(attachPoint, handlePosition, length, endGrade, out _);
                         continue;
                     }
@@ -99,13 +97,13 @@ namespace Mapify.Editor.Tools
 
                     if (branchIndex < switchBranchesCount / 2.0)
                     {
-                        //left of center
+                        // left of center
                         trackOrientation = TrackOrientation.Left;
                         thisRadius = (branchIndex + 1) * radius;
                     }
                     else
                     {
-                        //right of center
+                        // right of center
                         trackOrientation = TrackOrientation.Right;
                         thisRadius = (switchBranchesCount - branchIndex) * radius;
                     }

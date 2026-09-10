@@ -35,7 +35,7 @@ namespace Mapify.Map
 
         public static IEnumerator LoadMap(BasicMapInfo basicMapInfo)
         {
-            Mapify.LogDebug(() => $"Loading map {basicMapInfo.name}");
+            Mapify.LogDebug($"Loading map {basicMapInfo.name}");
 
             if (isMapLoaded)
                 throw new InvalidOperationException("Map is already loaded");
@@ -57,7 +57,7 @@ namespace Mapify.Map
             loadedAssetBundles = new List<AssetBundle>();
 
             // Register mapinfo
-            Mapify.LogDebug(() => $"Loading AssetBundle '{Names.MAP_INFO_ASSET_BUNDLE}'");
+            Mapify.LogDebug($"Loading AssetBundle '{Names.MAP_INFO_ASSET_BUNDLE}'");
             AssetBundleCreateRequest mapInfoRequest = AssetBundle.LoadFromFileAsync(Maps.GetMapAsset(Names.MAP_INFO_ASSET_BUNDLE, mapDir));
             do
             {
@@ -68,7 +68,7 @@ namespace Mapify.Map
             MapInfo mapInfo = null;
             if (mapInfoRequest.assetBundle is null)
             {
-                // Warning and not Error because this occurs if the map is built with an older version of Mapify, and then its not a problem
+                // Warning and not Error because this occurs if the map is built with an older version of Mapify, and then it's not a problem
                 Debug.LogWarning("Failed to load the mapinfo bundle");
             }
             else
@@ -91,7 +91,7 @@ namespace Mapify.Map
                     yield break;
                 }
 
-                //LoadingScreenImages will be null if the map was built with an older version of Mapify
+                // LoadingScreenImages will be null if the map was built with an older version of Mapify
                 if (mapInfo.LoadingScreenImages != null && mapInfo.LoadingScreenImages.Length > 0)
                 {
                     ShowLoadingScreenImage(mapInfo);
@@ -109,7 +109,7 @@ namespace Mapify.Map
 
                 if (assetFileName.EndsWith(".manifest")) { continue; }
 
-                Mapify.LogDebug(() => $"Loading AssetBundle '{assetFileName}'");
+                Mapify.LogDebug($"Loading AssetBundle '{assetFileName}'");
                 AssetBundleCreateRequest assetsReq = AssetBundle.LoadFromFileAsync(Maps.GetMapAsset(assetFileName, mapDir));
                 DisplayLoadingInfo_OnLoadingStatusChanged_Patch.what = assetFileName;
                 do
@@ -128,7 +128,7 @@ namespace Mapify.Map
                 }
             }
 
-            Mapify.LogDebug(() => $"Loading AssetBundle '{Names.SCENES_ASSET_BUNDLE}'");
+            Mapify.LogDebug($"Loading AssetBundle '{Names.SCENES_ASSET_BUNDLE}'");
             AssetBundleCreateRequest scenesReq = AssetBundle.LoadFromFileAsync(Maps.GetMapAsset(Names.SCENES_ASSET_BUNDLE, mapDir));
             DisplayLoadingInfo_OnLoadingStatusChanged_Patch.what = Names.SCENES_ASSET_BUNDLE;
             do
@@ -175,7 +175,7 @@ namespace Mapify.Map
 
             DisplayLoadingInfo_OnLoadingStatusChanged_Patch.what = null;
 
-            Mapify.Log("Vanilla scenes unloaded");
+            Mapify.LogInfo("Vanilla scenes unloaded");
             MonoBehaviourDisablerPatch.EnableAll();
 
             SetLevelInfo(mapInfo);
@@ -208,7 +208,7 @@ namespace Mapify.Map
 
         private static void ShowLoadingScreenImage(MapInfo mapInfo)
         {
-            Mapify.Log("Showing custom loading screen image");
+            Mapify.LogInfo("Showing custom loading screen image");
 
             var randomImageIndex = Random.Range(0, mapInfo.LoadingScreenImages.Length);
             var customImage = mapInfo.LoadingScreenImages[randomImageIndex];
@@ -227,11 +227,11 @@ namespace Mapify.Map
         {
             if (loadingScreenLogo == null)
             {
-                Mapify.LogDebug(() => "Skipping loading screen logo, it is null");
+                Mapify.LogDebug("Skipping loading screen logo, it is null");
                 return;
             }
 
-            Mapify.Log("Showing custom loading screen logo");
+            Mapify.LogInfo("Showing custom loading screen logo");
 
             var canvasGameObject = Object.FindObjectsOfType<GameObject>().FirstOrDefault(gameObject => gameObject.name == "LogoImage_alignedByHand");
             if (canvasGameObject is null)
@@ -248,11 +248,11 @@ namespace Mapify.Map
         {
             if (loadingScreenMusic == null) return;
 
-            Mapify.Log("Playing custom loading screen music");
+            Mapify.LogInfo("Playing custom loading screen music");
             var mainMenuMusicSource = GameObject.Find("Audio Source - main menu music")?.GetComponent<AudioSource>();
-            if (mainMenuMusicSource == null)
+            if (!mainMenuMusicSource)
             {
-                Mapify.LogError(nameof(PlayLoadingScreenMusic)+": can't find audio source");
+                Mapify.LogWarning(nameof(PlayLoadingScreenMusic)+": can't find audio source. This is normal if the user has muted music in DV settings");
                 return;
             }
 
@@ -272,7 +272,7 @@ namespace Mapify.Map
             if (collection.names == null || collection.names.Length == 0)
             {
                 // A streamer with no scenes will mark all positions as unloaded, and the game will get stuck on the loading screen.
-                Mapify.Log("No streamer scenes found, destroying!");
+                Mapify.LogInfo("No streamer scenes found, destroying!");
                 Object.Destroy(streamerObj);
                 return;
             }
@@ -285,6 +285,10 @@ namespace Mapify.Map
             streamer.destroyTileDelay = 1.3f;
             streamer.sceneLoadWaitFrames = 1;
             streamer.sceneCollection = collection;
+
+            var streamerInit = streamerObj.AddComponent<StreamerInit>();
+            streamerInit.streamer = streamer;
+
             streamerObj.SetActive(true);
         }
 
@@ -300,28 +304,28 @@ namespace Mapify.Map
             if (wsi == null) return;
             if (scene.path == wsi.terrainsScenePath)
             {
-                Mapify.Log($"Loaded terrain scene at {wsi.terrainsScenePath}");
+                Mapify.LogInfo($"Loaded terrain scene at {wsi.terrainsScenePath}");
                 new TerrainSceneInitializer(scene).Run();
             }
             else if (scene.path == wsi.railwayScenePath)
             {
-                Mapify.Log($"Loaded railway scene at {wsi.railwayScenePath}");
+                Mapify.LogInfo($"Loaded railway scene at {wsi.railwayScenePath}");
                 new RailwaySceneInitializer(scene).Run();
             }
             else if (scene.path == wsi.gameContentScenePath)
             {
-                Mapify.Log($"Loaded game content scene at {wsi.gameContentScenePath}");
+                Mapify.LogInfo($"Loaded game content scene at {wsi.gameContentScenePath}");
                 new GameContentSceneInitializer(scene).Run();
             }
             else if (scene.path == originalRailwayScenePath)
             {
-                Mapify.Log($"Loaded vanilla railway scene at {originalRailwayScenePath}");
+                Mapify.LogInfo($"Loaded vanilla railway scene at {originalRailwayScenePath}");
                 new RailwayCopier().CopyAssets(scene);
                 scenesToLoad--;
             }
             else if (scene.path == originalGameContentScenePath)
             {
-                Mapify.Log($"Loaded vanilla game content scene at {originalGameContentScenePath}");
+                Mapify.LogInfo($"Loaded vanilla game content scene at {originalGameContentScenePath}");
                 new GameContentCopier().CopyAssets(scene);
                 scenesToLoad--;
             }
@@ -341,7 +345,6 @@ namespace Mapify.Map
         private static void Cleanup()
         {
             WorldMapSetup.Cleanup();
-            StreamedObjectInitPatch.ResetStreamers();
             Maps.UnregisterLoadedMap();
             SceneManager.sceneLoaded -= OnSceneLoad;
             WorldStreamingInit_Awake_Patch.CanInitialize = false;

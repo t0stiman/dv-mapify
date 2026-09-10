@@ -25,7 +25,7 @@ namespace Mapify.Patches
             // Only continue if the buffer stop actually breaks
             if(!__instance.rb) return;
 
-            //the RigidBody is created in OnTriggerEnter so we have to set rb.mass in a Postfix
+            // the RigidBody is created in OnTriggerEnter so we have to set rb.mass in a Postfix
             __instance.rb.mass = __instance.GetComponent<Editor.BufferStop>().massAfterBreak;
         }
     }

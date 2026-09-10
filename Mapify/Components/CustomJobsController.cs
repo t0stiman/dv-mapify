@@ -27,7 +27,7 @@ namespace Mapify.Components
             var forcePlayerLicensedJobGeneration = true;
             var log = new StringBuilder();
 
-            Mapify.Log(vanillaJobController.stationController.stationInfo.YardID + " job generation started");
+            Mapify.LogInfo(vanillaJobController.stationController.stationInfo.YardID + " job generation started");
 
             var jobsCapacity = vanillaJobController.generationRuleset.jobsCapacity;
             // The base game has LICENSED_JOBS_GENERATION_ATTEMPTS set to 1/3 of JOB_GENERATION_ATTEMPTS so I'm going to do the same
@@ -68,10 +68,10 @@ namespace Mapify.Components
                 }
             }
 
-            Mapify.Log(log.ToString());
+            Mapify.LogInfo(log.ToString());
 
             //STATIONID: generated X jobs
-            Mapify.Log($"{vanillaJobController.stationController.stationInfo.YardID}: generated {vanillaJobController.stationController.logicStation.availableJobs.Count} jobs");
+            Mapify.LogInfo($"{vanillaJobController.stationController.stationInfo.YardID}: generated {vanillaJobController.stationController.logicStation.availableJobs.Count} jobs");
 
             vanillaJobController.generationCoro = null;
         }

@@ -1,11 +1,7 @@
 ﻿using System;
-using System.IO;
-using DV.UI;
 using HarmonyLib;
 using Mapify.Map;
-using Mapify.Patches;
 using UnityModManagerNet;
-using Object = UnityEngine.Object;
 
 namespace Mapify
 {
@@ -44,37 +40,31 @@ namespace Mapify
 
         private static void Patch()
         {
-            Log("Patching...");
+            LogInfo("Patching...");
             Harmony = new Harmony(ModEntry.Info.Id);
             Harmony.PatchAll();
-            Log("Successfully patched");
+            LogInfo("Successfully patched");
         }
 
         #region Logging
 
         public static void LogDebugExtreme(object msg)
         {
-            LogDebugExtreme(() => msg);
-        }
-
-        public static void LogDebugExtreme(Func<object> resolver)
-        {
-            if (Settings.ExtremelyVerboseLogging)
-                LogDebug(resolver);
+	        if (Settings.ExtremelyVerboseLogging)
+	        {
+		        LogDebug(msg);
+	        }
         }
 
         public static void LogDebug(object msg)
         {
-            LogDebug(() => msg);
+	        if (Settings.VerboseLogging)
+	        {
+		        ModEntry.Logger.Log($"[Debug] {msg}");
+	        }
         }
 
-        public static void LogDebug(Func<object> resolver)
-        {
-            if (Settings.VerboseLogging)
-                ModEntry.Logger.Log($"[Debug] {resolver.Invoke()}");
-        }
-
-        public static void Log(object msg)
+        public static void LogInfo(object msg)
         {
             ModEntry.Logger.Log($"[Info] {msg}");
         }

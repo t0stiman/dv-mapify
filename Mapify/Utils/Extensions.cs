@@ -84,8 +84,8 @@ namespace Mapify.Utils
         public static void PrintHierarchy(this GameObject gameObject, string indent = "")
         {
             Transform t = gameObject.transform;
-            Mapify.Log($"{indent}+-- {t.name}");
-            foreach (Component component in t.GetComponents<Component>()) Mapify.Log($"{indent}|   +-- {component.GetType().Name}");
+            Mapify.LogInfo($"{indent}+-- {t.name}");
+            foreach (Component component in t.GetComponents<Component>()) Mapify.LogInfo($"{indent}|   +-- {component.GetType().Name}");
             foreach (Transform child in t) PrintHierarchy(child.gameObject, $"{indent}|   ");
         }
 
@@ -128,12 +128,34 @@ namespace Mapify.Utils
 
         public static List<CargoGroup> ToVanilla(this IEnumerable<CargoSet> list)
         {
-            return list?.Select(l =>
+            return list?.Select(cargoSet =>
                 new CargoGroup(
-                    l.cargoTypes.ConvertByName<Cargo, CargoType>(),
-                    l.stations.Select(s => s.GetComponent<StationController>()).ToList()
+                    GetCargoTypes(cargoSet),
+                    cargoSet.stations.Select(s => s.GetComponent<StationController>()).ToList()
                 )
             ).ToList();
+        }
+
+        private static List<CargoType> GetCargoTypes(CargoSet cargoSet)
+        {
+            // base game cargo
+            var cargoTypes = cargoSet.cargoTypes.ConvertByName<Cargo, CargoType>();
+
+            // custom cargo mod
+            var cargoTypesById = Globals.G.Types._cargoTypesById;
+            foreach (var customCargoTypeId in cargoSet.customCargoTypes)
+            {
+                if (cargoTypesById.TryGetValue(customCargoTypeId, out var cargoTypeV2))
+                {
+                    cargoTypes.Add(cargoTypeV2.v1);
+                }
+                else
+                {
+                    Mapify.LogError($"{nameof(GetCargoTypes)}: could not find custom cargo type '{customCargoTypeId}' in Globals");
+                }
+            }
+
+            return cargoTypes;
         }
 
         #endregion
@@ -225,26 +247,104 @@ namespace Mapify.Utils
 
         public static void ConnectInToClosestJunctionOrBranch(this RailTrack track)
         {
-            var closestJunction = track.FindClosestJunction(track.curve[0].position);
-            if (closestJunction)
+            if (Mapify.Settings.VerboseLogging)
             {
+                Mapify.LogDebug($"{nameof(ConnectInToClosestJunctionOrBranch)} '{track.gameObject.GetPath()}'");
+            }
+
+            var pointPosition = track.curve[0].position;
+            var closestJunction = track.FindClosestJunction(pointPosition, Track.SNAP_RANGE);
+            var closestBranch = track.FindClosestBranch(pointPosition, Track.SNAP_RANGE);
+
+            if (closestBranch is null && closestJunction is null)
+            {
+                return;
+            }
+
+            bool junctionIsClosest;
+            if (closestJunction is null)
+            {
+                junctionIsClosest = false;
+            }
+            else if (closestBranch is null)
+            {
+                junctionIsClosest = true;
+            }
+            else if (closestJunction.outBranches.Any(outBranch => outBranch.track == closestBranch.track))
+            {
+                // connect to the switch, not the track in the switch
+                junctionIsClosest = true;
+            }
+            else
+            {
+                junctionIsClosest = Vector3.SqrMagnitude(pointPosition - closestJunction.position) <
+                                    Vector3.SqrMagnitude(pointPosition - closestBranch.GetBezierPoint().position);
+            }
+
+            if (junctionIsClosest)
+            {
+                if (Mapify.Settings.VerboseLogging)
+                {
+                    Mapify.LogDebug($"connecting IN to junction '{closestJunction.gameObject.GetPath()}'");
+                }
+
                 track.ConnectInToClosestJunction();
             }
             else
             {
+                Mapify.LogDebug($"connecting IN to a branch");
                 track.ConnectInToClosestBranch();
             }
         }
 
         public static void ConnectOutToClosestJunctionOrBranch(this RailTrack track)
         {
-            var closestJunction = track.FindClosestJunction(track.curve.Last().position);
-            if (closestJunction)
+            if (Mapify.Settings.VerboseLogging)
             {
+                Mapify.LogDebug($"{nameof(ConnectOutToClosestJunctionOrBranch)} '{track.gameObject.GetPath()}'");
+            }
+
+            var pointPosition = track.curve.Last().position;
+            var closestJunction = track.FindClosestJunction(pointPosition, Track.SNAP_RANGE);
+            var closestBranch = track.FindClosestBranch(pointPosition, Track.SNAP_RANGE);
+
+            if (closestBranch is null && closestJunction is null)
+            {
+                return;
+            }
+
+            bool junctionIsClosest;
+            if (closestJunction is null)
+            {
+                junctionIsClosest = false;
+            }
+            else if (closestBranch is null)
+            {
+                junctionIsClosest = true;
+            }
+            else if (closestJunction.outBranches.Any(outBranch => outBranch.track == closestBranch.track))
+            {
+                // connect to the switch, not the track in the switch
+                junctionIsClosest = true;
+            }
+            else
+            {
+                junctionIsClosest = Vector3.SqrMagnitude(pointPosition - closestJunction.position) <
+                                    Vector3.SqrMagnitude(pointPosition - closestBranch.GetBezierPoint().position);
+            }
+
+            if (junctionIsClosest)
+            {
+                if (Mapify.Settings.VerboseLogging)
+                {
+                    Mapify.LogDebug($"connecting OUT to junction '{closestJunction.gameObject.GetPath()}'");
+                }
+
                 track.ConnectOutToClosestJunction();
             }
             else
             {
+                Mapify.LogDebug($"connecting OUT to a branch");
                 track.ConnectOutToClosestBranch();
             }
         }
@@ -280,51 +380,50 @@ namespace Mapify.Utils
         public static RailTrack GetRailTrack(this RailTrackRegistry registry, string stationID, string yardID, byte trackNumber)
         {
             var query = $"[{stationID}]_[{yardID}-{trackNumber:D2}";
-
             return registry.AllTracks.FirstOrDefault(track => track.name.Contains(query));
         }
 
-        public static Junction.Branch FindClosestBranch(this Junction junction, Vector3 fromPoint, float maxRange = 5f)
+        public static Junction.Branch FindClosestBranch(this Junction junction, Vector3 fromPoint, List<RailTrack> tracksCache, float maxRange = 5f)
         {
             var closestDistance = float.PositiveInfinity;
 
-            RailTrack track = null;
+            RailTrack branchTrack = null;
             var first = false;
 
-            foreach (var foundTrack in Resources.FindObjectsOfTypeAll<RailTrack>())
+            foreach (var aTrack in tracksCache)
             {
                 // skip the tracks in the junction
-                if(junction.outBranches.Any(branch => branch.track == foundTrack)) continue;
+                if(junction.outBranches.Any(branch => branch.track == aTrack)) continue;
 
-                if (!foundTrack.curve || foundTrack.curve.pointCount < 2) continue;
+                if (!aTrack.curve || aTrack.curve.pointCount < 2) continue;
 
-                var firstPoint = foundTrack.curve[0];
+                var firstPoint = aTrack.curve[0];
 
-                var distanceToFirst = Vector3.SqrMagnitude(fromPoint - firstPoint.position);
-                if (distanceToFirst < maxRange * (double) maxRange && distanceToFirst < (double) closestDistance)
+                var distanceToFirst = Vector3.Distance(fromPoint, firstPoint.position);
+                if (distanceToFirst < maxRange && distanceToFirst < closestDistance)
                 {
                     closestDistance = distanceToFirst;
-                    track = foundTrack;
+                    branchTrack = aTrack;
                     first = true;
                 }
 
-                var lastPoint = foundTrack.curve.Last();
-                var distanceToLast = Vector3.SqrMagnitude(fromPoint - lastPoint.position);
-                if (distanceToLast < maxRange * (double) maxRange && distanceToLast < (double) closestDistance)
+                var lastPoint = aTrack.curve.Last();
+                var distanceToLast = Vector3.Distance(fromPoint, lastPoint.position);
+                if (distanceToLast < maxRange && distanceToLast < closestDistance)
                 {
                     closestDistance = distanceToLast;
-                    track = foundTrack;
+                    branchTrack = aTrack;
                     first = false;
                 }
             }
 
-            if (track == null)
+            if (branchTrack == null)
             {
                 Mapify.LogError($"Failed to find closest branch for {junction.name}");
                 return null;
             }
 
-            return new Junction.Branch(track, first);
+            return new Junction.Branch(branchTrack, first);
         }
 
         #endregion

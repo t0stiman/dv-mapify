@@ -121,7 +121,7 @@ namespace Mapify.Editor.Tools
 
         /// <summary>
         /// Returns the speed limit shown on track speed signs for a given radius.
-        /// source: DV.Signs.SignPlacer.GetMaxSpeedForRadius
+        /// Source: DV.Signs.SignPlacer.GetMaxSpeedForRadius
         /// </summary>
         /// <returns>The speed in km/h.</returns>
         public static float GetMaxSpeedForRadiusGame(float radius)
@@ -180,7 +180,7 @@ namespace Mapify.Editor.Tools
             // https://discord.com/channels/332511223536943105/560262776673796157/1136657491309105312
             // It's possible more testing is required, and in case the values are found
             // to be too high, then this older version should be used instead.
-            //return 60.0f * Mathf.Sqrt(radius / 230.0f);
+            // return 60.0f * Mathf.Sqrt(radius / 230.0f);
             return 60.0f * Mathf.Sqrt(radius / 170.0f);
         }
 

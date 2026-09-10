@@ -29,7 +29,7 @@ namespace Mapify.Patches
 
         public static void DisableAll()
         {
-            Mapify.LogDebug(() => "Disabling MonoBehaviours");
+            Mapify.LogDebug("Disabling MonoBehaviours");
 
             patchedMethods = new HashSet<MethodInfo>();
             foreach (Type type in Assembly.GetAssembly(typeof(TrainCar)).GetTypes())
@@ -39,7 +39,7 @@ namespace Mapify.Patches
                 if (type == typeof(ALicenseSpawner<>))
                     continue; // Causes an error while trying to patch
 
-                Mapify.LogDebugExtreme(() => $"Disabling {type.FullName}");
+                Mapify.LogDebugExtreme($"Disabling {type.FullName}");
 
                 foreach (string methodName in methodNames)
                 {
@@ -65,7 +65,7 @@ namespace Mapify.Patches
 
         public static void EnableAll()
         {
-            Mapify.LogDebug(() => "Enabling disabled MonoBehaviours");
+            Mapify.LogDebug("Enabling disabled MonoBehaviours");
             foreach (MethodInfo method in patchedMethods)
                 Mapify.Harmony.Unpatch(method, prefix);
             patchedMethods = null;

@@ -5,7 +5,7 @@ using HarmonyLib;
 
 namespace Mapify.Patches
 {
-    //The base game has a limit of 30 job generation attempts per station. These patches remove this limitation and instead base the attempts count on the stations job capacity.
+    // The base game has a limit of 30 job generation attempts per station. These patches remove this limitation and instead base the attempts count on the stations job capacity.
 
     [HarmonyPatch(typeof(StationProceduralJobsController), nameof(StationProceduralJobsController.GenerateProceduralJobsCoro))]
     public static class StationProceduralJobsController_Awake_Patch
