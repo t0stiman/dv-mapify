@@ -39,7 +39,7 @@ namespace Mapify.Editor.Tools
         private static Vector3 CalculateParallelOffset(Vector3 position, Vector3 direction, float offset, bool toLeft)
         {
             // Get perpendicular direction (cross with up vector)
-            Vector3 perpendicular = Vector3.Cross(direction.normalized, Vector3.up).normalized;
+            Vector3 perpendicular = Vector3.Cross(Vector3.up, direction.normalized).normalized;
             // Flip for left side
             if (toLeft)
             {
@@ -87,7 +87,7 @@ namespace Mapify.Editor.Tools
                 Vector3 handlePerp1 = Vector3.Cross(p0ToP1.normalized, Vector3.up).normalized;
                 Vector3 chord = bezier.P3 - bezier.P0;
                 bool curveGoesLeft = Vector3.Dot(handlePerp1, chord) > 0;
-                bool isInside = (curveGoesLeft && !toLeft) || (!curveGoesLeft && toLeft);
+                bool isInside = curveGoesLeft == toLeft;
 
                 // Calculate new radius and scaling ratio
                 float newRadius = isInside ? (estimatedRadius - offset) : (estimatedRadius + offset);
