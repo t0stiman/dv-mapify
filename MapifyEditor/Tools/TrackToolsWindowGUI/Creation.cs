@@ -180,9 +180,8 @@ namespace Mapify.Editor.Tools
 
                 if (!_parallelBothSides)
                 {
-                    _parallelTrackSide = (TrackOrientation)EditorGUILayout.EnumPopup(
-                        new GUIContent("Track side", "Which side to create parallel tracks"),
-                        _parallelTrackSide);
+                    _parallelTrackSide = DrawOrientationGUI("Track side",
+                        "Which side to create parallel tracks", _parallelTrackSide);
                 }
 
                 _parallelTrackCount = EditorGUILayout.IntSlider(
