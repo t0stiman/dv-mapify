@@ -23,7 +23,7 @@ namespace Mapify.Editor.Tools
 
         // Multi-track options.
         private bool _multiTrackMode = false;
-        private int _parallelTrackCount = 2;
+        private int _parallelTrackCount = 1;
         private float _parallelTrackSpacing = 4.5f;
         private TrackOrientation _parallelTrackSide = TrackOrientation.Right;
         private bool _parallelBothSides = false;
