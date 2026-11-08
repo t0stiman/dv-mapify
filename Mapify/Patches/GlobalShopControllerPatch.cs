@@ -1,4 +1,9 @@
-﻿namespace Mapify.Patches
+﻿using System;
+using System.Linq;
+using DV.Shops;
+using HarmonyLib;
+
+namespace Mapify.Patches
 {
 #if DEBUG
     [HarmonyPatch(typeof(GlobalShopController), nameof(GlobalShopController.InitializeShopData))]
