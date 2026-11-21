@@ -9,6 +9,10 @@ namespace Mapify.Editor
     [ExecuteInEditMode] // this is necessary for snapping to work
     public abstract class SwitchBase: MonoBehaviour
     {
+        [Tooltip("The ID of the station this switch belongs to\n" +
+            "World switches leave this field empty")]
+        public string stationId;
+
         public abstract Track[] GetTracks();
 
         public abstract BezierPoint GetJointPoint();
