@@ -55,9 +55,10 @@ jobs:
       - name: Build mod
         run: dotnet build --configuration Release --no-restore
 
-      - run: |
-        mkdir artifact
-        cp -t artifact info.json LICENSE README.md locale.csv Mapify/bin/Release/net48/Mapify.dll MapifyEditor/bin/Release/Runtime/MapifyEditor.dll MapifyBezierCurves/bin/Release/BezierCurves.dll
+      - name: Copy files
+        run: |
+          mkdir artifact
+          cp -t artifact info.json LICENSE README.md locale.csv Mapify/bin/Release/net48/Mapify.dll MapifyEditor/bin/Release/Runtime/MapifyEditor.dll MapifyBezierCurves/bin/Release/BezierCurves.dll
 
       - name: Upload mod files
         uses: actions/upload-artifact@v7
