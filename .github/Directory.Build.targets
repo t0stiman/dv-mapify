@@ -3,8 +3,4 @@
 		<ReferencePath>dlls</ReferencePath>
 		<AssemblySearchPaths>$(AssemblySearchPaths);$(ReferencePath);</AssemblySearchPaths>
 	</PropertyGroup>
-	
-	<ItemGroup>
-		<PackageReference Include="UnityModManager" Version="0.33.4"/>
-	</ItemGroup>
 </Project>
