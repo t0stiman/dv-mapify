@@ -33,6 +33,12 @@ jobs:
         run: |
           curl -fL -u "$DL_USER:$DL_PASS" -o "derailvalley.zip" "https://tostiman.com/steam/derailvalley.zip"
           unzip "derailvalley.zip" -d dlls
+
+      - name: Download UnityEditor.dll
+        run: |
+          curl -fL -u "$DL_USER:$DL_PASS" -O "https://tostiman.com/steam/unity/2019.4.40f1/UnityEditor.dll"
+          mv UnityEditor.dll dlls
+
       - name: Setup Directory.Build.targets
         run: cp .github/Directory.Build.targets .
 
