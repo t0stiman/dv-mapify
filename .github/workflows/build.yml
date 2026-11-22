@@ -67,6 +67,10 @@ jobs:
           if-no-files-found: error
           path: artifact
 
+      - name: game-ci/unity-builder gets mad if we don't clean up
+        run: |
+          rm -rf artifact dlls derailvalley.zip
+
       # export the unity editor package
 
       - name: Cache PackageBuilder/Library

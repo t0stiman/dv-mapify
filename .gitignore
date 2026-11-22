@@ -294,6 +294,3 @@ DerailValley/
 
 # docs generated files
 docs/book
-
-# pipeline
-/artifact
