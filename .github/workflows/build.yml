@@ -80,7 +80,7 @@ jobs:
           key: Library
 
       - name: Build editor package
-        uses: game-ci/unity-builder@v4
+        uses: game-ci/unity-builder@v6
         env:
           UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
           UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
@@ -94,6 +94,5 @@ jobs:
       - name: Upload editor package
         uses: actions/upload-artifact@v7
         with:
-          name: Editor package
           if-no-files-found: error
-          path: "**/mapify.unitypackage"
+          path: "PackageBuilder/mapify.unitypackage"
