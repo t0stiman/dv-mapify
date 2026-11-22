@@ -7,10 +7,12 @@ on:
   push:
     branches:
       - master
+      - development
 
   pull_request:
     branches:
       - master
+      - development
 
 env:
   DL_USER: ${{ secrets.DL_USER }}
