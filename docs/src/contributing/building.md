@@ -4,14 +4,7 @@
 
 ## Dependencies
 
-To build Mapify, you'll need to have some dependencies installed.
-
-- [.NET 7][dotnet-download]
-- [PowerShell][powershell-download]
-
-If you're running windows, ensure you have Powershell **7** installed.
-If you're on Linux, you should be able to download it from your package manager.
-
+To build Mapify, you only need [.NET][dotnet-download] and the [Unity 2019.4.40f1 editor][unity-download]. 
 
 ### Reference Directories
 
@@ -29,13 +22,17 @@ You can use the examples below as templates depending on your operating system.
 
 Here's an example file for Windows you can use as a template.
 Replace the provided paths with the paths to your Derail Valley installation directory.
-Make sure to include the semicolons between each of the paths, but not after the last one!
+Make sure to include the semicolons between each of the paths, but not after the last one!  
 Note that shortcuts like `%ProgramFiles%` *cannot* be used.
+
+`<TestMapDir>` is optional.
+
 ```xml
 <Project>
     <PropertyGroup>
         <DvInstallDir>C:\Program Files (x86)\Steam\steamapps\common\Derail Valley</DvInstallDir>
         <UnityInstallDir>C:\Program Files\Unity\Hub\Editor\2019.4.40f1\Editor</UnityInstallDir>
+        <TestMapDir>C:\users\username\projects\my_mapify_map\Assets\Mapify\Scripts</TestMapDir>
         <ReferencePath>
             $(DvInstallDir)\DerailValley_Data\Managed\;
             $(DvInstallDir)\DerailValley_Data\Managed\UnityModManager\;
@@ -53,11 +50,15 @@ Note that shortcuts like `%ProgramFiles%` *cannot* be used.
 Here's an example file for Linux you can use as a template.
 Replace the provided paths with the paths to your Derail Valley installation directory.
 Make sure to include the semicolons between each of the paths, but not after the last one!
+
+`<TestMapDir>` is optional.
+
 ```xml
 <Project>
     <PropertyGroup>
         <DvInstallDir>/home/username/.local/share/Steam/steamapps/common/Derail Valley</DvInstallDir>
         <UnityInstallDir>/home/username/.local/share/UnityHub/Editor/2019.4.40f1/Editor</UnityInstallDir>
+        <TestMapDir>/home/username/projects/my_mapify_map/Assets/Mapify/Scripts</TestMapDir>
         <ReferencePath>
             $(DvInstallDir)/DerailValley_Data/Managed/;
             $(DvInstallDir)/DerailValley_Data/Managed/UnityModManager/;
@@ -69,16 +70,6 @@ Make sure to include the semicolons between each of the paths, but not after the
 ```
 </details>
 
-
-## Packaging
-
-To package a build for distribution, you can run the `package.ps1` PowerShell script in the root of the project.
-If no parameters are supplied, it will create a `.zip` file ready for distribution in the `dist` directory.
-
-- **Linux:** `pwsh ./package.ps1`
-- **Windows:** `powershell -executionpolicy bypass .\package.ps1`
-
-
 [dotnet-download]: https://dotnet.microsoft.com/en-us/download
-[powershell-download]: https://github.com/PowerShell/PowerShell#get-powershell
 [directory-build-targets-docs]: https://learn.microsoft.com/en-us/visualstudio/msbuild/customize-by-directory?view=vs-2022#directorybuildprops-and-directorybuildtargets
+[unity-download]: https://docs.unity.com/en-us/hub/add-editor#install-an-archived-unity-editor-version
