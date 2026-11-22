@@ -20,7 +20,7 @@ env:
 jobs:
   build:
     # only run on the main repo, not forks
-    if: github.repository == 't0stiman/dv_steam_build_test'
+    if: github.repository == 't0stiman/dv-mapify'
     runs-on: ubuntu-latest
 
     steps:
