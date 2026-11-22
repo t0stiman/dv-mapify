@@ -15,7 +15,6 @@ on:
 env:
   DL_USER: ${{ secrets.DL_USER }}
   DL_PASS: ${{ secrets.DL_PASS }}
-  UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
 
 jobs:
   build:
@@ -30,8 +29,8 @@ jobs:
 
       - name: Download game DLLs
         run: |
-          curl -fL -u "$DL_USER:$DL_PASS" -o "${GAME_BRANCH}.zip" "https://tostiman.com/steam/derailvalley.zip"
-          unzip "${GAME_BRANCH}.zip" -d dlls
+          curl -fL -u "$DL_USER:$DL_PASS" -o "derailvalley.zip" "https://tostiman.com/steam/derailvalley.zip"
+          unzip "derailvalley.zip" -d dlls
       - name: Setup Directory.Build.targets
         run: cp .github/Directory.Build.targets .
 
@@ -73,7 +72,7 @@ jobs:
       - name: Build .unitypackage
         uses: game-ci/unity-builder@v4
         env:
-          UNITY_LICENSE: ${{ UNITY_LICENSE }}
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
         with:
           targetPlatform: StandaloneWindows64
           projectPath: PackageBuilder
