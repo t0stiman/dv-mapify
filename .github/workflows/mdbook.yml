@@ -1,7 +1,5 @@
-# Sample workflow for building and deploying a mdBook site to GitHub Pages
-#
+# Workflow for building and deploying a mdBook site to GitHub Pages
 # To get started with mdBook see: https://rust-lang.github.io/mdBook/index.html
-#
 name: Deploy mdBook site to Pages
 
 on:
@@ -27,11 +25,14 @@ concurrency:
 jobs:
     # Build job
     build:
+        # only run on the main repo, not forks
+        if: github.repository == 't0stiman/dv-mapify'
+
         runs-on: ubuntu-latest
         env:
             MDBOOK_VERSION: 0.4.36
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v7
             - name: Install mdBook
               run: |
                   curl --proto '=https' --tlsv1.2 https://sh.rustup.rs -sSf -y | sh
@@ -49,6 +50,9 @@ jobs:
 
     # Deployment job
     deploy:
+        # only run on the main repo, not forks
+        if: github.repository == 't0stiman/dv-mapify'
+
         environment:
             name: github-pages
             url: ${{ steps.deployment.outputs.page_url }}

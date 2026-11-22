@@ -26,8 +26,23 @@ namespace Mapify.Editor
             if (File.Exists(EXPORT_ASSET_PATH))
                 File.Delete(EXPORT_ASSET_PATH);
 
-            AssetDatabase.ExportPackage(EXPORT_ASSET_PATH, path, ExportPackageOptions.Recurse | ExportPackageOptions.IncludeDependencies);
+            AssetDatabase.ExportPackage(
+                EXPORT_ASSET_PATH,
+                path,
+                ExportPackageOptions.Recurse | ExportPackageOptions.IncludeDependencies
+            );
             Debug.Log($"Package exported to '{path}'!");
+        }
+
+        // used by Github Action
+        public static void ExportCI()
+        {
+            // Export
+            AssetDatabase.ExportPackage(
+                $"Assets/Mapify",
+                $"mapify.{UNITY_PACKAGE_EXT_NAME}",
+                ExportPackageOptions.Recurse | ExportPackageOptions.IncludeDependencies
+            );
         }
 
         [MenuItem("Mapify/Package/Import", priority = 3)]
