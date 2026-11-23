@@ -1,0 +1,6 @@
+<Project>
+	<PropertyGroup>
+		<ReferencePath>$(MSBuildThisFileDirectory)dlls</ReferencePath>
+		<AssemblySearchPaths>$(AssemblySearchPaths);$(ReferencePath);</AssemblySearchPaths>
+	</PropertyGroup>
+</Project>

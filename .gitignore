@@ -284,7 +284,7 @@ build/
 dist/
 
 # User-specific refrence paths
-Directory.Build.targets
+/Directory.Build.targets
 
 # Custom map used for testing
 TestMap/

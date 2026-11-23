@@ -1,0 +1,98 @@
+name: Build
+
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+  push:
+    branches:
+      - master
+      - development
+
+  pull_request:
+    branches:
+      - master
+      - development
+
+env:
+  DL_USER: ${{ secrets.DL_USER }}
+  DL_PASS: ${{ secrets.DL_PASS }}
+
+jobs:
+  build:
+    # only run on the main repo, not forks
+    if: github.repository == 't0stiman/dv-mapify'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          lfs: true
+
+      # build the mod
+
+      - name: Download game DLLs
+        run: |
+          curl -fL -u "$DL_USER:$DL_PASS" -o "derailvalley.zip" "https://tostiman.com/steam/derailvalley.zip"
+          unzip "derailvalley.zip" -d dlls
+
+      - name: Download UnityEditor.dll
+        run: |
+          curl -fL -u "$DL_USER:$DL_PASS" -O "https://tostiman.com/steam/unity/2019.4.40f1/UnityEditor.dll"
+          mv UnityEditor.dll dlls
+
+      - name: Setup Directory.Build.targets
+        run: cp .github/Directory.Build.targets .
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore nuget
+        run: dotnet restore
+
+      - name: Build mod
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Copy files
+        run: |
+          mkdir artifact
+          cp -t artifact info.json LICENSE README.md locale.csv Mapify/bin/Release/net48/Mapify.dll MapifyEditor/bin/Release/Runtime/MapifyEditor.dll MapifyBezierCurves/bin/Release/BezierCurves.dll
+
+      - name: Upload mod files
+        uses: actions/upload-artifact@v7
+        with:
+          name: Mapify
+          if-no-files-found: error
+          path: artifact
+
+      - name: game-ci/unity-builder gets mad if we don't clean up
+        run: |
+          rm -rf artifact dlls derailvalley.zip
+
+      # export the unity editor package
+
+      - name: Cache PackageBuilder/Library
+        uses: actions/cache@v6
+        with:
+          path: PackageBuilder/Library
+          key: Library
+
+      - name: Build editor package
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: StandaloneWindows64
+          projectPath: PackageBuilder
+          unityVersion: 2019.4.40f1
+          buildMethod: Mapify.Editor.PackageCreator.ExportCI
+
+      - name: Upload editor package
+        uses: actions/upload-artifact@v7
+        with:
+          if-no-files-found: error
+          path: "PackageBuilder/mapify.unitypackage"
