@@ -134,17 +134,23 @@ namespace Mapify.Editor.Tools
         // Orientation enum dropdown with a button to swap options easily.
         private void DrawOrientationGUI(string tooltip)
         {
+            _orientation = DrawOrientationGUI("Orientation", tooltip, _orientation);
+        }
+
+        private TrackOrientation DrawOrientationGUI(string label, string tooltip, TrackOrientation orientation)
+        {
             EditorGUILayout.BeginHorizontal();
-            _orientation = (TrackOrientation)EditorGUILayout.EnumPopup(new GUIContent("Orientation",
+            orientation = (TrackOrientation)EditorGUILayout.EnumPopup(new GUIContent(label,
                 tooltip),
-                _orientation);
+                orientation);
 
             if (GUILayout.Button(new GUIContent("Swap orientation", "Swaps orientation between left and right"), GUILayout.MaxWidth(140)))
             {
-                _orientation = FlipOrientation(_orientation);
+                orientation = FlipOrientation(orientation);
             }
 
             EditorGUILayout.EndHorizontal();
+            return orientation;
         }
 
         private void DrawVanillaSwitchOptions()
