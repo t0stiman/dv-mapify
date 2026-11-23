@@ -50,7 +50,7 @@
     <!-- Mod Loader -->
     <ItemGroup>
         <PackageReference Include="Krafs.Publicizer" Version="2.2.1" />
-        <PackageReference Include="UnityModManager" Version="0.27.2" />
+        <PackageReference Include="UnityModManager" Version="0.33.4"/>
     </ItemGroup>
 
     <!-- Third-party -->
